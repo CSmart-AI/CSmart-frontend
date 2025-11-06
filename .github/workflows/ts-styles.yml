@@ -1,0 +1,85 @@
+name: TypeScript Style Checking
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "entrypoints/**"
+      - "components/**"
+      - "data/**"
+      - "types/**"
+      - "utils/**"
+      - "*.ts"
+      - "*.tsx"
+      - "*.js"
+      - "*.jsx"
+      - "package.json"
+      - "tsconfig.json"
+      - "biome.json"
+  pull_request:
+    paths:
+      - "entrypoints/**"
+      - "components/**"
+      - "data/**"
+      - "types/**"
+      - "utils/**"
+      - "*.ts"
+      - "*.tsx"
+      - "*.js"
+      - "*.jsx"
+      - "package.json"
+      - "tsconfig.json"
+      - "biome.json"
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
+
+jobs:
+  biome-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run Biome Format Check
+        run: pnpm biome ci --linter-enabled=false .
+
+  biome-import-sort:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run Biome Import Sort Check
+        run: pnpm biome ci --organize-imports-enabled=true --formatter-enabled=false --linter-enabled=false
