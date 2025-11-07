@@ -1,4 +1,5 @@
 import {
+	Bot,
 	Calendar,
 	GraduationCap,
 	Settings,
@@ -39,6 +40,12 @@ const Layout = ({ children }: LayoutProps) => {
 			label: "일정",
 			icon: Calendar,
 			description: "상담 및 특별 일정 관리",
+		},
+		{
+			path: "/ai-management",
+			label: "AI 응답",
+			icon: Bot,
+			description: "AI 자동응답 관리",
 		},
 	];
 

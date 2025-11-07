@@ -1,5 +1,6 @@
 import { Route, HashRouter as Router, Routes } from "react-router-dom";
 import Layout from "../../components/Layout.tsx";
+import AIManagementPage from "./AIManagementPage.tsx";
 import CalendarPage from "./CalendarPage.tsx";
 import ConsultationPage from "./ConsultationPage.tsx";
 import ManagementPage from "./ManagementPage.tsx";
@@ -16,6 +17,7 @@ function App() {
 					<Route path="/registration" element={<RegistrationPage />} />
 					<Route path="/management" element={<ManagementPage />} />
 					<Route path="/calendar" element={<CalendarPage />} />
+					<Route path="/ai-management" element={<AIManagementPage />} />
 					<Route path="/student/:id" element={<StudentDetailPage />} />
 				</Routes>
 			</Layout>
