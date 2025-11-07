@@ -1,3 +1,3 @@
-# WXT + React
+## CSmart-fronted
 
-This template should help get you started developing with React in WXT.
+TBD
