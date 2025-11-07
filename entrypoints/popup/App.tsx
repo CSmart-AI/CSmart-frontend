@@ -56,7 +56,7 @@ function App() {
 		<div className="login-container">
 			<div className="login-header">
 				<h1>CSmart</h1>
-				<p>카카오톡으로 로그인해주세요</p>
+				<p>카카오톡 계정으로 로그인하세요</p>
 			</div>
 
 			<form onSubmit={handleSubmit} className="login-form">
