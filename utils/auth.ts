@@ -21,7 +21,7 @@ const STORAGE_KEYS = {
 
 export const authStorage = {
 	get: async (): Promise<AuthState> => {
-		if (typeof browser !== "undefined" && browser.storage) {
+		if (browser?.storage) {
 			const result = await browser.storage.local.get(STORAGE_KEYS.AUTH_STATE);
 			return (
 				result[STORAGE_KEYS.AUTH_STATE] || {
@@ -49,7 +49,7 @@ export const authStorage = {
 	},
 
 	set: async (state: AuthState): Promise<void> => {
-		if (typeof browser !== "undefined" && browser.storage) {
+		if (browser?.storage) {
 			await browser.storage.local.set({
 				[STORAGE_KEYS.AUTH_STATE]: state,
 				[STORAGE_KEYS.ACCESS_TOKEN]: state.accessToken,
@@ -59,7 +59,7 @@ export const authStorage = {
 	},
 
 	clear: async (): Promise<void> => {
-		if (typeof browser !== "undefined" && browser.storage) {
+		if (browser?.storage) {
 			await browser.storage.local.remove([
 				STORAGE_KEYS.AUTH_STATE,
 				STORAGE_KEYS.ACCESS_TOKEN,
@@ -68,4 +68,3 @@ export const authStorage = {
 		}
 	},
 };
-

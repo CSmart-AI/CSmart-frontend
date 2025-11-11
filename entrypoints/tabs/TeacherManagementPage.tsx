@@ -1,5 +1,5 @@
 import { Edit, Plus, Trash2, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
 	type CreateTeacherRequestDTO,
 	type TeacherDTO,
@@ -31,11 +31,7 @@ const TeacherManagementPage = () => {
 		specialization: "",
 	});
 
-	useEffect(() => {
-		loadTeachers();
-	}, []);
-
-	const loadTeachers = async () => {
+	const loadTeachers = useCallback(async () => {
 		setLoading(true);
 		try {
 			const response = await teacherApi.getAll();
@@ -49,7 +45,11 @@ const TeacherManagementPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
+
+	useEffect(() => {
+		loadTeachers();
+	}, [loadTeachers]);
 
 	const handleCreate = async () => {
 		if (!formData.name || !formData.email || !formData.password) {
@@ -257,7 +257,10 @@ const TeacherManagementPage = () => {
 
 						<div className="space-y-4">
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
+								<label
+									htmlFor="name"
+									className="block text-sm font-medium text-gray-700 mb-1"
+								>
 									이름 <span className="text-red-500">*</span>
 								</label>
 								<input
@@ -272,7 +275,10 @@ const TeacherManagementPage = () => {
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
+								<label
+									htmlFor="email"
+									className="block text-sm font-medium text-gray-700 mb-1"
+								>
 									이메일 <span className="text-red-500">*</span>
 								</label>
 								<input
@@ -287,7 +293,10 @@ const TeacherManagementPage = () => {
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
+								<label
+									htmlFor="password"
+									className="block text-sm font-medium text-gray-700 mb-1"
+								>
 									비밀번호{" "}
 									{!editingTeacher && <span className="text-red-500">*</span>}
 								</label>
@@ -307,7 +316,10 @@ const TeacherManagementPage = () => {
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
+								<label
+									htmlFor="phoneNumber"
+									className="block text-sm font-medium text-gray-700 mb-1"
+								>
 									전화번호
 								</label>
 								<input
@@ -322,7 +334,10 @@ const TeacherManagementPage = () => {
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
+								<label
+									htmlFor="kakaoChannelId"
+									className="block text-sm font-medium text-gray-700 mb-1"
+								>
 									카카오 채널 ID
 								</label>
 								<input
@@ -337,7 +352,10 @@ const TeacherManagementPage = () => {
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
+								<label
+									htmlFor="specialization"
+									className="block text-sm font-medium text-gray-700 mb-1"
+								>
 									전문분야
 								</label>
 								<input

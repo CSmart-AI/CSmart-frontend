@@ -83,4 +83,3 @@ const TeacherLayout = ({ children }: TeacherLayoutProps) => {
 };
 
 export default TeacherLayout;
-

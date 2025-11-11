@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, HashRouter as Router, Routes } from "react-router-dom";
+import {
+	Navigate,
+	Route,
+	HashRouter as Router,
+	Routes,
+} from "react-router-dom";
 import AdminLayout from "../../components/AdminLayout.tsx";
 import TeacherLayout from "../../components/TeacherLayout.tsx";
 import { authStorage, type UserRole } from "../../utils/auth";
@@ -67,7 +72,10 @@ function App() {
 						<Route path="/management" element={<ManagementPage />} />
 						<Route path="/calendar" element={<CalendarPage />} />
 						<Route path="/ai-management" element={<AIManagementPage />} />
-						<Route path="/teacher-management" element={<TeacherManagementPage />} />
+						<Route
+							path="/teacher-management"
+							element={<TeacherManagementPage />}
+						/>
 						<Route path="/student/:id" element={<StudentDetailPage />} />
 						<Route path="*" element={<Navigate to="/consultation" replace />} />
 					</Routes>
@@ -82,10 +90,16 @@ function App() {
 			<Router>
 				<TeacherLayout>
 					<Routes>
-						<Route path="/" element={<Navigate to="/ai-management" replace />} />
+						<Route
+							path="/"
+							element={<Navigate to="/ai-management" replace />}
+						/>
 						<Route path="/login/kakao" element={<KakaoLoginPage />} />
 						<Route path="/ai-management" element={<AIManagementPage />} />
-						<Route path="*" element={<Navigate to="/ai-management" replace />} />
+						<Route
+							path="*"
+							element={<Navigate to="/ai-management" replace />}
+						/>
 					</Routes>
 				</TeacherLayout>
 			</Router>
