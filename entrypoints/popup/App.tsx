@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { browser } from "wxt/browser";
+import { authStorage, type UserRole } from "@/utils/auth";
 import "./App.css";
 
 /**
- * 카카오톡 로그인 팝업 컴포넌트
- * 아이디와 비밀번호를 입력받아 인증 후 메인 앱을 새 탭으로 열기
+ * 로그인 팝업 컴포넌트
+ * 관리자/선생님 선택 후 이메일과 비밀번호로 로그인
  */
 function App() {
-	const [kakaoId, setKakaoId] = useState("");
+	const [userRole, setUserRole] = useState<UserRole | null>(null);
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -20,34 +22,46 @@ function App() {
 		setError("");
 
 		// 입력값 검증
-		if (!kakaoId.trim() || !password.trim()) {
-			setError("아이디와 비밀번호를 모두 입력해주세요.");
+		if (!userRole) {
+			setError("관리자 또는 선생님을 선택해주세요.");
+			return;
+		}
+
+		if (!email.trim() || !password.trim()) {
+			setError("이메일과 비밀번호를 모두 입력해주세요.");
 			return;
 		}
 
 		setLoading(true);
 
 		try {
-			// 여기에 실제 카카오톡 인증 로직을 추가할 수 있습니다
-			// 임시로 간단한 검증만 수행
+			// TODO: 실제 API 연동 전까지 임시로 모든 입력을 통과시킴
+			// API 호출 대신 임시 토큰과 사용자 정보 생성
 			await new Promise((resolve) => setTimeout(resolve, 500));
 
-			// 로그인 정보를 Chrome storage에 저장
-			await browser.storage.local.set({
+			// 임시 인증 상태 저장
+			await authStorage.set({
 				isAuthenticated: true,
-				kakaoId: kakaoId,
-				loginTime: Date.now(),
+				role: userRole,
+				accessToken: "temp_access_token",
+				refreshToken: "temp_refresh_token",
+				memberId: userRole === "admin" ? 1 : 2,
+				name: userRole === "admin" ? "관리자" : "선생님",
+				email: email,
+				teacherId: userRole === "teacher" ? 2 : null,
 			});
 
-			// 새 탭에서 메인 앱 열기
+			// 로그인 후 /login/kakao로 리다이렉트 (API는 아직 없지만 경로는 생성)
 			browser.tabs.create({
-				url: browser.runtime.getURL("/tabs.html"),
+				url: browser.runtime.getURL("/tabs.html#/login/kakao"),
 			});
 
 			// 팝업 닫기
 			window.close();
 		} catch (error) {
-			setError(`로그인 중 오류가 발생했습니다: ${error}`);
+			setError(
+				`로그인 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`,
+			);
 			setLoading(false);
 		}
 	};
@@ -56,16 +70,38 @@ function App() {
 		<div className="login-container">
 			<div className="login-header">
 				<h1>CSmart</h1>
-				<p>카카오톡 계정으로 로그인하세요</p>
+				<p>로그인 유형을 선택하고 로그인하세요</p>
 			</div>
 
 			<form onSubmit={handleSubmit} className="login-form">
+				{/* Role Selection */}
+				<div className="input-group">
+					<div className="role-selection">
+						<button
+							type="button"
+							onClick={() => setUserRole("admin")}
+							className={`role-button ${userRole === "admin" ? "active" : ""}`}
+							disabled={loading}
+						>
+							관리자
+						</button>
+						<button
+							type="button"
+							onClick={() => setUserRole("teacher")}
+							className={`role-button ${userRole === "teacher" ? "active" : ""}`}
+							disabled={loading}
+						>
+							선생님
+						</button>
+					</div>
+				</div>
+
 				<div className="input-group">
 					<input
-						type="text"
-						placeholder="카카오톡 아이디"
-						value={kakaoId}
-						onChange={(e) => setKakaoId(e.target.value)}
+						type="email"
+						placeholder="이메일"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
 						disabled={loading}
 					/>
 				</div>

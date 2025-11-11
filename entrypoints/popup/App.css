@@ -110,3 +110,37 @@ body {
 	opacity: 0.6;
 	cursor: not-allowed;
 }
+
+.role-selection {
+	display: flex;
+	gap: 8px;
+}
+
+.role-button {
+	flex: 1;
+	padding: 12px 16px;
+	border: 2px solid #e1e8ed;
+	border-radius: 8px;
+	font-size: 14px;
+	font-weight: 600;
+	background: white;
+	color: #667eea;
+	cursor: pointer;
+	transition: all 0.3s ease;
+}
+
+.role-button:hover:not(:disabled) {
+	border-color: #667eea;
+	background: #f0f4ff;
+}
+
+.role-button.active {
+	background: #667eea;
+	color: white;
+	border-color: #667eea;
+}
+
+.role-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
