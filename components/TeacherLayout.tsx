@@ -1,4 +1,4 @@
-import { Bot } from "lucide-react";
+import { Bot, Calendar, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -15,6 +15,18 @@ const TeacherLayout = ({ children }: TeacherLayoutProps) => {
 			label: "AI 응답",
 			icon: Bot,
 			description: "AI 자동응답 관리",
+		},
+		{
+			path: "/calendar",
+			label: "일정",
+			icon: Calendar,
+			description: "상담 및 특별 일정 관리",
+		},
+		{
+			path: "/management",
+			label: "학생 관리",
+			icon: Users,
+			description: "수강 중인 학생 관리",
 		},
 	];
 

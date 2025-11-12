@@ -1,3 +1,5 @@
+import type { UserRole } from "./auth";
+
 const API_BASE_URL = "http://localhost:8080";
 
 export interface ApiResponse<T> {
@@ -14,10 +16,12 @@ export interface LoginRequest {
 
 export interface LoginResponse {
 	memberId: number;
+	role: UserRole;
 	email: string;
 	name: string;
 	accessToken: string;
 	refreshToken: string;
+	teacherId?: number;
 }
 
 export interface TeacherDTO {

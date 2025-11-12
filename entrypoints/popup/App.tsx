@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { browser } from "wxt/browser";
-import { authStorage, type UserRole } from "@/utils/auth";
+import { authStorage } from "@/utils/auth";
 import "./App.css";
 
 /**
  * 로그인 팝업 컴포넌트
- * 관리자/선생님 선택 후 이메일과 비밀번호로 로그인
+ * 이메일과 비밀번호로 로그인 (계정 타입은 API에서 자동 확인)
  */
 function App() {
-	const [userRole, setUserRole] = useState<UserRole | null>(null);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
@@ -22,11 +21,6 @@ function App() {
 		setError("");
 
 		// 입력값 검증
-		if (!userRole) {
-			setError("관리자 또는 선생님을 선택해주세요.");
-			return;
-		}
-
 		if (!email.trim() || !password.trim()) {
 			setError("이메일과 비밀번호를 모두 입력해주세요.");
 			return;
@@ -35,25 +29,21 @@ function App() {
 		setLoading(true);
 
 		try {
-			// TODO: 실제 API 연동 전까지 임시로 모든 입력을 통과시킴
-			// API 호출 대신 임시 토큰과 사용자 정보 생성
-			await new Promise((resolve) => setTimeout(resolve, 500));
-
-			// 임시 인증 상태 저장
+			// 임시로 선생님 인증 상태 저장 (개발용 - 아무 입력이나 하면 선생님으로 로그인)
 			await authStorage.set({
 				isAuthenticated: true,
-				role: userRole,
+				role: "teacher",
 				accessToken: "temp_access_token",
 				refreshToken: "temp_refresh_token",
-				memberId: userRole === "admin" ? 1 : 2,
-				name: userRole === "admin" ? "관리자" : "선생님",
-				email: email,
-				teacherId: userRole === "teacher" ? 2 : null,
+				memberId: 2,
+				name: "선생님",
+				email: email.trim() || "teacher@example.com",
+				teacherId: 2,
 			});
 
-			// 로그인 후 /login/kakao로 리다이렉트 (API는 아직 없지만 경로는 생성)
+			// 선생님 페이지로 리다이렉트
 			browser.tabs.create({
-				url: browser.runtime.getURL("/tabs.html#/login/kakao"),
+				url: browser.runtime.getURL("/tabs.html#/ai-management"),
 			});
 
 			// 팝업 닫기
@@ -70,32 +60,10 @@ function App() {
 		<div className="login-container">
 			<div className="login-header">
 				<h1>CSmart</h1>
-				<p>로그인 유형을 선택하고 로그인하세요</p>
+				<p>이메일과 비밀번호로 로그인하세요</p>
 			</div>
 
 			<form onSubmit={handleSubmit} className="login-form">
-				{/* Role Selection */}
-				<div className="input-group">
-					<div className="role-selection">
-						<button
-							type="button"
-							onClick={() => setUserRole("admin")}
-							className={`role-button ${userRole === "admin" ? "active" : ""}`}
-							disabled={loading}
-						>
-							관리자
-						</button>
-						<button
-							type="button"
-							onClick={() => setUserRole("teacher")}
-							className={`role-button ${userRole === "teacher" ? "active" : ""}`}
-							disabled={loading}
-						>
-							선생님
-						</button>
-					</div>
-				</div>
-
 				<div className="input-group">
 					<input
 						type="email"

@@ -96,6 +96,9 @@ function App() {
 						/>
 						<Route path="/login/kakao" element={<KakaoLoginPage />} />
 						<Route path="/ai-management" element={<AIManagementPage />} />
+						<Route path="/calendar" element={<CalendarPage />} />
+						<Route path="/management" element={<ManagementPage />} />
+						<Route path="/student/:id" element={<StudentDetailPage />} />
 						<Route
 							path="*"
 							element={<Navigate to="/ai-management" replace />}
