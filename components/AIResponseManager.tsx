@@ -12,10 +12,12 @@ import {
 	XCircle,
 } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/utils/cn";
 import { formatTemporalDateTime, toJSDate } from "@/utils/temporal";
 import { mockAIResponses } from "../data/aiResponseData";
 import { mockStudents } from "../data/mockData";
 import type { AIResponse } from "../types/student";
+import { Badge, Button, Card, Typography } from "./ui";
 
 const AIResponseManager = () => {
 	const [selectedTab, setSelectedTab] = useState<"pending" | "all">("pending");
@@ -71,42 +73,36 @@ const AIResponseManager = () => {
 		const categories = {
 			faq: {
 				label: "FAQ",
-				color: "bg-blue-100 text-blue-800",
+				variant: "primary" as const,
 				icon: MessageCircle,
 			},
 			consultation: {
 				label: "상담",
-				color: "bg-green-100 text-green-800",
+				variant: "success" as const,
 				icon: MessageCircle,
 			},
 			complaint: {
 				label: "불만",
-				color: "bg-red-100 text-red-800",
+				variant: "danger" as const,
 				icon: AlertTriangle,
 			},
 			schedule: {
 				label: "일정",
-				color: "bg-purple-100 text-purple-800",
+				variant: "primary" as const,
 				icon: Clock,
 			},
 			payment: {
 				label: "결제",
-				color: "bg-yellow-100 text-yellow-800",
+				variant: "warning" as const,
 				icon: TrendingUp,
 			},
 			other: {
 				label: "기타",
-				color: "bg-gray-100 text-gray-800",
+				variant: "default" as const,
 				icon: MessageCircle,
 			},
 		};
 		return categories[category as keyof typeof categories] || categories.other;
-	};
-
-	const getConfidenceColor = (confidence: number) => {
-		if (confidence >= 0.8) return "text-green-600 bg-green-100";
-		if (confidence >= 0.6) return "text-yellow-600 bg-yellow-100";
-		return "text-red-600 bg-red-100";
 	};
 
 	const getStatusIcon = (response: AIResponse) => {
@@ -150,117 +146,151 @@ const AIResponseManager = () => {
 	};
 
 	return (
-		<div className="space-y-6">
+		<div className="w-full space-y-6">
 			{/* Header & Stats */}
-			<div className="bg-white rounded-lg shadow-sm p-6">
+			<Card padding="lg">
 				<div className="flex justify-between items-center mb-6">
 					<div>
-						<h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-							<Bot className="h-6 w-6 text-blue-600" />
+						<Typography variant="h3" className="flex items-center gap-2 mb-2">
+							<Bot className="h-6 w-6 text-[var(--color-primary)]" />
 							AI 자동응답 관리
-						</h2>
-						<p className="text-gray-600 mt-1">
+						</Typography>
+						<Typography
+							variant="body"
+							className="text-[var(--color-text-secondary)]"
+						>
 							AI가 분석한 카카오톡 메시지와 추천 응답을 관리합니다
-						</p>
+						</Typography>
 					</div>
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-					<div className="bg-yellow-50 p-4 rounded-lg">
+					<Card
+						padding="md"
+						className="bg-[var(--color-yellow)]/10 border-[var(--color-yellow)]/20"
+					>
 						<div className="flex items-center">
-							<Clock className="h-8 w-8 text-yellow-600" />
+							<Clock className="h-8 w-8 text-[var(--color-yellow)]" />
 							<div className="ml-3">
-								<div className="text-2xl font-bold text-yellow-600">
+								<div className="text-2xl font-bold text-[var(--color-yellow)]">
 									{pendingCount}
 								</div>
-								<div className="text-sm text-yellow-800">승인 대기</div>
+								<Typography
+									variant="small"
+									className="text-[var(--color-text-secondary)]"
+								>
+									승인 대기
+								</Typography>
 							</div>
 						</div>
-					</div>
+					</Card>
 
-					<div className="bg-green-50 p-4 rounded-lg">
+					<Card
+						padding="md"
+						className="bg-[var(--color-green)]/10 border-[var(--color-green)]/20"
+					>
 						<div className="flex items-center">
-							<Bot className="h-8 w-8 text-green-600" />
+							<Bot className="h-8 w-8 text-[var(--color-green)]" />
 							<div className="ml-3">
-								<div className="text-2xl font-bold text-green-600">
+								<div className="text-2xl font-bold text-[var(--color-green)]">
 									{autoSentCount}
 								</div>
-								<div className="text-sm text-green-800">자동 발송</div>
+								<Typography
+									variant="small"
+									className="text-[var(--color-text-secondary)]"
+								>
+									자동 발송
+								</Typography>
 							</div>
 						</div>
-					</div>
+					</Card>
 
-					<div className="bg-blue-50 p-4 rounded-lg">
+					<Card
+						padding="md"
+						className="bg-[var(--color-blue)]/10 border-[var(--color-blue)]/20"
+					>
 						<div className="flex items-center">
-							<CheckCircle className="h-8 w-8 text-blue-600" />
+							<CheckCircle className="h-8 w-8 text-[var(--color-blue)]" />
 							<div className="ml-3">
-								<div className="text-2xl font-bold text-blue-600">
+								<div className="text-2xl font-bold text-[var(--color-blue)]">
 									{approvedCount}
 								</div>
-								<div className="text-sm text-blue-800">승인 완료</div>
+								<Typography
+									variant="small"
+									className="text-[var(--color-text-secondary)]"
+								>
+									승인 완료
+								</Typography>
 							</div>
 						</div>
-					</div>
+					</Card>
 
-					<div className="bg-purple-50 p-4 rounded-lg">
+					<Card
+						padding="md"
+						className="bg-[var(--color-primary)]/10 border-[var(--color-primary)]/20"
+					>
 						<div className="flex items-center">
-							<TrendingUp className="h-8 w-8 text-purple-600" />
+							<TrendingUp className="h-8 w-8 text-[var(--color-primary)]" />
 							<div className="ml-3">
-								<div className="text-2xl font-bold text-purple-600">
+								<div className="text-2xl font-bold text-[var(--color-primary)]">
 									{Math.round((autoSentCount / mockAIResponses.length) * 100)}%
 								</div>
-								<div className="text-sm text-purple-800">자동화율</div>
+								<Typography
+									variant="small"
+									className="text-[var(--color-text-secondary)]"
+								>
+									자동화율
+								</Typography>
 							</div>
 						</div>
-					</div>
+					</Card>
 				</div>
-			</div>
+			</Card>
 
 			{/* Filters & Search */}
-			<div className="bg-white rounded-lg shadow-sm p-6">
-				<div className="flex flex-col md:flex-row gap-4 mb-4">
+			<Card padding="md">
+				<div className="flex flex-col md:flex-row gap-4">
 					<div className="flex gap-2">
-						<button
-							type="button"
+						<Button
+							variant={selectedTab === "pending" ? "primary" : "secondary"}
+							size="md"
 							onClick={() => setSelectedTab("pending")}
-							className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-								selectedTab === "pending"
-									? "bg-blue-600 text-white"
-									: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-							}`}
+							className={cn(
+								selectedTab === "pending" &&
+									"bg-[var(--color-primary)] text-white",
+							)}
 						>
 							승인 대기 ({pendingCount})
-						</button>
-						<button
-							type="button"
+						</Button>
+						<Button
+							variant={selectedTab === "all" ? "primary" : "secondary"}
+							size="md"
 							onClick={() => setSelectedTab("all")}
-							className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-								selectedTab === "all"
-									? "bg-blue-600 text-white"
-									: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-							}`}
+							className={cn(
+								selectedTab === "all" && "bg-[var(--color-primary)] text-white",
+							)}
 						>
 							전체 응답
-						</button>
+						</Button>
 					</div>
 
 					<div className="flex gap-4 flex-1">
 						<div className="relative flex-1">
-							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-secondary)] h-4 w-4" />
 							<input
 								type="text"
 								placeholder="메시지 내용 또는 학생명으로 검색..."
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
-								className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								className="w-full pl-9 pr-4 py-2 bg-[var(--color-dark)] border border-[rgba(255,255,255,0.1)] rounded-[var(--radius-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
 							/>
 						</div>
 						<div className="flex items-center gap-2">
-							<Filter className="h-4 w-4 text-gray-400" />
+							<Filter className="h-4 w-4 text-[var(--color-text-secondary)]" />
 							<select
 								value={filterCategory}
 								onChange={(e) => setFilterCategory(e.target.value)}
-								className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								className="bg-[var(--color-dark)] border border-[rgba(255,255,255,0.1)] rounded-[var(--radius-medium)] px-3 py-2 text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
 							>
 								<option value="all">전체 카테고리</option>
 								<option value="faq">FAQ</option>
@@ -273,7 +303,7 @@ const AIResponseManager = () => {
 						</div>
 					</div>
 				</div>
-			</div>
+			</Card>
 
 			{/* AI Responses List */}
 			<div className="space-y-4">
@@ -283,63 +313,70 @@ const AIResponseManager = () => {
 					const studentName = getStudentName(response.studentId);
 
 					return (
-						<div
-							key={response.id}
-							className="bg-white rounded-lg shadow-sm p-6"
-						>
+						<Card key={response.id} padding="lg">
 							<div className="flex justify-between items-start mb-4">
-								<div className="flex items-center gap-3">
+								<div className="flex items-center gap-3 flex-wrap">
 									<div className="flex items-center gap-2">
 										{getStatusIcon(response)}
-										<span className="font-medium text-gray-900">
+										<Typography variant="body" className="font-medium">
 											{studentName}
-										</span>
+										</Typography>
 									</div>
-									<span
-										className={`px-2 py-1 rounded-full text-xs font-medium ${categoryInfo.color}`}
-									>
+									<Badge variant={categoryInfo.variant}>
 										<CategoryIcon className="h-3 w-3 inline mr-1" />
 										{categoryInfo.label}
-									</span>
-									<span
-										className={`px-2 py-1 rounded-full text-xs font-medium ${getConfidenceColor(
-											response.confidence,
-										)}`}
+									</Badge>
+									<Badge
+										variant={
+											response.confidence >= 0.8
+												? "success"
+												: response.confidence >= 0.6
+													? "warning"
+													: "danger"
+										}
 									>
 										신뢰도 {Math.round(response.confidence * 100)}%
-									</span>
+									</Badge>
 									{response.isAutoSent && (
-										<span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-											자동발송
-										</span>
+										<Badge variant="success">자동발송</Badge>
 									)}
 								</div>
-								<div className="text-xs text-gray-500">
+								<Typography
+									variant="small"
+									className="text-[var(--color-text-secondary)]"
+								>
 									{formatTemporalDateTime(response.createdAt, "MM/dd HH:mm")}
-								</div>
+								</Typography>
 							</div>
 
 							{/* Original Message */}
 							<div className="mb-4">
-								<div className="text-sm font-medium text-gray-700 mb-2">
+								<Typography variant="body" className="font-medium mb-2">
 									원본 메시지:
-								</div>
-								<div className="bg-gray-50 p-3 rounded-lg text-sm text-gray-800">
-									{response.originalMessage}
-								</div>
+								</Typography>
+								<Card padding="md" className="bg-[var(--color-dark)]/50">
+									<Typography
+										variant="body"
+										className="text-[var(--color-text-primary)] whitespace-pre-wrap"
+									>
+										{response.originalMessage}
+									</Typography>
+								</Card>
 							</div>
 
 							{/* Suggested Response */}
 							<div className="mb-4">
-								<div className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-									AI 추천 응답:
+								<div className="flex items-center gap-2 mb-2">
+									<Typography variant="body" className="font-medium">
+										AI 추천 응답:
+									</Typography>
 									{response.status === "pending" && (
 										<button
 											type="button"
 											onClick={() =>
 												handleEdit(response.id, response.suggestedResponse)
 											}
-											className="text-blue-600 hover:text-blue-700"
+											className="text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 transition-colors"
 										>
 											<Edit3 className="h-4 w-4" />
 										</button>
@@ -350,36 +387,47 @@ const AIResponseManager = () => {
 										<textarea
 											value={editedText}
 											onChange={(e) => setEditedText(e.target.value)}
-											className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											className="w-full p-3 bg-[var(--color-dark)] border border-[rgba(255,255,255,0.1)] rounded-[var(--radius-medium)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
 											rows={4}
 										/>
 										<div className="flex gap-2">
-											<button
-												type="button"
+											<Button
+												variant="primary"
+												size="sm"
 												onClick={() => handleSaveEdit(response.id)}
-												className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
 											>
 												저장
-											</button>
-											<button
-												type="button"
+											</Button>
+											<Button
+												variant="secondary"
+												size="sm"
 												onClick={() => setEditingResponse(null)}
-												className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm"
 											>
 												취소
-											</button>
+											</Button>
 										</div>
 									</div>
 								) : (
-									<div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-900 whitespace-pre-wrap">
-										{response.suggestedResponse}
-									</div>
+									<Card
+										padding="md"
+										className="bg-[var(--color-primary)]/10 border-[var(--color-primary)]/20"
+									>
+										<Typography
+											variant="body"
+											className="text-[var(--color-text-primary)] whitespace-pre-wrap"
+										>
+											{response.suggestedResponse}
+										</Typography>
+									</Card>
 								)}
 							</div>
 
 							{/* Actions */}
 							<div className="flex justify-between items-center">
-								<div className="text-xs text-gray-500">
+								<Typography
+									variant="small"
+									className="text-[var(--color-text-secondary)]"
+								>
 									{response.status === "sent" && response.sentAt && (
 										<span>
 											발송됨:{" "}
@@ -398,59 +446,63 @@ const AIResponseManager = () => {
 									{response.approvedBy && (
 										<span className="ml-2">by {response.approvedBy}</span>
 									)}
-								</div>
+								</Typography>
 
 								<div className="flex gap-2">
 									{response.status === "pending" && (
 										<>
-											<button
-												type="button"
+											<Button
+												variant="danger"
+												size="sm"
 												onClick={() => handleReject(response.id)}
-												className="bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200 transition-colors text-sm flex items-center gap-1"
 											>
-												<XCircle className="h-4 w-4" />
+												<XCircle className="h-4 w-4 mr-1" />
 												거절
-											</button>
-											<button
-												type="button"
+											</Button>
+											<Button
+												variant="primary"
+												size="sm"
 												onClick={() => handleApprove(response.id)}
-												className="bg-green-100 text-green-700 px-3 py-1 rounded-lg hover:bg-green-200 transition-colors text-sm flex items-center gap-1"
+												className="bg-[var(--color-green)] hover:opacity-90"
 											>
-												<CheckCircle className="h-4 w-4" />
+												<CheckCircle className="h-4 w-4 mr-1" />
 												승인
-											</button>
+											</Button>
 										</>
 									)}
 									{response.status === "approved" && (
-										<button
-											type="button"
+										<Button
+											variant="primary"
+											size="sm"
 											onClick={() => handleSendApproved(response.id)}
-											className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-1"
 										>
-											<Send className="h-4 w-4" />
+											<Send className="h-4 w-4 mr-1" />
 											발송
-										</button>
+										</Button>
 									)}
 								</div>
 							</div>
-						</div>
+						</Card>
 					);
 				})}
 
 				{filteredResponses.length === 0 && (
-					<div className="bg-white rounded-lg shadow-sm p-12 text-center">
-						<Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-						<h3 className="text-lg font-medium text-gray-900 mb-2">
+					<Card padding="lg" className="text-center">
+						<Bot className="h-12 w-12 text-[var(--color-text-secondary)] mx-auto mb-4" />
+						<Typography variant="h4" className="mb-2">
 							{selectedTab === "pending"
 								? "승인 대기 중인 응답이 없습니다"
 								: "응답이 없습니다"}
-						</h3>
-						<p className="text-gray-600">
+						</Typography>
+						<Typography
+							variant="body"
+							className="text-[var(--color-text-secondary)]"
+						>
 							{selectedTab === "pending"
 								? "새로운 메시지가 들어오면 AI가 자동으로 분석하여 여기에 표시됩니다."
 								: "검색 조건을 변경해보세요."}
-						</p>
-					</div>
+						</Typography>
+					</Card>
 				)}
 			</div>
 		</div>

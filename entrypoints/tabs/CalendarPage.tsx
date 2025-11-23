@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Badge, Button, Card, Input, Typography } from "@/components/ui";
 import { mockCalendarEvents } from "@/data/calendarData";
+import { cn } from "@/utils/cn";
 import {
 	addMonths,
 	eachDayOfInterval,
@@ -40,7 +42,7 @@ const CalendarPage = () => {
 
 	const monthStart = startOfMonth(currentDate);
 	const monthEnd = endOfMonth(currentDate);
-	const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 }); // 일요일 시작
+	const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
 	const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
 	const monthDays = eachDayOfInterval({
 		start: calendarStart,
@@ -68,29 +70,29 @@ const CalendarPage = () => {
 			consultation: {
 				label: "전화상담",
 				icon: Phone,
-				color: "bg-blue-100 text-blue-800",
+				variant: "primary" as const,
 			},
 			placement_test: {
 				label: "배치고사",
 				icon: FileText,
-				color: "bg-green-100 text-green-800",
+				variant: "success" as const,
 			},
 			special: {
 				label: "특별일정",
 				icon: Star,
-				color: "bg-purple-100 text-purple-800",
+				variant: "primary" as const,
 			},
 			follow_up: {
 				label: "후속관리",
 				icon: Users,
-				color: "bg-amber-100 text-amber-800",
+				variant: "warning" as const,
 			},
 		};
 		return (
 			types[type as keyof typeof types] || {
 				label: "기타",
 				icon: AlertCircle,
-				color: "bg-gray-100 text-gray-800",
+				variant: "default" as const,
 			}
 		);
 	};
@@ -98,22 +100,22 @@ const CalendarPage = () => {
 	const getStatusIcon = (status: string) => {
 		switch (status) {
 			case "completed":
-				return <CheckCircle className="h-4 w-4 text-green-500" />;
+				return <CheckCircle className="h-4 w-4 text-[var(--color-green)]" />;
 			case "cancelled":
-				return <XCircle className="h-4 w-4 text-red-500" />;
+				return <XCircle className="h-4 w-4 text-[var(--color-red)]" />;
 			default:
-				return <Clock className="h-4 w-4 text-blue-500" />;
+				return <Clock className="h-4 w-4 text-[var(--color-primary)]" />;
 		}
 	};
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
 			case "completed":
-				return "border-l-green-500 bg-green-50";
+				return "border-l-[var(--color-green)] bg-[var(--color-green)]/10";
 			case "cancelled":
-				return "border-l-red-500 bg-red-50";
+				return "border-l-[var(--color-red)] bg-[var(--color-red)]/10";
 			default:
-				return "border-l-blue-500 bg-blue-50";
+				return "border-l-[var(--color-primary)] bg-[var(--color-primary)]/10";
 		}
 	};
 
@@ -135,396 +137,436 @@ const CalendarPage = () => {
 		.slice(0, 5);
 
 	return (
-		<div className="space-y-6">
-			{/* Header */}
-			<div className="bg-white rounded-lg shadow-sm p-6">
-				<div className="flex justify-between items-center">
-					<div>
-						<h1 className="text-2xl font-bold text-gray-900">일정 관리</h1>
-						<p className="text-gray-600 mt-1">
+		<div className="flex min-h-[calc(100vh-var(--header-height))]">
+			{/* Main Content Area */}
+			<main className="flex-1 bg-[var(--color-background)]">
+				<div className="w-full px-[var(--page-padding-inline)] py-6">
+					{/* Page Header */}
+					<div className="mb-6">
+						<div className="flex items-center justify-between mb-4">
+							<div className="flex items-center gap-2">
+								<Calendar className="h-5 w-5 text-[var(--color-primary)]" />
+								<Typography variant="h3">일정 관리</Typography>
+							</div>
+							<Button>
+								<Plus className="h-4 w-4 mr-2" />
+								일정 추가
+							</Button>
+						</div>
+						<Typography variant="body-secondary">
 							전화상담, 배치고사, 특별일정을 한눈에 관리하세요
-						</p>
-					</div>
-					<button
-						type="button"
-						className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-					>
-						<Plus className="h-4 w-4" />
-						일정 추가
-					</button>
-				</div>
-			</div>
-
-			{/* Stats */}
-			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-				<div className="bg-white rounded-lg shadow-sm p-6">
-					<div className="flex items-center">
-						<Calendar className="h-8 w-8 text-blue-600" />
-						<div className="ml-3">
-							<div className="text-2xl font-bold text-blue-600">
-								{todayEvents.length}
-							</div>
-							<div className="text-sm text-blue-800">오늘 일정</div>
-						</div>
-					</div>
-				</div>
-
-				<div className="bg-white rounded-lg shadow-sm p-6">
-					<div className="flex items-center">
-						<Phone className="h-8 w-8 text-green-600" />
-						<div className="ml-3">
-							<div className="text-2xl font-bold text-green-600">
-								{
-									filteredEvents.filter(
-										(e) =>
-											e.type === "consultation" && e.status === "scheduled",
-									).length
-								}
-							</div>
-							<div className="text-sm text-green-800">예정 상담</div>
-						</div>
-					</div>
-				</div>
-
-				<div className="bg-white rounded-lg shadow-sm p-6">
-					<div className="flex items-center">
-						<FileText className="h-8 w-8 text-purple-600" />
-						<div className="ml-3">
-							<div className="text-2xl font-bold text-purple-600">
-								{
-									filteredEvents.filter(
-										(e) =>
-											e.type === "placement_test" && e.status === "scheduled",
-									).length
-								}
-							</div>
-							<div className="text-sm text-purple-800">예정 시험</div>
-						</div>
-					</div>
-				</div>
-
-				<div className="bg-white rounded-lg shadow-sm p-6">
-					<div className="flex items-center">
-						<Users className="h-8 w-8 text-amber-600" />
-						<div className="ml-3">
-							<div className="text-2xl font-bold text-amber-600">
-								{
-									filteredEvents.filter(
-										(e) => e.type === "follow_up" && e.status === "scheduled",
-									).length
-								}
-							</div>
-							<div className="text-sm text-amber-800">후속 관리</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* Filters */}
-			<div className="bg-white rounded-lg shadow-sm p-6">
-				<div className="flex flex-col md:flex-row gap-4">
-					<div className="flex-1 relative">
-						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-						<input
-							type="text"
-							placeholder="일정 제목, 학생 이름으로 검색..."
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-						/>
-					</div>
-					<div className="flex items-center gap-2">
-						<Filter className="h-5 w-5 text-gray-400" />
-						<select
-							value={filterType}
-							onChange={(e) => setFilterType(e.target.value)}
-							className="border border-gray-300 rounded-lg px-3 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-						>
-							<option value="all">전체 일정</option>
-							<option value="consultation">전화상담</option>
-							<option value="placement_test">배치고사</option>
-							<option value="special">특별일정</option>
-							<option value="follow_up">후속관리</option>
-						</select>
-					</div>
-				</div>
-			</div>
-
-			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-				{/* Calendar */}
-				<div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
-					{/* Calendar Header */}
-					<div className="flex items-center justify-between mb-6">
-						<h2 className="text-lg font-semibold text-gray-900">
-							{currentDate.toLocaleDateString("ko-KR", {
-								year: "numeric",
-								month: "long",
-							})}
-						</h2>
-						<div className="flex gap-2">
-							<button
-								type="button"
-								onClick={() => navigateMonth("prev")}
-								className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-							>
-								<ChevronLeft className="h-5 w-5 text-gray-600" />
-							</button>
-							<button
-								type="button"
-								onClick={() => setCurrentDate(new Date())}
-								className="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-							>
-								오늘
-							</button>
-							<button
-								type="button"
-								onClick={() => navigateMonth("next")}
-								className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-							>
-								<ChevronRight className="h-5 w-5 text-gray-600" />
-							</button>
-						</div>
+						</Typography>
 					</div>
 
-					{/* Calendar Grid */}
-					<div className="grid grid-cols-7 gap-1 mb-4">
-						{["일", "월", "화", "수", "목", "금", "토"].map((day) => (
-							<div
-								key={day}
-								className="p-2 text-center text-sm font-medium text-gray-600"
-							>
-								{day}
-							</div>
-						))}
-					</div>
-
-					<div className="grid grid-cols-7 gap-1">
-						{monthDays.map((day: Date) => {
-							const dayEvents = getEventsForDate(day);
-							const isSelected = selectedDate && isSameDay(day, selectedDate);
-							const isTodayDate = isToday(day);
-							const isCurrentMonth = isSameMonth(day, currentDate);
-
-							return (
-								<button
-									key={day.toISOString()}
-									onClick={() => setSelectedDate(day)}
-									onKeyDown={(e) => {
-										if (e.key === "Enter" || e.key === " ") {
-											e.preventDefault();
-											setSelectedDate(day);
-										}
-									}}
-									type="button"
-									tabIndex={0}
-									className={`min-h-[80px] p-2 border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors ${
-										isSelected ? "bg-blue-50 border-blue-200" : ""
-									} ${isTodayDate ? "bg-blue-100 border-blue-300" : ""} ${
-										!isCurrentMonth ? "bg-gray-50" : ""
-									}`}
-								>
-									<div
-										className={`text-sm font-medium mb-1 ${
-											isTodayDate
-												? "text-blue-700"
-												: isCurrentMonth
-													? "text-gray-900"
-													: "text-gray-400"
-										}`}
-									>
-										{day.getDate()}
+					<div className="space-y-6">
+						{/* Stats */}
+						<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+							<Card padding="md">
+								<div className="flex items-center">
+									<Calendar className="h-8 w-8 text-[var(--color-primary)]" />
+									<div className="ml-3">
+										<Typography
+											variant="h2"
+											className="text-[var(--color-primary)]"
+										>
+											{todayEvents.length}
+										</Typography>
+										<Typography variant="small">오늘 일정</Typography>
 									</div>
-									<div className="space-y-1">
-										{dayEvents.slice(0, 2).map((event) => (
-											<div
-												key={event.id}
-												className="text-xs p-1 rounded text-white truncate"
-												style={{ backgroundColor: event.color }}
-												title={event.title}
+								</div>
+							</Card>
+
+							<Card padding="md">
+								<div className="flex items-center">
+									<Phone className="h-8 w-8 text-[var(--color-green)]" />
+									<div className="ml-3">
+										<Typography
+											variant="h2"
+											className="text-[var(--color-green)]"
+										>
+											{
+												filteredEvents.filter(
+													(e) =>
+														e.type === "consultation" &&
+														e.status === "scheduled",
+												).length
+											}
+										</Typography>
+										<Typography variant="small">예정 상담</Typography>
+									</div>
+								</div>
+							</Card>
+
+							<Card padding="md">
+								<div className="flex items-center">
+									<FileText className="h-8 w-8 text-[var(--color-primary)]" />
+									<div className="ml-3">
+										<Typography
+											variant="h2"
+											className="text-[var(--color-primary)]"
+										>
+											{
+												filteredEvents.filter(
+													(e) =>
+														e.type === "placement_test" &&
+														e.status === "scheduled",
+												).length
+											}
+										</Typography>
+										<Typography variant="small">예정 시험</Typography>
+									</div>
+								</div>
+							</Card>
+
+							<Card padding="md">
+								<div className="flex items-center">
+									<Users className="h-8 w-8 text-[var(--color-yellow)]" />
+									<div className="ml-3">
+										<Typography
+											variant="h2"
+											className="text-[var(--color-yellow)]"
+										>
+											{
+												filteredEvents.filter(
+													(e) =>
+														e.type === "follow_up" && e.status === "scheduled",
+												).length
+											}
+										</Typography>
+										<Typography variant="small">후속 관리</Typography>
+									</div>
+								</div>
+							</Card>
+						</div>
+
+						{/* Filters */}
+						<Card padding="md">
+							<div className="flex flex-col md:flex-row gap-4">
+								<div className="flex-1">
+									<Input
+										type="text"
+										placeholder="일정 제목, 학생 이름으로 검색..."
+										value={searchTerm}
+										onChange={(e) => setSearchTerm(e.target.value)}
+										icon={<Search className="h-4 w-4" />}
+									/>
+								</div>
+								<div className="flex items-center gap-2">
+									<Filter className="h-4 w-4 text-[var(--color-text-secondary)]" />
+									<select
+										value={filterType}
+										onChange={(e) => setFilterType(e.target.value)}
+										className="px-3 py-2 bg-[var(--color-dark)] border border-[rgba(255,255,255,0.1)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
+									>
+										<option value="all">전체 일정</option>
+										<option value="consultation">전화상담</option>
+										<option value="placement_test">배치고사</option>
+										<option value="special">특별일정</option>
+										<option value="follow_up">후속관리</option>
+									</select>
+								</div>
+							</div>
+						</Card>
+
+						<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+							{/* Calendar */}
+							<div className="lg:col-span-2">
+								<Card padding="lg">
+									{/* Calendar Header */}
+									<div className="flex items-center justify-between mb-6">
+										<Typography variant="h3">
+											{currentDate.toLocaleDateString("ko-KR", {
+												year: "numeric",
+												month: "long",
+											})}
+										</Typography>
+										<div className="flex gap-2">
+											<button
+												type="button"
+												onClick={() => navigateMonth("prev")}
+												className="p-2 hover:bg-[rgba(255,255,255,0.03)] rounded-lg transition-colors"
 											>
-												{event.title}
+												<ChevronLeft className="h-5 w-5 text-[var(--color-text-secondary)]" />
+											</button>
+											<button
+												type="button"
+												onClick={() => setCurrentDate(new Date())}
+												className="px-3 py-2 text-sm bg-[var(--color-primary)]/20 text-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary)]/30 transition-colors"
+											>
+												오늘
+											</button>
+											<button
+												type="button"
+												onClick={() => navigateMonth("next")}
+												className="p-2 hover:bg-[rgba(255,255,255,0.03)] rounded-lg transition-colors"
+											>
+												<ChevronRight className="h-5 w-5 text-[var(--color-text-secondary)]" />
+											</button>
+										</div>
+									</div>
+
+									{/* Calendar Grid */}
+									<div className="grid grid-cols-7 gap-1 mb-4">
+										{["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+											<div
+												key={day}
+												className="p-2 text-center text-sm font-medium text-[var(--color-text-secondary)]"
+											>
+												{day}
 											</div>
 										))}
-										{dayEvents.length > 2 && (
-											<div className="text-xs text-gray-500">
-												+{dayEvents.length - 2}개 더
-											</div>
-										)}
 									</div>
-								</button>
-							);
-						})}
-					</div>
-				</div>
 
-				{/* Sidebar */}
-				<div className="space-y-6">
-					{/* Selected Date Events */}
-					{selectedDate && (
-						<div className="bg-white rounded-lg shadow-sm p-6">
-							<h3 className="text-lg font-semibold text-gray-900 mb-4">
-								{selectedDate.toLocaleDateString("ko-KR", {
-									month: "long",
-									day: "numeric",
-									weekday: "short",
-								})}{" "}
-								일정
-							</h3>
-							<div className="space-y-3">
-								{getEventsForDate(selectedDate).map((event) => {
-									const typeInfo = getEventTypeInfo(event.type);
-									const Icon = typeInfo.icon;
+									<div className="grid grid-cols-7 gap-1">
+										{monthDays.map((day: Date) => {
+											const dayEvents = getEventsForDate(day);
+											const isSelected =
+												selectedDate && isSameDay(day, selectedDate);
+											const isTodayDate = isToday(day);
+											const isCurrentMonth = isSameMonth(day, currentDate);
 
-									return (
-										<div
-											key={event.id}
-											className={`p-3 rounded-lg border-l-4 ${getStatusColor(
-												event.status,
-											)}`}
-										>
-											<div className="flex items-start justify-between mb-2">
-												<div className="flex items-center gap-2">
-													<Icon className="h-4 w-4" />
-													<span className="font-medium text-sm">
-														{event.title}
-													</span>
-												</div>
-												{getStatusIcon(event.status)}
-											</div>
-											<div className="text-xs text-gray-600 mb-1">
-												{formatTemporalDateTime(event.startDate, "HH:mm")} -{" "}
-												{formatTemporalDateTime(event.endDate, "HH:mm")}
-											</div>
-											{event.description && (
-												<div className="text-xs text-gray-600 mb-2">
-													{event.description}
-												</div>
-											)}
-											{event.studentName && (
-												<div className="flex items-center justify-between">
-													<span
-														className={`text-xs px-2 py-1 rounded-full font-medium ${typeInfo.color}`}
+											return (
+												<button
+													key={day.toISOString()}
+													onClick={() => setSelectedDate(day)}
+													onKeyDown={(e) => {
+														if (e.key === "Enter" || e.key === " ") {
+															e.preventDefault();
+															setSelectedDate(day);
+														}
+													}}
+													type="button"
+													tabIndex={0}
+													className={cn(
+														"min-h-[80px] p-2 border border-[rgba(255,255,255,0.05)] cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors rounded-lg",
+														isSelected &&
+															"bg-[var(--color-primary)]/20 border-[var(--color-primary)]/30",
+														isTodayDate &&
+															"bg-[var(--color-primary)]/10 border-[var(--color-primary)]/20",
+														!isCurrentMonth && "opacity-50",
+													)}
+												>
+													<div
+														className={cn(
+															"text-sm font-medium mb-1",
+															isTodayDate
+																? "text-[var(--color-primary)]"
+																: isCurrentMonth
+																	? "text-[var(--color-text-primary)]"
+																	: "text-[var(--color-text-secondary)]",
+														)}
 													>
-														{typeInfo.label}
-													</span>
-													<Link
-														to={`/student/${event.studentId}`}
-														className="text-xs text-blue-600 hover:text-blue-700"
+														{day.getDate()}
+													</div>
+													<div className="space-y-1">
+														{dayEvents.slice(0, 2).map((event) => (
+															<div
+																key={event.id}
+																className="text-xs p-1 rounded text-white truncate"
+																style={{ backgroundColor: event.color }}
+																title={event.title}
+															>
+																{event.title}
+															</div>
+														))}
+														{dayEvents.length > 2 && (
+															<Typography variant="small" className="text-xs">
+																+{dayEvents.length - 2}개 더
+															</Typography>
+														)}
+													</div>
+												</button>
+											);
+										})}
+									</div>
+								</Card>
+							</div>
+
+							{/* Sidebar */}
+							<div className="space-y-6">
+								{/* Selected Date Events */}
+								{selectedDate && (
+									<Card padding="md">
+										<Typography variant="h3" className="mb-4">
+											{selectedDate.toLocaleDateString("ko-KR", {
+												month: "long",
+												day: "numeric",
+												weekday: "short",
+											})}{" "}
+											일정
+										</Typography>
+										<div className="space-y-3">
+											{getEventsForDate(selectedDate).map((event) => {
+												const typeInfo = getEventTypeInfo(event.type);
+												const Icon = typeInfo.icon;
+
+												return (
+													<Card
+														key={event.id}
+														padding="sm"
+														className={cn(
+															"border-l-4",
+															getStatusColor(event.status),
+														)}
 													>
-														{event.studentName}
-													</Link>
+														<div className="flex items-start justify-between mb-2">
+															<div className="flex items-center gap-2">
+																<Icon className="h-4 w-4" />
+																<Typography
+																	variant="small"
+																	className="font-medium"
+																>
+																	{event.title}
+																</Typography>
+															</div>
+															{getStatusIcon(event.status)}
+														</div>
+														<Typography variant="small" className="mb-1">
+															{formatTemporalDateTime(event.startDate, "HH:mm")}{" "}
+															- {formatTemporalDateTime(event.endDate, "HH:mm")}
+														</Typography>
+														{event.description && (
+															<Typography variant="small" className="mb-2">
+																{event.description}
+															</Typography>
+														)}
+														{event.studentName && (
+															<div className="flex items-center justify-between">
+																<Badge variant={typeInfo.variant}>
+																	{typeInfo.label}
+																</Badge>
+																<Link
+																	to={`/student/${event.studentId}`}
+																	className="text-xs text-[var(--color-primary)] hover:text-[var(--color-primary)]/80"
+																>
+																	{event.studentName}
+																</Link>
+															</div>
+														)}
+													</Card>
+												);
+											})}
+											{getEventsForDate(selectedDate).length === 0 && (
+												<div className="text-center py-8">
+													<Calendar className="h-8 w-8 mx-auto mb-2 text-[var(--color-text-secondary)]" />
+													<Typography variant="small">
+														이 날에는 일정이 없습니다
+													</Typography>
 												</div>
 											)}
 										</div>
-									);
-								})}
-								{getEventsForDate(selectedDate).length === 0 && (
-									<div className="text-center py-8 text-gray-500">
-										<Calendar className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-										<p className="text-sm">이 날에는 일정이 없습니다</p>
+									</Card>
+								)}
+
+								{/* Upcoming Events */}
+								<Card padding="md">
+									<Typography variant="h3" className="mb-4">
+										다가오는 일정
+									</Typography>
+									<div className="space-y-3">
+										{upcomingEvents.map((event) => {
+											const typeInfo = getEventTypeInfo(event.type);
+											const Icon = typeInfo.icon;
+
+											return (
+												<Card
+													key={event.id}
+													padding="sm"
+													className="bg-[var(--color-dark)]/50"
+												>
+													<div className="flex items-center gap-2 mb-1">
+														<Icon className="h-4 w-4" />
+														<Typography variant="small" className="font-medium">
+															{event.title}
+														</Typography>
+													</div>
+													<Typography variant="small" className="mb-2">
+														{formatTemporalDateTime(
+															event.startDate,
+															"MM/dd (E) HH:mm",
+														)}
+													</Typography>
+													{event.studentName && (
+														<div className="flex items-center justify-between">
+															<Badge variant={typeInfo.variant}>
+																{typeInfo.label}
+															</Badge>
+															<Typography variant="small">
+																{event.studentName}
+															</Typography>
+														</div>
+													)}
+												</Card>
+											);
+										})}
+										{upcomingEvents.length === 0 && (
+											<div className="text-center py-4">
+												<Clock className="h-6 w-6 mx-auto mb-2 text-[var(--color-text-secondary)]" />
+												<Typography variant="small">
+													예정된 일정이 없습니다
+												</Typography>
+											</div>
+										)}
 									</div>
+								</Card>
+
+								{/* Today's Events */}
+								{todayEvents.length > 0 && (
+									<Card padding="md">
+										<Typography variant="h3" className="mb-4">
+											오늘의 일정
+										</Typography>
+										<div className="space-y-3">
+											{todayEvents.map((event) => {
+												const typeInfo = getEventTypeInfo(event.type);
+												const Icon = typeInfo.icon;
+
+												return (
+													<Card
+														key={event.id}
+														padding="sm"
+														className={cn(
+															"border-l-4",
+															getStatusColor(event.status),
+														)}
+													>
+														<div className="flex items-start justify-between mb-1">
+															<div className="flex items-center gap-2">
+																<Icon className="h-4 w-4" />
+																<Typography
+																	variant="small"
+																	className="font-medium"
+																>
+																	{event.title}
+																</Typography>
+															</div>
+															{getStatusIcon(event.status)}
+														</div>
+														<Typography variant="small" className="mb-1">
+															{formatTemporalDateTime(event.startDate, "HH:mm")}{" "}
+															- {formatTemporalDateTime(event.endDate, "HH:mm")}
+														</Typography>
+														{event.studentName && (
+															<div className="flex items-center justify-between">
+																<Badge variant={typeInfo.variant}>
+																	{typeInfo.label}
+																</Badge>
+																<Typography variant="small">
+																	{event.studentName}
+																</Typography>
+															</div>
+														)}
+													</Card>
+												);
+											})}
+										</div>
+									</Card>
 								)}
 							</div>
 						</div>
-					)}
-
-					{/* Upcoming Events */}
-					<div className="bg-white rounded-lg shadow-sm p-6">
-						<h3 className="text-lg font-semibold text-gray-900 mb-4">
-							다가오는 일정
-						</h3>
-						<div className="space-y-3">
-							{upcomingEvents.map((event) => {
-								const typeInfo = getEventTypeInfo(event.type);
-								const Icon = typeInfo.icon;
-
-								return (
-									<div key={event.id} className="p-3 bg-gray-50 rounded-lg">
-										<div className="flex items-center gap-2 mb-1">
-											<Icon className="h-4 w-4" />
-											<span className="font-medium text-sm">{event.title}</span>
-										</div>
-										<div className="text-xs text-gray-600 mb-2">
-											{formatTemporalDateTime(
-												event.startDate,
-												"MM/dd (E) HH:mm",
-											)}
-										</div>
-										{event.studentName && (
-											<div className="flex items-center justify-between">
-												<span
-													className={`text-xs px-2 py-1 rounded-full font-medium ${typeInfo.color}`}
-												>
-													{typeInfo.label}
-												</span>
-												<span className="text-xs text-gray-600">
-													{event.studentName}
-												</span>
-											</div>
-										)}
-									</div>
-								);
-							})}
-							{upcomingEvents.length === 0 && (
-								<div className="text-center py-4 text-gray-500">
-									<Clock className="h-6 w-6 mx-auto mb-2 text-gray-300" />
-									<p className="text-sm">예정된 일정이 없습니다</p>
-								</div>
-							)}
-						</div>
 					</div>
-
-					{/* Today's Events */}
-					{todayEvents.length > 0 && (
-						<div className="bg-white rounded-lg shadow-sm p-6">
-							<h3 className="text-lg font-semibold text-gray-900 mb-4">
-								오늘의 일정
-							</h3>
-							<div className="space-y-3">
-								{todayEvents.map((event) => {
-									const typeInfo = getEventTypeInfo(event.type);
-									const Icon = typeInfo.icon;
-
-									return (
-										<div
-											key={event.id}
-											className={`p-3 rounded-lg border-l-4 ${getStatusColor(
-												event.status,
-											)}`}
-										>
-											<div className="flex items-start justify-between mb-1">
-												<div className="flex items-center gap-2">
-													<Icon className="h-4 w-4" />
-													<span className="font-medium text-sm">
-														{event.title}
-													</span>
-												</div>
-												{getStatusIcon(event.status)}
-											</div>
-											<div className="text-xs text-gray-600 mb-1">
-												{formatTemporalDateTime(event.startDate, "HH:mm")} -{" "}
-												{formatTemporalDateTime(event.endDate, "HH:mm")}
-											</div>
-											{event.studentName && (
-												<div className="flex items-center justify-between">
-													<span
-														className={`text-xs px-2 py-1 rounded-full font-medium ${typeInfo.color}`}
-													>
-														{typeInfo.label}
-													</span>
-													<span className="text-xs text-gray-600">
-														{event.studentName}
-													</span>
-												</div>
-											)}
-										</div>
-									);
-								})}
-							</div>
-						</div>
-					)}
 				</div>
-			</div>
+			</main>
 		</div>
 	);
 };

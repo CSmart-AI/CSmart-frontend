@@ -1,7 +1,75 @@
 @import "tailwindcss";
 
+/* Linear Theme CSS Variables */
 :root {
-	font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+	/* Colors */
+	--color-primary: #5e6ad2;
+	--color-primary-rgb: 94, 106, 210;
+	--color-light: #f4f5f8;
+	--color-dark: #222326;
+	--color-background: #08090a;
+	--color-text-primary: #f7f8f8;
+	--color-text-secondary: #8a8f98;
+
+	/* Semantic Colors */
+	--color-blue: #4ea7fc;
+	--color-red: #eb5757;
+	--color-green: #4cb782;
+	--color-orange: #fc7840;
+	--color-yellow: #f2c94c;
+	--color-indigo: #5e6ad2;
+	--color-white: #fff;
+	--color-black: #000;
+
+	/* Typography */
+	--font-primary:
+		"Inter Variable", "SF Pro Display", -apple-system, "system-ui", "Segoe UI",
+		Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+	--font-weight-light: 300;
+	--font-weight-normal: 400;
+	--font-weight-medium: 510;
+	--font-weight-semibold: 590;
+	--font-weight-bold: 680;
+
+	/* Spacing */
+	--header-height: 64px;
+	--page-padding-inline: 24px;
+	--page-padding-block: 64px;
+	--page-max-width: 1024px;
+
+	/* Border Radius */
+	--radius-small: 4px;
+	--radius-medium: 8px;
+	--radius-large: 12px;
+	--radius-xlarge: 16px;
+	--radius-rounded: 9999px;
+
+	/* Transitions */
+	--transition-quick: 0.1s;
+	--transition-regular: 0.25s;
+	--ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+
+	/* Focus */
+	--focus-ring-color: var(--color-indigo);
+	--focus-ring-width: 2px;
+	--focus-ring-offset: 2px;
+
+	/* Scrollbar */
+	--scrollbar-size: 6px;
+	--scrollbar-color: rgba(255, 255, 255, 0.1);
+	--scrollbar-color-hover: rgba(255, 255, 255, 0.2);
+}
+
+* {
+	font-family: var(--font-primary);
+}
+
+body {
+	background-color: var(--color-background);
+	color: var(--color-text-primary);
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: var(--font-weight-normal);
 }
 
 /* Custom styles */
@@ -20,20 +88,24 @@
 }
 
 /* Scrollbar styling */
-.overflow-y-auto::-webkit-scrollbar {
-	width: 6px;
+.overflow-y-auto::-webkit-scrollbar,
+*::-webkit-scrollbar {
+	width: var(--scrollbar-size);
+	height: var(--scrollbar-size);
 }
 
-.overflow-y-auto::-webkit-scrollbar-track {
-	background: #f1f1f1;
+.overflow-y-auto::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-color);
 	border-radius: 3px;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
-	background: #c1c1c1;
-	border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-	background: #a8a8a8;
+.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-color-hover);
 }

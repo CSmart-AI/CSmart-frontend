@@ -13,60 +13,69 @@ import {
 	TrendingUp,
 	XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { cn } from "@/utils/cn";
 import { formatTemporalDateTime, toJSDate } from "@/utils/temporal";
 import { mockStudents } from "../data/mockData";
 import type { AIResponse } from "../types/student";
+import { Badge, Button, Card, Input, Typography } from "./ui";
 
 interface PageSpecificAIManagerProps {
 	responses: AIResponse[];
 	pageType: "consultation" | "registration" | "management";
-	title: string;
-	description: string;
+	title?: string;
+	description?: string;
 }
 
-const PageSpecificAIManager = ({
-	responses,
-	pageType,
-	title,
-	description,
-}: PageSpecificAIManagerProps) => {
+const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 	const [selectedTab, setSelectedTab] = useState<"pending" | "all">("pending");
 	const [filterCategory, setFilterCategory] = useState<string>("all");
 	const [searchTerm, setSearchTerm] = useState("");
 	const [editingResponse, setEditingResponse] = useState<string | null>(null);
 	const [editedText, setEditedText] = useState("");
+	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-	const filteredResponses = responses
-		.filter((response) => {
-			if (selectedTab === "pending" && response.status !== "pending")
-				return false;
-			if (filterCategory !== "all" && response.category !== filterCategory)
-				return false;
-			if (searchTerm) {
-				const student = mockStudents.find(
-					(s) => s.info.id === response.studentId,
-				);
-				const studentName = student?.info.name || "";
-				return (
-					response.originalMessage
-						.toLowerCase()
-						.includes(searchTerm.toLowerCase()) ||
-					response.suggestedResponse
-						.toLowerCase()
-						.includes(searchTerm.toLowerCase()) ||
-					studentName.toLowerCase().includes(searchTerm.toLowerCase())
-				);
-			}
-			return true;
-		})
-		.sort(
-			(a, b) =>
-				toJSDate(b.createdAt).getTime() - toJSDate(a.createdAt).getTime(),
-		);
+	const filteredResponses = useMemo(
+		() =>
+			responses
+				.filter((response) => {
+					if (selectedTab === "pending" && response.status !== "pending")
+						return false;
+					if (filterCategory !== "all" && response.category !== filterCategory)
+						return false;
+					if (searchTerm) {
+						const student = mockStudents.find(
+							(s) => s.info.id === response.studentId,
+						);
+						const studentName = student?.info.name || "";
+						return (
+							response.originalMessage
+								.toLowerCase()
+								.includes(searchTerm.toLowerCase()) ||
+							response.suggestedResponse
+								.toLowerCase()
+								.includes(searchTerm.toLowerCase()) ||
+							studentName.toLowerCase().includes(searchTerm.toLowerCase())
+						);
+					}
+					return true;
+				})
+				.sort(
+					(a, b) =>
+						toJSDate(b.createdAt).getTime() - toJSDate(a.createdAt).getTime(),
+				),
+		[responses, selectedTab, filterCategory, searchTerm],
+	);
 
 	const pendingCount = responses.filter((r) => r.status === "pending").length;
-	const approvedCount = responses.filter((r) => r.status === "approved").length;
+	const pendingResponses = filteredResponses.filter(
+		(r) => r.status === "pending",
+	);
+	const allSelected =
+		pendingResponses.length > 0 &&
+		pendingResponses.every((r) => selectedIds.has(r.id));
+	const someSelected =
+		pendingResponses.some((r) => selectedIds.has(r.id)) && !allSelected;
 
 	const getStudentName = (studentId: string) => {
 		const student = mockStudents.find((s) => s.info.id === studentId);
@@ -77,37 +86,37 @@ const PageSpecificAIManager = ({
 		const categories = {
 			faq: {
 				label: "FAQ",
-				color: "bg-blue-100 text-blue-800",
+				variant: "primary" as const,
 				icon: MessageCircle,
 			},
 			consultation: {
 				label: "상담",
-				color: "bg-green-100 text-green-800",
+				variant: "success" as const,
 				icon: Phone,
 			},
 			complaint: {
 				label: "불만",
-				color: "bg-red-100 text-red-800",
+				variant: "danger" as const,
 				icon: AlertTriangle,
 			},
 			schedule: {
 				label: "일정",
-				color: "bg-purple-100 text-purple-800",
+				variant: "primary" as const,
 				icon: Clock,
 			},
 			payment: {
 				label: "결제",
-				color: "bg-yellow-100 text-yellow-800",
+				variant: "warning" as const,
 				icon: TrendingUp,
 			},
 			placement_test: {
 				label: "배치고사",
-				color: "bg-indigo-100 text-indigo-800",
+				variant: "primary" as const,
 				icon: FileText,
 			},
 			other: {
 				label: "기타",
-				color: "bg-gray-100 text-gray-800",
+				variant: "default" as const,
 				icon: MessageCircle,
 			},
 		};
@@ -117,26 +126,13 @@ const PageSpecificAIManager = ({
 	const getStatusIcon = (response: AIResponse) => {
 		switch (response.status) {
 			case "sent":
-				return <CheckCircle className="h-4 w-4 text-green-500" />;
+				return <CheckCircle className="h-4 w-4 text-[var(--color-green)]" />;
 			case "approved":
-				return <Send className="h-4 w-4 text-blue-500" />;
+				return <Send className="h-4 w-4 text-[var(--color-primary)]" />;
 			case "rejected":
-				return <XCircle className="h-4 w-4 text-red-500" />;
+				return <XCircle className="h-4 w-4 text-[var(--color-red)]" />;
 			default:
-				return <Clock className="h-4 w-4 text-yellow-500" />;
-		}
-	};
-
-	const getPageIcon = () => {
-		switch (pageType) {
-			case "consultation":
-				return Phone;
-			case "registration":
-				return FileText;
-			case "management":
-				return MessageCircle;
-			default:
-				return Bot;
+				return <Clock className="h-4 w-4 text-[var(--color-yellow)]" />;
 		}
 	};
 
@@ -163,274 +159,415 @@ const PageSpecificAIManager = ({
 		console.log("Sending approved response:", responseId);
 	};
 
-	const PageIcon = getPageIcon();
+	const handleToggleSelect = (id: string) => {
+		const newSelected = new Set(selectedIds);
+		if (newSelected.has(id)) {
+			newSelected.delete(id);
+		} else {
+			newSelected.add(id);
+		}
+		setSelectedIds(newSelected);
+	};
+
+	const handleSelectAll = () => {
+		if (allSelected) {
+			setSelectedIds(new Set());
+		} else {
+			setSelectedIds(new Set(pendingResponses.map((r) => r.id)));
+		}
+	};
+
+	const handleBulkApprove = () => {
+		console.log("Bulk approving:", Array.from(selectedIds));
+		setSelectedIds(new Set());
+	};
+
+	const handleBulkReject = () => {
+		console.log("Bulk rejecting:", Array.from(selectedIds));
+		setSelectedIds(new Set());
+	};
 
 	return (
 		<div className="space-y-6">
-			{/* Header & Stats */}
-			<div className="bg-white rounded-lg shadow-sm p-6">
-				<div className="flex justify-between items-center mb-6">
-					<div>
-						<h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-							<PageIcon className="h-6 w-6 text-blue-600" />
-							{title}
-						</h2>
-						<p className="text-gray-600 mt-1">{description}</p>
-					</div>
-				</div>
-
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<div className="bg-yellow-50 p-4 rounded-lg">
-						<div className="flex items-center">
-							<Clock className="h-8 w-8 text-yellow-600" />
-							<div className="ml-3">
-								<div className="text-2xl font-bold text-yellow-600">
-									{pendingCount}
-								</div>
-								<div className="text-sm text-yellow-800">승인 대기</div>
-							</div>
-						</div>
-					</div>
-
-					<div className="bg-blue-50 p-4 rounded-lg">
-						<div className="flex items-center">
-							<CheckCircle className="h-8 w-8 text-blue-600" />
-							<div className="ml-3">
-								<div className="text-2xl font-bold text-blue-600">
-									{approvedCount}
-								</div>
-								<div className="text-sm text-blue-800">승인 완료</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* Filters & Search */}
-			<div className="bg-white rounded-lg shadow-sm p-6">
-				<div className="flex flex-col md:flex-row gap-4 mb-4">
-					<div className="flex gap-2">
-						<button
-							type="button"
-							onClick={() => setSelectedTab("pending")}
-							className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-								selectedTab === "pending"
-									? "bg-blue-600 text-white"
-									: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-							}`}
-						>
-							승인 대기 ({pendingCount})
-						</button>
-						<button
-							type="button"
-							onClick={() => setSelectedTab("all")}
-							className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-								selectedTab === "all"
-									? "bg-blue-600 text-white"
-									: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-							}`}
-						>
-							전체 응답
-						</button>
-					</div>
-
-					<div className="flex gap-4 flex-1">
-						<div className="relative flex-1">
-							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-							<input
-								type="text"
-								placeholder="메시지 내용 또는 학생명으로 검색..."
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-							/>
-						</div>
-						<div className="flex items-center gap-2">
-							<Filter className="h-4 w-4 text-gray-400" />
-							<select
-								value={filterCategory}
-								onChange={(e) => setFilterCategory(e.target.value)}
-								className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+			{/* Filters & Search - Linear Style */}
+			<div className="flex items-center gap-4">
+				{/* Tab Buttons */}
+				<div className="flex gap-2 border-b border-[rgba(255,255,255,0.05)] -mb-px">
+					<button
+						type="button"
+						onClick={() => setSelectedTab("pending")}
+						className={cn(
+							"px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
+							selectedTab === "pending"
+								? "text-[var(--color-primary)] border-[var(--color-primary)]"
+								: "text-[var(--color-text-secondary)] border-transparent hover:text-[var(--color-text-primary)]",
+						)}
+					>
+						승인 대기
+						{pendingCount > 0 && (
+							<Badge
+								variant="danger"
+								className="ml-2 h-4 min-w-4 flex items-center justify-center px-1 text-[9px]"
 							>
-								<option value="all">전체 카테고리</option>
-								<option value="faq">FAQ</option>
-								<option value="consultation">상담</option>
-								<option value="placement_test">배치고사</option>
-								<option value="schedule">일정</option>
-								<option value="payment">결제</option>
-								<option value="other">기타</option>
-							</select>
-						</div>
-					</div>
+								{pendingCount}
+							</Badge>
+						)}
+					</button>
+					<button
+						type="button"
+						onClick={() => setSelectedTab("all")}
+						className={cn(
+							"px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
+							selectedTab === "all"
+								? "text-[var(--color-primary)] border-[var(--color-primary)]"
+								: "text-[var(--color-text-secondary)] border-transparent hover:text-[var(--color-text-primary)]",
+						)}
+					>
+						전체 응답
+					</button>
+				</div>
+
+				{/* Search */}
+				<div className="flex-1 max-w-md">
+					<Input
+						type="text"
+						placeholder="메시지 내용 또는 학생명으로 검색..."
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						icon={<Search className="h-4 w-4" />}
+					/>
+				</div>
+
+				{/* Filter */}
+				<div className="flex items-center gap-2">
+					<Filter className="h-4 w-4 text-[var(--color-text-secondary)]" />
+					<select
+						value={filterCategory}
+						onChange={(e) => setFilterCategory(e.target.value)}
+						className="px-3 py-2 bg-[var(--color-dark)] border border-[rgba(255,255,255,0.1)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
+					>
+						<option value="all">전체 카테고리</option>
+						<option value="faq">FAQ</option>
+						<option value="consultation">상담</option>
+						<option value="placement_test">배치고사</option>
+						<option value="schedule">일정</option>
+						<option value="payment">결제</option>
+						<option value="other">기타</option>
+					</select>
 				</div>
 			</div>
 
-			{/* AI Responses List */}
-			<div className="space-y-4">
-				{filteredResponses.map((response) => {
-					const categoryInfo = getCategoryInfo(response.category);
-					const CategoryIcon = categoryInfo.icon;
-					const studentName = getStudentName(response.studentId);
+			{/* Bulk Actions */}
+			{selectedTab === "pending" && pendingResponses.length > 0 && (
+				<Card padding="md" className="flex items-center justify-between">
+					<div className="flex items-center gap-4">
+						<label className="flex items-center gap-2 cursor-pointer">
+							<input
+								type="checkbox"
+								checked={allSelected}
+								ref={(input) => {
+									if (input) input.indeterminate = someSelected;
+								}}
+								onChange={handleSelectAll}
+								className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[var(--color-dark)] text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
+							/>
+							<Typography variant="small" className="font-medium">
+								전체 선택 ({selectedIds.size}/{pendingResponses.length})
+							</Typography>
+						</label>
+					</div>
+					{selectedIds.size > 0 && (
+						<div className="flex items-center gap-2">
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={handleBulkReject}
+								className="text-[var(--color-red)] hover:bg-[var(--color-red)]/10"
+							>
+								<XCircle className="h-4 w-4 mr-1" />
+								일괄 거절 ({selectedIds.size})
+							</Button>
+							<Button
+								variant="primary"
+								size="sm"
+								onClick={handleBulkApprove}
+								className="bg-[var(--color-green)] hover:opacity-90"
+							>
+								<CheckCircle className="h-4 w-4 mr-1" />
+								일괄 승인 ({selectedIds.size})
+							</Button>
+						</div>
+					)}
+				</Card>
+			)}
 
-					return (
-						<div
-							key={response.id}
-							className="bg-white rounded-lg shadow-sm p-6"
-						>
-							<div className="flex justify-between items-start mb-4">
-								<div className="flex items-center gap-3">
-									<div className="flex items-center gap-2">
-										{getStatusIcon(response)}
-										<span className="font-medium text-gray-900">
+			{/* Table */}
+			<Card padding="none" className="overflow-x-auto">
+				<table className="w-full">
+					<thead>
+						<tr className="border-b border-[rgba(255,255,255,0.05)]">
+							{selectedTab === "pending" && (
+								<th className="px-4 py-3 text-left w-12">
+									<input
+										type="checkbox"
+										checked={allSelected}
+										ref={(input) => {
+											if (input) input.indeterminate = someSelected;
+										}}
+										onChange={handleSelectAll}
+										className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[var(--color-dark)] text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
+									/>
+								</th>
+							)}
+							<th className="px-4 py-3 text-left">
+								<Typography
+									variant="small"
+									className="font-medium text-[var(--color-text-secondary)]"
+								>
+									학생명
+								</Typography>
+							</th>
+							<th className="px-4 py-3 text-left">
+								<Typography
+									variant="small"
+									className="font-medium text-[var(--color-text-secondary)]"
+								>
+									카테고리
+								</Typography>
+							</th>
+							<th className="px-4 py-3 text-left min-w-[350px]">
+								<Typography
+									variant="small"
+									className="font-medium text-[var(--color-text-secondary)]"
+								>
+									원본 메시지
+								</Typography>
+							</th>
+							<th className="px-4 py-3 text-left min-w-[350px]">
+								<Typography
+									variant="small"
+									className="font-medium text-[var(--color-text-secondary)]"
+								>
+									AI 응답
+								</Typography>
+							</th>
+							<th className="px-4 py-3 text-left w-24">
+								<Typography
+									variant="small"
+									className="font-medium text-[var(--color-text-secondary)]"
+								>
+									상태
+								</Typography>
+							</th>
+							<th className="px-4 py-3 text-left w-32">
+								<Typography
+									variant="small"
+									className="font-medium text-[var(--color-text-secondary)]"
+								>
+									시간
+								</Typography>
+							</th>
+							<th className="px-4 py-3 text-right w-32">
+								<Typography
+									variant="small"
+									className="font-medium text-[var(--color-text-secondary)]"
+								>
+									액션
+								</Typography>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{filteredResponses.map((response) => {
+							const categoryInfo = getCategoryInfo(response.category);
+							const CategoryIcon = categoryInfo.icon;
+							const studentName = getStudentName(response.studentId);
+							const isSelected = selectedIds.has(response.id);
+
+							return (
+								<tr
+									key={response.id}
+									className={cn(
+										"border-b border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-colors",
+										isSelected && "bg-[var(--color-primary)]/5",
+									)}
+								>
+									{selectedTab === "pending" && (
+										<td className="px-4 py-3">
+											<input
+												type="checkbox"
+												checked={isSelected}
+												onChange={() => handleToggleSelect(response.id)}
+												className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[var(--color-dark)] text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
+											/>
+										</td>
+									)}
+									<td className="px-4 py-3">
+										<Typography variant="small" className="font-medium">
 											{studentName}
-										</span>
-									</div>
-									<span
-										className={`px-2 py-1 rounded-full text-xs font-medium ${categoryInfo.color}`}
-									>
-										<CategoryIcon className="h-3 w-3 inline mr-1" />
-										{categoryInfo.label}
-									</span>
-								</div>
-								<div className="text-xs text-gray-500">
-									{formatTemporalDateTime(response.createdAt, "MM/dd HH:mm")}
-								</div>
-							</div>
-
-							{/* Original Message */}
-							<div className="mb-4">
-								<div className="text-sm font-medium text-gray-700 mb-2">
-									원본 메시지:
-								</div>
-								<div className="bg-gray-50 p-3 rounded-lg text-sm text-gray-800">
-									{response.originalMessage}
-								</div>
-							</div>
-
-							{/* Suggested Response */}
-							<div className="mb-4">
-								<div className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-									AI 추천 응답:
-									{response.status === "pending" && (
-										<button
-											type="button"
-											onClick={() =>
-												handleEdit(response.id, response.suggestedResponse)
-											}
-											className="text-blue-600 hover:text-blue-700"
-										>
-											<Edit3 className="h-4 w-4" />
-										</button>
-									)}
-								</div>
-								{editingResponse === response.id ? (
-									<div className="space-y-3">
-										<textarea
-											value={editedText}
-											onChange={(e) => setEditedText(e.target.value)}
-											className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											rows={4}
-										/>
-										<div className="flex gap-2">
-											<button
-												type="button"
-												onClick={() => handleSaveEdit(response.id)}
-												className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+										</Typography>
+									</td>
+									<td className="px-4 py-3">
+										<Badge variant={categoryInfo.variant} className="text-xs">
+											<CategoryIcon className="h-3 w-3 inline mr-1" />
+											{categoryInfo.label}
+										</Badge>
+									</td>
+									<td className="px-4 py-3">
+										<div className="max-w-[350px]">
+											<Typography
+												variant="body-secondary"
+												className="text-sm line-clamp-3"
 											>
-												저장
-											</button>
-											<button
-												type="button"
-												onClick={() => setEditingResponse(null)}
-												className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm"
-											>
-												취소
-											</button>
+												{response.originalMessage}
+											</Typography>
 										</div>
-									</div>
-								) : (
-									<div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-900 whitespace-pre-wrap">
-										{response.suggestedResponse}
-									</div>
-								)}
-							</div>
-
-							{/* Actions */}
-							<div className="flex justify-between items-center">
-								<div className="text-xs text-gray-500">
-									{response.status === "sent" && response.sentAt && (
-										<span>
-											발송됨:{" "}
-											{formatTemporalDateTime(response.sentAt, "MM/dd HH:mm")}
-										</span>
-									)}
-									{response.status === "approved" && response.approvedAt && (
-										<span>
-											승인됨:{" "}
+									</td>
+									<td className="px-4 py-3">
+										{editingResponse === response.id ? (
+											<div className="space-y-2 max-w-[350px]">
+												<textarea
+													value={editedText}
+													onChange={(e) => setEditedText(e.target.value)}
+													className="w-full p-2 bg-[var(--color-background)] border border-[rgba(255,255,255,0.1)] rounded text-xs text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)]"
+													rows={4}
+												/>
+												<div className="flex gap-1">
+													<Button
+														size="sm"
+														onClick={() => handleSaveEdit(response.id)}
+														className="text-xs px-2 py-1"
+													>
+														저장
+													</Button>
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() => setEditingResponse(null)}
+														className="text-xs px-2 py-1"
+													>
+														취소
+													</Button>
+												</div>
+											</div>
+										) : (
+											<div className="max-w-[350px]">
+												<Typography
+													variant="body-secondary"
+													className="text-sm line-clamp-3 text-[var(--color-primary)]"
+												>
+													{response.suggestedResponse}
+												</Typography>
+												{response.status === "pending" && (
+													<button
+														type="button"
+														onClick={() =>
+															handleEdit(
+																response.id,
+																response.suggestedResponse,
+															)
+														}
+														className="mt-1 text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 transition-colors"
+													>
+														<Edit3 className="h-3 w-3" />
+													</button>
+												)}
+											</div>
+										)}
+									</td>
+									<td className="px-4 py-3">
+										<div className="flex items-center gap-1">
+											{getStatusIcon(response)}
+											<Typography variant="small" className="text-xs">
+												{response.status === "pending"
+													? "대기"
+													: response.status === "approved"
+														? "승인"
+														: response.status === "sent"
+															? "발송"
+															: "거절"}
+											</Typography>
+										</div>
+									</td>
+									<td className="px-4 py-3">
+										<Typography
+											variant="small"
+											className="text-xs text-[var(--color-text-secondary)]"
+										>
 											{formatTemporalDateTime(
-												response.approvedAt,
+												response.createdAt,
 												"MM/dd HH:mm",
 											)}
-										</span>
-									)}
-									{response.approvedBy && (
-										<span className="ml-2">by {response.approvedBy}</span>
-									)}
-								</div>
-
-								<div className="flex gap-2">
-									{response.status === "pending" && (
-										<>
-											<button
-												type="button"
-												onClick={() => handleReject(response.id)}
-												className="bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200 transition-colors text-sm flex items-center gap-1"
-											>
-												<XCircle className="h-4 w-4" />
-												거절
-											</button>
-											<button
-												type="button"
-												onClick={() => handleApprove(response.id)}
-												className="bg-green-100 text-green-700 px-3 py-1 rounded-lg hover:bg-green-200 transition-colors text-sm flex items-center gap-1"
-											>
-												<CheckCircle className="h-4 w-4" />
-												승인
-											</button>
-										</>
-									)}
-									{response.status === "approved" && (
-										<button
-											type="button"
-											onClick={() => handleSendApproved(response.id)}
-											className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-1"
+										</Typography>
+									</td>
+									<td className="px-4 py-3">
+										<div className="flex items-center justify-end gap-1">
+											{response.status === "pending" && (
+												<>
+													<button
+														type="button"
+														onClick={() => handleReject(response.id)}
+														className="p-1.5 text-[var(--color-red)] hover:bg-[var(--color-red)]/10 rounded transition-colors"
+														title="거절"
+													>
+														<XCircle className="h-4 w-4" />
+													</button>
+													<button
+														type="button"
+														onClick={() => handleApprove(response.id)}
+														className="p-1.5 text-[var(--color-green)] hover:bg-[var(--color-green)]/10 rounded transition-colors"
+														title="승인"
+													>
+														<CheckCircle className="h-4 w-4" />
+													</button>
+												</>
+											)}
+											{response.status === "approved" && (
+												<button
+													type="button"
+													onClick={() => handleSendApproved(response.id)}
+													className="p-1.5 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded transition-colors"
+													title="발송"
+												>
+													<Send className="h-4 w-4" />
+												</button>
+											)}
+										</div>
+									</td>
+								</tr>
+							);
+						})}
+						{filteredResponses.length === 0 && (
+							<tr>
+								<td
+									colSpan={selectedTab === "pending" ? 8 : 7}
+									className="px-4 py-16 text-center"
+								>
+									<div className="flex flex-col items-center justify-center">
+										<Bot className="h-16 w-16 text-[var(--color-text-secondary)]/30 mb-6" />
+										<Typography
+											variant="h3"
+											className="mb-2 text-[var(--color-text-primary)]"
 										>
-											<Send className="h-4 w-4" />
-											발송
-										</button>
-									)}
-								</div>
-							</div>
-						</div>
-					);
-				})}
-
-				{filteredResponses.length === 0 && (
-					<div className="bg-white rounded-lg shadow-sm p-12 text-center">
-						<Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-						<h3 className="text-lg font-medium text-gray-900 mb-2">
-							{selectedTab === "pending"
-								? "승인 대기 중인 응답이 없습니다"
-								: "응답이 없습니다"}
-						</h3>
-						<p className="text-gray-600">
-							{selectedTab === "pending"
-								? "새로운 메시지가 들어오면 AI가 자동으로 분석하여 여기에 표시됩니다."
-								: "검색 조건을 변경해보세요."}
-						</p>
-					</div>
-				)}
-			</div>
+											{selectedTab === "pending"
+												? "승인 대기 중인 응답이 없습니다"
+												: "응답이 없습니다"}
+										</Typography>
+										<Typography
+											variant="body-secondary"
+											className="text-[var(--color-text-secondary)] text-center max-w-md"
+										>
+											{selectedTab === "pending"
+												? "새로운 메시지가 들어오면 AI가 자동으로 분석하여 여기에 표시됩니다."
+												: "검색 조건을 변경해보세요."}
+										</Typography>
+									</div>
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</Card>
 		</div>
 	);
 };

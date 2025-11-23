@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import AdminLayout from "../../components/AdminLayout.tsx";
 import TeacherLayout from "../../components/TeacherLayout.tsx";
+import { Typography } from "../../components/ui";
 import { authStorage, type UserRole } from "../../utils/auth";
 import AIManagementPage from "./AIManagementPage.tsx";
 import CalendarPage from "./CalendarPage.tsx";
@@ -42,8 +43,8 @@ function App() {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
-				<div className="text-gray-600">로딩 중...</div>
+			<div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
+				<Typography variant="body-secondary">로딩 중...</Typography>
 			</div>
 		);
 	}

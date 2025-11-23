@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/utils/cn";
+import { Typography } from "./ui";
 
 interface LayoutProps {
 	children: ReactNode;
@@ -50,32 +52,20 @@ const Layout = ({ children }: LayoutProps) => {
 	];
 
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-[var(--color-background)]">
 			{/* Header */}
-			<header className="bg-white shadow-sm border-b">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center h-16">
-						<div className="flex items-center">
-							<Settings className="h-8 w-8 text-blue-600" />
-							<h1 className="ml-3 text-xl font-bold text-gray-900">CSmart</h1>
+			<header className="bg-[var(--color-dark)] border-b border-[rgba(255,255,255,0.05)] backdrop-blur-[20px] sticky top-0 z-[var(--layer-header)]">
+				<div className="w-full px-[var(--page-padding-inline)]">
+					<div className="flex items-center justify-between h-[var(--header-height)]">
+						<div className="flex items-center gap-3">
+							<Settings className="h-8 w-8 text-[var(--color-primary)]" />
+							<Typography variant="h4" as="h1">
+								CSmart
+							</Typography>
 						</div>
-						<div className="flex items-center space-x-4">
-							<span className="text-sm text-gray-600">관리자</span>
-							<div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-								<span className="text-white text-sm font-medium">관</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</header>
-
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-				<div className="flex gap-8">
-					{/* Sidebar Navigation */}
-					<nav className="w-64 shrink-0">
-						<div className="bg-white rounded-lg shadow-sm p-6">
-							<h2 className="text-lg font-semibold text-gray-900 mb-4">메뉴</h2>
-							<ul className="space-y-2">
+						{/* Navigation */}
+						<nav className="flex-1 flex justify-center">
+							<ul className="flex items-center gap-1">
 								{navItems.map((item) => {
 									const Icon = item.icon;
 									const isActive = location.pathname === item.path;
@@ -84,31 +74,40 @@ const Layout = ({ children }: LayoutProps) => {
 										<li key={item.path}>
 											<Link
 												to={item.path}
-												className={`flex items-center p-3 rounded-lg transition-colors ${
+												className={cn(
+													"flex items-center gap-2 px-4 py-2 rounded-[var(--radius-medium)] transition-all duration-100",
 													isActive
-														? "bg-blue-50 text-blue-700 border border-blue-200"
-														: "text-gray-700 hover:bg-gray-50"
-												}`}
+														? "bg-[var(--color-primary)]/20 text-[var(--color-primary)] border border-[var(--color-primary)]/30"
+														: "text-[var(--color-text-secondary)] hover:bg-[var(--color-dark)]/50 hover:text-[var(--color-text-primary)]",
+												)}
+												title={item.description}
 											>
-												<Icon className="h-5 w-5 mr-3" />
-												<div>
-													<div className="font-medium">{item.label}</div>
-													<div className="text-xs text-gray-500 mt-1">
-														{item.description}
-													</div>
-												</div>
+												<Icon className="h-4 w-4 shrink-0" />
+												<span className="font-medium text-sm">
+													{item.label}
+												</span>
 											</Link>
 										</li>
 									);
 								})}
 							</ul>
+						</nav>
+						<div className="flex items-center gap-4">
+							<span className="text-sm text-[var(--color-text-secondary)]">
+								관리자
+							</span>
+							<div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center">
+								<span className="text-white text-sm font-medium">관</span>
+							</div>
 						</div>
-					</nav>
-
-					{/* Main Content */}
-					<main className="flex-1">{children}</main>
+					</div>
 				</div>
-			</div>
+			</header>
+
+			{/* Main Content */}
+			<main className="w-full px-[var(--page-padding-inline)] py-8">
+				{children}
+			</main>
 		</div>
 	);
 };
