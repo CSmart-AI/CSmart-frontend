@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { browser } from "wxt/browser";
+import { authStorage } from "@/utils/auth";
 import "./App.css";
 
 /**
- * 카카오톡 로그인 팝업 컴포넌트
- * 아이디와 비밀번호를 입력받아 인증 후 메인 앱을 새 탭으로 열기
+ * 로그인 팝업 컴포넌트
+ * 이메일과 비밀번호로 로그인 (계정 타입은 API에서 자동 확인)
  */
 function App() {
-	const [kakaoId, setKakaoId] = useState("");
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -20,34 +21,37 @@ function App() {
 		setError("");
 
 		// 입력값 검증
-		if (!kakaoId.trim() || !password.trim()) {
-			setError("아이디와 비밀번호를 모두 입력해주세요.");
+		if (!email.trim() || !password.trim()) {
+			setError("이메일과 비밀번호를 모두 입력해주세요.");
 			return;
 		}
 
 		setLoading(true);
 
 		try {
-			// 여기에 실제 카카오톡 인증 로직을 추가할 수 있습니다
-			// 임시로 간단한 검증만 수행
-			await new Promise((resolve) => setTimeout(resolve, 500));
-
-			// 로그인 정보를 Chrome storage에 저장
-			await browser.storage.local.set({
+			// 임시로 선생님 인증 상태 저장 (개발용 - 아무 입력이나 하면 선생님으로 로그인)
+			await authStorage.set({
 				isAuthenticated: true,
-				kakaoId: kakaoId,
-				loginTime: Date.now(),
+				role: "teacher",
+				accessToken: "temp_access_token",
+				refreshToken: "temp_refresh_token",
+				memberId: 2,
+				name: "선생님",
+				email: email.trim() || "teacher@example.com",
+				teacherId: 2,
 			});
 
-			// 새 탭에서 메인 앱 열기
+			// 선생님 페이지로 리다이렉트
 			browser.tabs.create({
-				url: browser.runtime.getURL("/tabs.html"),
+				url: browser.runtime.getURL("/tabs.html#/ai-management"),
 			});
 
 			// 팝업 닫기
 			window.close();
 		} catch (error) {
-			setError(`로그인 중 오류가 발생했습니다: ${error}`);
+			setError(
+				`로그인 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`,
+			);
 			setLoading(false);
 		}
 	};
@@ -56,16 +60,16 @@ function App() {
 		<div className="login-container">
 			<div className="login-header">
 				<h1>CSmart</h1>
-				<p>카카오톡 계정으로 로그인</p>
+				<p>이메일과 비밀번호로 로그인하세요</p>
 			</div>
 
 			<form onSubmit={handleSubmit} className="login-form">
 				<div className="input-group">
 					<input
-						type="text"
-						placeholder="카카오톡 아이디"
-						value={kakaoId}
-						onChange={(e) => setKakaoId(e.target.value)}
+						type="email"
+						placeholder="이메일"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
 						disabled={loading}
 					/>
 				</div>

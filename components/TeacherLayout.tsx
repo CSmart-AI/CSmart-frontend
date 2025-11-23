@@ -1,39 +1,20 @@
-import {
-	Bot,
-	Calendar,
-	GraduationCap,
-	Settings,
-	UserPlus,
-	Users,
-} from "lucide-react";
+import { Bot, Calendar, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-interface LayoutProps {
+interface TeacherLayoutProps {
 	children: ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const TeacherLayout = ({ children }: TeacherLayoutProps) => {
 	const location = useLocation();
 
 	const navItems = [
 		{
-			path: "/consultation",
-			label: "상담",
-			icon: UserPlus,
-			description: "신규 학생 상담 관리",
-		},
-		{
-			path: "/registration",
-			label: "등록",
-			icon: GraduationCap,
-			description: "등록 중인 학생 관리",
-		},
-		{
-			path: "/management",
-			label: "관리",
-			icon: Users,
-			description: "수강 중인 학생 관리",
+			path: "/ai-management",
+			label: "AI 응답",
+			icon: Bot,
+			description: "AI 자동응답 관리",
 		},
 		{
 			path: "/calendar",
@@ -42,10 +23,10 @@ const Layout = ({ children }: LayoutProps) => {
 			description: "상담 및 특별 일정 관리",
 		},
 		{
-			path: "/ai-management",
-			label: "AI 응답",
-			icon: Bot,
-			description: "AI 자동응답 관리",
+			path: "/management",
+			label: "학생 관리",
+			icon: Users,
+			description: "수강 중인 학생 관리",
 		},
 	];
 
@@ -56,13 +37,13 @@ const Layout = ({ children }: LayoutProps) => {
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="flex justify-between items-center h-16">
 						<div className="flex items-center">
-							<Settings className="h-8 w-8 text-blue-600" />
+							<Bot className="h-8 w-8 text-blue-600" />
 							<h1 className="ml-3 text-xl font-bold text-gray-900">CSmart</h1>
 						</div>
 						<div className="flex items-center space-x-4">
-							<span className="text-sm text-gray-600">관리자</span>
-							<div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-								<span className="text-white text-sm font-medium">관</span>
+							<span className="text-sm text-gray-600">선생님</span>
+							<div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+								<span className="text-white text-sm font-medium">선</span>
 							</div>
 						</div>
 					</div>
@@ -113,4 +94,4 @@ const Layout = ({ children }: LayoutProps) => {
 	);
 };
 
-export default Layout;
+export default TeacherLayout;

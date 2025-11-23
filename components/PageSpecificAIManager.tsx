@@ -31,9 +31,7 @@ const PageSpecificAIManager = ({
 	title,
 	description,
 }: PageSpecificAIManagerProps) => {
-	const [selectedTab, setSelectedTab] = useState<"pending" | "sent" | "all">(
-		"pending",
-	);
+	const [selectedTab, setSelectedTab] = useState<"pending" | "all">("pending");
 	const [filterCategory, setFilterCategory] = useState<string>("all");
 	const [searchTerm, setSearchTerm] = useState("");
 	const [editingResponse, setEditingResponse] = useState<string | null>(null);
@@ -42,11 +40,6 @@ const PageSpecificAIManager = ({
 	const filteredResponses = responses
 		.filter((response) => {
 			if (selectedTab === "pending" && response.status !== "pending")
-				return false;
-			if (
-				selectedTab === "sent" &&
-				(!response.isAutoSent || response.status !== "sent")
-			)
 				return false;
 			if (filterCategory !== "all" && response.category !== filterCategory)
 				return false;
@@ -73,9 +66,6 @@ const PageSpecificAIManager = ({
 		);
 
 	const pendingCount = responses.filter((r) => r.status === "pending").length;
-	const autoSentCount = responses.filter(
-		(r) => r.isAutoSent && r.status === "sent",
-	).length;
 	const approvedCount = responses.filter((r) => r.status === "approved").length;
 
 	const getStudentName = (studentId: string) => {
@@ -122,12 +112,6 @@ const PageSpecificAIManager = ({
 			},
 		};
 		return categories[category as keyof typeof categories] || categories.other;
-	};
-
-	const getConfidenceColor = (confidence: number) => {
-		if (confidence >= 0.8) return "text-green-600 bg-green-100";
-		if (confidence >= 0.6) return "text-yellow-600 bg-yellow-100";
-		return "text-red-600 bg-red-100";
 	};
 
 	const getStatusIcon = (response: AIResponse) => {
@@ -195,7 +179,7 @@ const PageSpecificAIManager = ({
 					</div>
 				</div>
 
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div className="bg-yellow-50 p-4 rounded-lg">
 						<div className="flex items-center">
 							<Clock className="h-8 w-8 text-yellow-600" />
@@ -208,18 +192,6 @@ const PageSpecificAIManager = ({
 						</div>
 					</div>
 
-					<div className="bg-green-50 p-4 rounded-lg">
-						<div className="flex items-center">
-							<Bot className="h-8 w-8 text-green-600" />
-							<div className="ml-3">
-								<div className="text-2xl font-bold text-green-600">
-									{autoSentCount}
-								</div>
-								<div className="text-sm text-green-800">자동 발송</div>
-							</div>
-						</div>
-					</div>
-
 					<div className="bg-blue-50 p-4 rounded-lg">
 						<div className="flex items-center">
 							<CheckCircle className="h-8 w-8 text-blue-600" />
@@ -228,21 +200,6 @@ const PageSpecificAIManager = ({
 									{approvedCount}
 								</div>
 								<div className="text-sm text-blue-800">승인 완료</div>
-							</div>
-						</div>
-					</div>
-
-					<div className="bg-purple-50 p-4 rounded-lg">
-						<div className="flex items-center">
-							<TrendingUp className="h-8 w-8 text-purple-600" />
-							<div className="ml-3">
-								<div className="text-2xl font-bold text-purple-600">
-									{responses.length > 0
-										? Math.round((autoSentCount / responses.length) * 100)
-										: 0}
-									%
-								</div>
-								<div className="text-sm text-purple-800">자동화율</div>
 							</div>
 						</div>
 					</div>
@@ -263,17 +220,6 @@ const PageSpecificAIManager = ({
 							}`}
 						>
 							승인 대기 ({pendingCount})
-						</button>
-						<button
-							type="button"
-							onClick={() => setSelectedTab("sent")}
-							className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-								selectedTab === "sent"
-									? "bg-blue-600 text-white"
-									: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-							}`}
-						>
-							자동 발송 ({autoSentCount})
 						</button>
 						<button
 							type="button"
@@ -345,18 +291,6 @@ const PageSpecificAIManager = ({
 										<CategoryIcon className="h-3 w-3 inline mr-1" />
 										{categoryInfo.label}
 									</span>
-									<span
-										className={`px-2 py-1 rounded-full text-xs font-medium ${getConfidenceColor(
-											response.confidence,
-										)}`}
-									>
-										신뢰도 {Math.round(response.confidence * 100)}%
-									</span>
-									{response.isAutoSent && (
-										<span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-											자동발송
-										</span>
-									)}
 								</div>
 								<div className="text-xs text-gray-500">
 									{formatTemporalDateTime(response.createdAt, "MM/dd HH:mm")}
@@ -487,16 +421,12 @@ const PageSpecificAIManager = ({
 						<h3 className="text-lg font-medium text-gray-900 mb-2">
 							{selectedTab === "pending"
 								? "승인 대기 중인 응답이 없습니다"
-								: selectedTab === "sent"
-									? "자동 발송된 응답이 없습니다"
-									: "응답이 없습니다"}
+								: "응답이 없습니다"}
 						</h3>
 						<p className="text-gray-600">
 							{selectedTab === "pending"
 								? "새로운 메시지가 들어오면 AI가 자동으로 분석하여 여기에 표시됩니다."
-								: selectedTab === "sent"
-									? "AI가 자동으로 발송한 메시지들이 여기에 표시됩니다."
-									: "검색 조건을 변경해보세요."}
+								: "검색 조건을 변경해보세요."}
 						</p>
 					</div>
 				)}

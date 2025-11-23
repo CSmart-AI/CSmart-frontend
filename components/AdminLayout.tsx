@@ -9,11 +9,11 @@ import {
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-interface LayoutProps {
+interface AdminLayoutProps {
 	children: ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const AdminLayout = ({ children }: AdminLayoutProps) => {
 	const location = useLocation();
 
 	const navItems = [
@@ -46,6 +46,12 @@ const Layout = ({ children }: LayoutProps) => {
 			label: "AI 응답",
 			icon: Bot,
 			description: "AI 자동응답 관리",
+		},
+		{
+			path: "/teacher-management",
+			label: "선생님 관리",
+			icon: Settings,
+			description: "선생님 채널 관리",
 		},
 	];
 
@@ -113,4 +119,4 @@ const Layout = ({ children }: LayoutProps) => {
 	);
 };
 
-export default Layout;
+export default AdminLayout;
