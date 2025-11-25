@@ -49,10 +49,7 @@ const ConsultationPage = () => {
 								>
 									{consultationStudents.length}
 								</Typography>
-								<Typography
-									variant="small"
-									className="text-gray-600"
-								>
+								<Typography variant="small" className="text-gray-600">
 									상담 대기 중
 								</Typography>
 							</div>

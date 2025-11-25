@@ -83,8 +83,7 @@ const StudentDetailPage = () => {
 	};
 
 	const getScoreGrade = (score?: number) => {
-		if (!score)
-			return { grade: "N/A", color: "text-gray-600" };
+		if (!score) return { grade: "N/A", color: "text-gray-600" };
 		if (score >= 250) return { grade: "A", color: "text-[var(--color-green)]" };
 		if (score >= 200)
 			return { grade: "B", color: "text-[var(--color-primary)]" };

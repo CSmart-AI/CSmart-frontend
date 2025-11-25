@@ -213,9 +213,7 @@ const TeacherManagementPage = () => {
 											<div className="space-y-2">
 												{teacher.phoneNumber && (
 													<Typography variant="small">
-														<span className="text-gray-600">
-															전화번호:
-														</span>{" "}
+														<span className="text-gray-600">전화번호:</span>{" "}
 														<span className="font-medium">
 															{teacher.phoneNumber}
 														</span>
@@ -233,18 +231,14 @@ const TeacherManagementPage = () => {
 												)}
 												{teacher.specialization && (
 													<Typography variant="small">
-														<span className="text-gray-600">
-															전문분야:
-														</span>{" "}
+														<span className="text-gray-600">전문분야:</span>{" "}
 														<span className="font-medium">
 															{teacher.specialization}
 														</span>
 													</Typography>
 												)}
 												<Typography variant="small">
-													<span className="text-gray-600">
-														상태:
-													</span>{" "}
+													<span className="text-gray-600">상태:</span>{" "}
 													<Badge
 														variant={
 															teacher.status === "ACTIVE"

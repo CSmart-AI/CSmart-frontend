@@ -93,9 +93,7 @@ const Layout = ({ children }: LayoutProps) => {
 							</ul>
 						</nav>
 						<div className="flex items-center gap-4">
-							<span className="text-sm text-gray-600">
-								관리자
-							</span>
+							<span className="text-sm text-gray-600">관리자</span>
 							<div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center">
 								<span className="text-white text-sm font-medium">관</span>
 							</div>

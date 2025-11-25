@@ -69,10 +69,7 @@ const RegistrationPage = () => {
 								<Typography variant="h2" className="text-[var(--color-green)]">
 									{registrationStudents.length}
 								</Typography>
-								<Typography
-									variant="small"
-									className="text-gray-600"
-								>
+								<Typography variant="small" className="text-gray-600">
 									등록 진행 중
 								</Typography>
 							</div>

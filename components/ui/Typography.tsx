@@ -28,8 +28,7 @@ export const Typography = ({
 		h3: "text-xl font-[590] leading-[1.33] text-gray-900",
 		h4: "text-lg font-[590] leading-[1.33] text-gray-900",
 		body: "text-base font-normal leading-6 text-gray-900",
-		"body-secondary":
-			"text-[15px] font-normal leading-6 text-gray-600",
+		"body-secondary": "text-[15px] font-normal leading-6 text-gray-600",
 		small: "text-sm font-normal leading-5 text-gray-600",
 	};
 

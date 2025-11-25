@@ -27,15 +27,15 @@
 			"description": "밝은 배경용 악센트 색상"
 		},
 		"dark": {
-			"name": "Nordic Gray",
-			"hex": "#222326",
-			"rgb": "35, 35, 38",
+			"name": "Pure White",
+			"hex": "#FFFFFF",
+			"rgb": "255, 255, 255",
 			"rgbValues": {
-				"r": 35,
-				"g": 35,
-				"b": 38
+				"r": 255,
+				"g": 255,
+				"b": 255
 			},
-			"description": "어두운 배경용 악센트 색상"
+			"description": "라이트 모드용 흰색 배경"
 		},
 		"semantic": {
 			"blue": "#4ea7fc",
@@ -48,14 +48,14 @@
 			"black": "#000"
 		},
 		"background": {
-			"primary": "rgb(8, 9, 10)",
-			"hex": "#08090A"
+			"primary": "rgb(249, 250, 251)",
+			"hex": "#F9FAFB"
 		},
 		"text": {
-			"primary": "rgb(247, 248, 248)",
-			"hex": "#F7F8F8",
-			"secondary": "rgb(138, 143, 152)",
-			"hexSecondary": "#8A8F98"
+			"primary": "rgb(17, 24, 39)",
+			"hex": "#111827",
+			"secondary": "rgb(75, 85, 99)",
+			"hexSecondary": "#4B5563"
 		}
 	},
 	"typography": {
@@ -88,7 +88,7 @@
 				"fontSize": "40px",
 				"fontWeight": "590",
 				"lineHeight": "44px",
-				"color": "rgb(247, 248, 248)",
+				"color": "rgb(17, 24, 39)",
 				"letterSpacing": "-0.88px"
 			},
 			"h2": {
@@ -106,13 +106,13 @@
 			"fontSize": "16px",
 			"fontWeight": "400",
 			"lineHeight": "24px",
-			"color": "rgb(247, 248, 248)"
+			"color": "rgb(17, 24, 39)"
 		},
 		"paragraph": {
 			"fontSize": "15px",
 			"fontWeight": "400",
 			"lineHeight": "24px",
-			"color": "rgb(138, 143, 152)"
+			"color": "rgb(75, 85, 99)"
 		}
 	},
 	"spacing": {
@@ -136,7 +136,7 @@
 	"components": {
 		"button": {
 			"backgroundColor": "transparent",
-			"color": "rgb(138, 143, 152)",
+			"color": "rgb(75, 85, 99)",
 			"padding": "0px 12px",
 			"borderRadius": "8px",
 			"border": "none",
@@ -145,7 +145,7 @@
 			"fontFamily": "\"Inter Variable\", \"SF Pro Display\", -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif"
 		},
 		"link": {
-			"color": "rgb(255, 255, 255)",
+			"color": "rgb(17, 24, 39)",
 			"textDecoration": "none",
 			"fontSize": "14px",
 			"fontWeight": "510"
@@ -196,9 +196,9 @@
 		"footer": "50"
 	},
 	"scrollbar": {
-		"color": "rgba(255, 255, 255, 0.1)",
-		"colorHover": "rgba(255, 255, 255, 0.2)",
-		"colorActive": "rgba(255, 255, 255, 0.4)",
+		"color": "rgba(0, 0, 0, 0.1)",
+		"colorHover": "rgba(0, 0, 0, 0.2)",
+		"colorActive": "rgba(0, 0, 0, 0.4)",
 		"size": "6px",
 		"sizeActive": "10px",
 		"gap": "4px"

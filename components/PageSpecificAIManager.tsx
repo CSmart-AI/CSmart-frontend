@@ -259,7 +259,10 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 
 			{/* Bulk Actions */}
 			{selectedTab === "pending" && pendingResponses.length > 0 && (
-				<Card padding="md" className="flex items-center justify-between bg-white border border-gray-200">
+				<Card
+					padding="md"
+					className="flex items-center justify-between bg-white border border-gray-200"
+				>
 					<div className="flex items-center gap-4">
 						<label className="flex items-center gap-2 cursor-pointer">
 							<input
@@ -302,7 +305,10 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 			)}
 
 			{/* Table */}
-			<Card padding="none" className="overflow-x-auto bg-white border border-gray-200">
+			<Card
+				padding="none"
+				className="overflow-x-auto bg-white border border-gray-200"
+			>
 				<table className="w-full">
 					<thead>
 						<tr className="border-b border-gray-200 bg-gray-50">
@@ -403,7 +409,10 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 										</td>
 									)}
 									<td className="px-4 py-3">
-										<Typography variant="small" className="font-medium text-gray-900">
+										<Typography
+											variant="small"
+											className="font-medium text-gray-900"
+										>
 											{studentName}
 										</Typography>
 									</td>
@@ -478,7 +487,10 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 									<td className="px-4 py-3">
 										<div className="flex items-center gap-1">
 											{getStatusIcon(response)}
-											<Typography variant="small" className="text-xs text-gray-700">
+											<Typography
+												variant="small"
+												className="text-xs text-gray-700"
+											>
 												{response.status === "pending"
 													? "대기"
 													: response.status === "approved"
@@ -545,10 +557,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 								>
 									<div className="flex flex-col items-center justify-center">
 										<Bot className="h-16 w-16 text-gray-300 mb-6" />
-										<Typography
-											variant="h3"
-											className="mb-2 text-gray-900"
-										>
+										<Typography variant="h3" className="mb-2 text-gray-900">
 											{selectedTab === "pending"
 												? "승인 대기 중인 응답이 없습니다"
 												: "응답이 없습니다"}
