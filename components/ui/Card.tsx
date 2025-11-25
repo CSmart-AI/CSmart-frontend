@@ -22,7 +22,7 @@ export const Card = ({
 	return (
 		<div
 			className={cn(
-				"bg-[var(--color-dark)] rounded-[var(--radius-large)] border border-[rgba(255,255,255,0.05)]",
+				"bg-white rounded-[var(--radius-large)] border border-gray-200",
 				paddingStyles[padding],
 				className,
 			)}

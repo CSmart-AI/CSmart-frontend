@@ -34,7 +34,7 @@ const StudentDetailPage = () => {
 	if (!student) {
 		return (
 			<Card padding="lg" className="text-center">
-				<User className="h-12 w-12 text-[var(--color-text-secondary)] mx-auto mb-4" />
+				<User className="h-12 w-12 text-gray-600 mx-auto mb-4" />
 				<Typography variant="h3" className="mb-2">
 					학생을 찾을 수 없습니다
 				</Typography>
@@ -84,7 +84,7 @@ const StudentDetailPage = () => {
 
 	const getScoreGrade = (score?: number) => {
 		if (!score)
-			return { grade: "N/A", color: "text-[var(--color-text-secondary)]" };
+			return { grade: "N/A", color: "text-gray-600" };
 		if (score >= 250) return { grade: "A", color: "text-[var(--color-green)]" };
 		if (score >= 200)
 			return { grade: "B", color: "text-[var(--color-primary)]" };
@@ -98,7 +98,7 @@ const StudentDetailPage = () => {
 	return (
 		<div className="flex min-h-[calc(100vh-var(--header-height))]">
 			{/* Main Content Area */}
-			<main className="flex-1 bg-[var(--color-background)]">
+			<main className="flex-1 bg-gray-50">
 				<div className="w-full px-[var(--page-padding-inline)] py-6">
 					{/* Page Header */}
 					<div className="mb-6">
@@ -107,9 +107,9 @@ const StudentDetailPage = () => {
 								<div className="flex items-center gap-4">
 									<Link
 										to="/management"
-										className="p-2 hover:bg-[rgba(255,255,255,0.03)] rounded-lg transition-colors"
+										className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
 									>
-										<ArrowLeft className="h-5 w-5 text-[var(--color-text-secondary)]" />
+										<ArrowLeft className="h-5 w-5 text-gray-600" />
 									</Link>
 									<div className="w-16 h-16 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary)]/70 rounded-full flex items-center justify-center text-white text-xl font-bold">
 										{student.info.name[0]}
@@ -288,7 +288,7 @@ const StudentDetailPage = () => {
 									{student.info.message && (
 										<Card
 											padding="md"
-											className="mt-4 bg-[var(--color-primary)]/10 border border-[rgba(255,255,255,0.05)]"
+											className="mt-4 bg-[var(--color-primary)]/10 border border-gray-200"
 										>
 											<Typography
 												variant="small"
@@ -466,7 +466,7 @@ const StudentDetailPage = () => {
 											<textarea
 												value={editedNotes}
 												onChange={(e) => setEditedNotes(e.target.value)}
-												className="w-full p-3 bg-[var(--color-dark)] border border-[rgba(255,255,255,0.1)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
+												className="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
 												rows={4}
 												placeholder="특이사항을 입력하세요..."
 											/>
@@ -512,7 +512,7 @@ const StudentDetailPage = () => {
 													"max-w-xs px-4 py-2 rounded-lg",
 													message.sender === "admin"
 														? "bg-[var(--color-primary)] text-white"
-														: "bg-[var(--color-dark)]/50 text-[var(--color-text-primary)]",
+														: "bg-white/50 text-gray-900",
 												)}
 											>
 												<Typography variant="small">
@@ -524,7 +524,7 @@ const StudentDetailPage = () => {
 														"text-xs mt-1",
 														message.sender === "admin"
 															? "text-white/70"
-															: "text-[var(--color-text-secondary)]",
+															: "text-gray-600",
 													)}
 												>
 													{formatTemporalDateTime(
@@ -538,14 +538,14 @@ const StudentDetailPage = () => {
 								</div>
 
 								{/* Message Input */}
-								<div className="border-t border-[rgba(255,255,255,0.1)] pt-4">
+								<div className="border-t border-gray-300 pt-4">
 									<div className="flex gap-2">
 										<input
 											type="text"
 											value={newMessage}
 											onChange={(e) => setNewMessage(e.target.value)}
 											placeholder="메시지를 입력하세요..."
-											className="flex-1 px-3 py-2 bg-[var(--color-dark)] border border-[rgba(255,255,255,0.1)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
+											className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
 											onKeyPress={(e) =>
 												e.key === "Enter" && handleSendMessage()
 											}

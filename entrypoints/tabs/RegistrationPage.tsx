@@ -56,7 +56,7 @@ const RegistrationPage = () => {
 	return (
 		<div className="flex min-h-[calc(100vh-var(--header-height))]">
 			{/* Main Content Area */}
-			<main className="flex-1 bg-[var(--color-background)]">
+			<main className="flex-1 bg-gray-50">
 				<div className="w-full px-[var(--page-padding-inline)] py-6">
 					{/* Page Header */}
 					<div className="mb-6">
@@ -71,7 +71,7 @@ const RegistrationPage = () => {
 								</Typography>
 								<Typography
 									variant="small"
-									className="text-[var(--color-text-secondary)]"
+									className="text-gray-600"
 								>
 									등록 진행 중
 								</Typography>
@@ -127,7 +127,7 @@ const RegistrationPage = () => {
 											{/* Payment Information */}
 											<Card
 												padding="md"
-												className="bg-[var(--color-primary)]/10 border border-[rgba(255,255,255,0.05)]"
+												className="bg-[var(--color-primary)]/10 border border-gray-200"
 											>
 												<div className="flex items-center mb-3">
 													<CreditCard className="h-5 w-5 text-[var(--color-primary)] mr-2" />
@@ -224,7 +224,7 @@ const RegistrationPage = () => {
 											{/* Placement Test */}
 											<Card
 												padding="md"
-												className="bg-[var(--color-green)]/10 border border-[rgba(255,255,255,0.05)]"
+												className="bg-[var(--color-green)]/10 border border-gray-200"
 											>
 												<div className="flex items-center mb-3">
 													<Calculator className="h-5 w-5 text-[var(--color-green)] mr-2" />
@@ -332,7 +332,7 @@ const RegistrationPage = () => {
 											{/* Progress Status */}
 											<Card
 												padding="md"
-												className="bg-[var(--color-primary)]/10 border border-[rgba(255,255,255,0.05)]"
+												className="bg-[var(--color-primary)]/10 border border-gray-200"
 											>
 												<div className="flex items-center mb-3">
 													<Award className="h-5 w-5 text-[var(--color-primary)] mr-2" />
@@ -406,7 +406,7 @@ const RegistrationPage = () => {
 										{/* Recent Message */}
 										<Card
 											padding="md"
-											className="mt-6 bg-[var(--color-dark)]/50 border border-[rgba(255,255,255,0.05)]"
+											className="mt-6 bg-white/50 border border-gray-200"
 										>
 											<div className="flex items-center justify-between mb-2">
 												<Typography
@@ -434,7 +434,7 @@ const RegistrationPage = () => {
 										{student.specialNotes && (
 											<Card
 												padding="sm"
-												className="mt-4 bg-[var(--color-yellow)]/10 border border-[rgba(255,255,255,0.05)]"
+												className="mt-4 bg-[var(--color-yellow)]/10 border border-gray-200"
 											>
 												<div className="flex items-center">
 													<Typography
@@ -458,7 +458,7 @@ const RegistrationPage = () => {
 
 							{filteredStudents.length === 0 && (
 								<Card padding="lg" className="text-center">
-									<FileText className="h-12 w-12 text-[var(--color-text-secondary)] mx-auto mb-4" />
+									<FileText className="h-12 w-12 text-gray-600 mx-auto mb-4" />
 									<Typography variant="h3" className="mb-2">
 										등록 진행 중인 학생이 없습니다
 									</Typography>

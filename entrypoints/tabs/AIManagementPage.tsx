@@ -74,16 +74,16 @@ const AIManagementPage = () => {
 	return (
 		<div className="flex min-h-[calc(100vh-var(--header-height))]">
 			{/* Sidebar Navigation - Linear Style */}
-			<aside className="w-64 border-r border-[rgba(255,255,255,0.05)] bg-[var(--color-dark)] flex-shrink-0 flex flex-col">
+			<aside className="w-64 border-r border-gray-200 bg-white flex-shrink-0 flex flex-col">
 				{/* Sidebar Header */}
-				<div className="p-6 border-b border-[rgba(255,255,255,0.05)]">
-					<Typography variant="h3" className="flex items-center gap-2 mb-1">
+				<div className="p-6 border-b border-gray-200">
+					<Typography
+						variant="h3"
+						className="flex items-center gap-2 mb-1 text-gray-900"
+					>
 						AI 응답 관리
 					</Typography>
-					<Typography
-						variant="small"
-						className="text-[var(--color-text-secondary)]"
-					>
+					<Typography variant="small" className="text-gray-600">
 						모든 페이지의 AI 자동응답을 한 곳에서 관리합니다
 					</Typography>
 				</div>
@@ -103,8 +103,8 @@ const AIManagementPage = () => {
 									className={cn(
 										"w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-100 text-left group",
 										isActive
-											? "bg-[var(--color-primary)]/20 text-[var(--color-text-primary)]"
-											: "text-[var(--color-text-secondary)] hover:bg-[rgba(255,255,255,0.03)] hover:text-[var(--color-text-primary)]",
+											? "bg-[var(--color-primary)]/20 text-gray-900"
+											: "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
 									)}
 								>
 									<div className="flex items-center gap-2.5">
@@ -113,7 +113,7 @@ const AIManagementPage = () => {
 												"h-4 w-4",
 												isActive
 													? "text-[var(--color-primary)]"
-													: "text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]",
+													: "text-gray-600 group-hover:text-gray-900",
 											)}
 										/>
 										<Typography variant="small" className="font-medium">
@@ -135,23 +135,17 @@ const AIManagementPage = () => {
 				</nav>
 
 				{/* Sidebar Footer Stats */}
-				<div className="p-4 border-t border-[rgba(255,255,255,0.05)] space-y-3">
+				<div className="p-4 border-t border-gray-200 space-y-3">
 					<div className="flex items-center justify-between">
-						<Typography
-							variant="small"
-							className="text-[var(--color-text-secondary)]"
-						>
+						<Typography variant="small" className="text-gray-600">
 							총 응답
 						</Typography>
-						<Typography variant="small" className="font-semibold">
+						<Typography variant="small" className="font-semibold text-gray-900">
 							{getTotalCount(activePageType)}
 						</Typography>
 					</div>
 					<div className="flex items-center justify-between">
-						<Typography
-							variant="small"
-							className="text-[var(--color-text-secondary)]"
-						>
+						<Typography variant="small" className="text-gray-600">
 							승인 대기
 						</Typography>
 						<Typography
@@ -162,10 +156,7 @@ const AIManagementPage = () => {
 						</Typography>
 					</div>
 					<div className="flex items-center justify-between">
-						<Typography
-							variant="small"
-							className="text-[var(--color-text-secondary)]"
-						>
+						<Typography variant="small" className="text-gray-600">
 							발송 완료
 						</Typography>
 						<Typography
@@ -179,13 +170,15 @@ const AIManagementPage = () => {
 			</aside>
 
 			{/* Main Content Area */}
-			<main className="flex-1 bg-[var(--color-background)]">
+			<main className="flex-1 bg-gray-50">
 				<div className="w-full px-[var(--page-padding-inline)] py-6">
 					{/* Page Header */}
 					<div className="mb-4">
 						<div className="flex items-center gap-2">
 							<pageConfig.icon className="h-5 w-5 text-[var(--color-primary)]" />
-							<Typography variant="h3">{pageConfig.title}</Typography>
+							<Typography variant="h3" className="text-gray-900">
+								{pageConfig.title}
+							</Typography>
 						</div>
 					</div>
 

@@ -139,7 +139,7 @@ const CalendarPage = () => {
 	return (
 		<div className="flex min-h-[calc(100vh-var(--header-height))]">
 			{/* Main Content Area */}
-			<main className="flex-1 bg-[var(--color-background)]">
+			<main className="flex-1 bg-gray-50">
 				<div className="w-full px-[var(--page-padding-inline)] py-6">
 					{/* Page Header */}
 					<div className="mb-6">
@@ -252,11 +252,11 @@ const CalendarPage = () => {
 									/>
 								</div>
 								<div className="flex items-center gap-2">
-									<Filter className="h-4 w-4 text-[var(--color-text-secondary)]" />
+									<Filter className="h-4 w-4 text-gray-600" />
 									<select
 										value={filterType}
 										onChange={(e) => setFilterType(e.target.value)}
-										className="px-3 py-2 bg-[var(--color-dark)] border border-[rgba(255,255,255,0.1)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
+										className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
 									>
 										<option value="all">전체 일정</option>
 										<option value="consultation">전화상담</option>
@@ -284,9 +284,9 @@ const CalendarPage = () => {
 											<button
 												type="button"
 												onClick={() => navigateMonth("prev")}
-												className="p-2 hover:bg-[rgba(255,255,255,0.03)] rounded-lg transition-colors"
+												className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
 											>
-												<ChevronLeft className="h-5 w-5 text-[var(--color-text-secondary)]" />
+												<ChevronLeft className="h-5 w-5 text-gray-600" />
 											</button>
 											<button
 												type="button"
@@ -298,9 +298,9 @@ const CalendarPage = () => {
 											<button
 												type="button"
 												onClick={() => navigateMonth("next")}
-												className="p-2 hover:bg-[rgba(255,255,255,0.03)] rounded-lg transition-colors"
+												className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
 											>
-												<ChevronRight className="h-5 w-5 text-[var(--color-text-secondary)]" />
+												<ChevronRight className="h-5 w-5 text-gray-600" />
 											</button>
 										</div>
 									</div>
@@ -310,7 +310,7 @@ const CalendarPage = () => {
 										{["일", "월", "화", "수", "목", "금", "토"].map((day) => (
 											<div
 												key={day}
-												className="p-2 text-center text-sm font-medium text-[var(--color-text-secondary)]"
+												className="p-2 text-center text-sm font-medium text-gray-600"
 											>
 												{day}
 											</div>
@@ -338,7 +338,7 @@ const CalendarPage = () => {
 													type="button"
 													tabIndex={0}
 													className={cn(
-														"min-h-[80px] p-2 border border-[rgba(255,255,255,0.05)] cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors rounded-lg",
+														"min-h-[80px] p-2 border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors rounded-lg",
 														isSelected &&
 															"bg-[var(--color-primary)]/20 border-[var(--color-primary)]/30",
 														isTodayDate &&
@@ -352,8 +352,8 @@ const CalendarPage = () => {
 															isTodayDate
 																? "text-[var(--color-primary)]"
 																: isCurrentMonth
-																	? "text-[var(--color-text-primary)]"
-																	: "text-[var(--color-text-secondary)]",
+																	? "text-gray-900"
+																	: "text-gray-600",
 														)}
 													>
 														{day.getDate()}
@@ -448,7 +448,7 @@ const CalendarPage = () => {
 											})}
 											{getEventsForDate(selectedDate).length === 0 && (
 												<div className="text-center py-8">
-													<Calendar className="h-8 w-8 mx-auto mb-2 text-[var(--color-text-secondary)]" />
+													<Calendar className="h-8 w-8 mx-auto mb-2 text-gray-600" />
 													<Typography variant="small">
 														이 날에는 일정이 없습니다
 													</Typography>
@@ -472,7 +472,7 @@ const CalendarPage = () => {
 												<Card
 													key={event.id}
 													padding="sm"
-													className="bg-[var(--color-dark)]/50"
+													className="bg-gray-50"
 												>
 													<div className="flex items-center gap-2 mb-1">
 														<Icon className="h-4 w-4" />
@@ -501,7 +501,7 @@ const CalendarPage = () => {
 										})}
 										{upcomingEvents.length === 0 && (
 											<div className="text-center py-4">
-												<Clock className="h-6 w-6 mx-auto mb-2 text-[var(--color-text-secondary)]" />
+												<Clock className="h-6 w-6 mx-auto mb-2 text-gray-600" />
 												<Typography variant="small">
 													예정된 일정이 없습니다
 												</Typography>

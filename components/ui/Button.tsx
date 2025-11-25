@@ -21,9 +21,9 @@ export const Button = ({
 		primary:
 			"bg-[var(--color-primary)] text-white hover:opacity-90 active:opacity-80",
 		secondary:
-			"bg-[var(--color-dark)] text-[var(--color-text-primary)] hover:bg-opacity-80 active:bg-opacity-70",
+			"bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-400",
 		ghost:
-			"bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-dark)] active:bg-opacity-70",
+			"bg-transparent text-gray-600 hover:bg-gray-100 active:bg-gray-200",
 		danger:
 			"bg-[var(--color-red)] text-white hover:opacity-90 active:opacity-80",
 	};

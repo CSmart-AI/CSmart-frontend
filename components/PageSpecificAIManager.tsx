@@ -192,7 +192,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 			{/* Filters & Search - Linear Style */}
 			<div className="flex items-center gap-4">
 				{/* Tab Buttons */}
-				<div className="flex gap-2 border-b border-[rgba(255,255,255,0.05)] -mb-px">
+				<div className="flex gap-2 border-b border-gray-200 -mb-px">
 					<button
 						type="button"
 						onClick={() => setSelectedTab("pending")}
@@ -200,7 +200,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 							"px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
 							selectedTab === "pending"
 								? "text-[var(--color-primary)] border-[var(--color-primary)]"
-								: "text-[var(--color-text-secondary)] border-transparent hover:text-[var(--color-text-primary)]",
+								: "text-gray-600 border-transparent hover:text-gray-900",
 						)}
 					>
 						승인 대기
@@ -220,7 +220,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 							"px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
 							selectedTab === "all"
 								? "text-[var(--color-primary)] border-[var(--color-primary)]"
-								: "text-[var(--color-text-secondary)] border-transparent hover:text-[var(--color-text-primary)]",
+								: "text-gray-600 border-transparent hover:text-gray-900",
 						)}
 					>
 						전체 응답
@@ -240,11 +240,11 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 
 				{/* Filter */}
 				<div className="flex items-center gap-2">
-					<Filter className="h-4 w-4 text-[var(--color-text-secondary)]" />
+					<Filter className="h-4 w-4 text-gray-600" />
 					<select
 						value={filterCategory}
 						onChange={(e) => setFilterCategory(e.target.value)}
-						className="px-3 py-2 bg-[var(--color-dark)] border border-[rgba(255,255,255,0.1)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
+						className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
 					>
 						<option value="all">전체 카테고리</option>
 						<option value="faq">FAQ</option>
@@ -259,7 +259,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 
 			{/* Bulk Actions */}
 			{selectedTab === "pending" && pendingResponses.length > 0 && (
-				<Card padding="md" className="flex items-center justify-between">
+				<Card padding="md" className="flex items-center justify-between bg-white border border-gray-200">
 					<div className="flex items-center gap-4">
 						<label className="flex items-center gap-2 cursor-pointer">
 							<input
@@ -269,9 +269,9 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 									if (input) input.indeterminate = someSelected;
 								}}
 								onChange={handleSelectAll}
-								className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[var(--color-dark)] text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
+								className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
 							/>
-							<Typography variant="small" className="font-medium">
+							<Typography variant="small" className="font-medium text-gray-900">
 								전체 선택 ({selectedIds.size}/{pendingResponses.length})
 							</Typography>
 						</label>
@@ -302,10 +302,10 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 			)}
 
 			{/* Table */}
-			<Card padding="none" className="overflow-x-auto">
+			<Card padding="none" className="overflow-x-auto bg-white border border-gray-200">
 				<table className="w-full">
 					<thead>
-						<tr className="border-b border-[rgba(255,255,255,0.05)]">
+						<tr className="border-b border-gray-200 bg-gray-50">
 							{selectedTab === "pending" && (
 								<th className="px-4 py-3 text-left w-12">
 									<input
@@ -315,14 +315,14 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 											if (input) input.indeterminate = someSelected;
 										}}
 										onChange={handleSelectAll}
-										className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[var(--color-dark)] text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
+										className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
 									/>
 								</th>
 							)}
 							<th className="px-4 py-3 text-left">
 								<Typography
 									variant="small"
-									className="font-medium text-[var(--color-text-secondary)]"
+									className="font-medium text-gray-600"
 								>
 									학생명
 								</Typography>
@@ -330,7 +330,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 							<th className="px-4 py-3 text-left">
 								<Typography
 									variant="small"
-									className="font-medium text-[var(--color-text-secondary)]"
+									className="font-medium text-gray-600"
 								>
 									카테고리
 								</Typography>
@@ -338,7 +338,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 							<th className="px-4 py-3 text-left min-w-[350px]">
 								<Typography
 									variant="small"
-									className="font-medium text-[var(--color-text-secondary)]"
+									className="font-medium text-gray-600"
 								>
 									원본 메시지
 								</Typography>
@@ -346,7 +346,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 							<th className="px-4 py-3 text-left min-w-[350px]">
 								<Typography
 									variant="small"
-									className="font-medium text-[var(--color-text-secondary)]"
+									className="font-medium text-gray-600"
 								>
 									AI 응답
 								</Typography>
@@ -354,7 +354,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 							<th className="px-4 py-3 text-left w-24">
 								<Typography
 									variant="small"
-									className="font-medium text-[var(--color-text-secondary)]"
+									className="font-medium text-gray-600"
 								>
 									상태
 								</Typography>
@@ -362,7 +362,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 							<th className="px-4 py-3 text-left w-32">
 								<Typography
 									variant="small"
-									className="font-medium text-[var(--color-text-secondary)]"
+									className="font-medium text-gray-600"
 								>
 									시간
 								</Typography>
@@ -370,7 +370,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 							<th className="px-4 py-3 text-right w-32">
 								<Typography
 									variant="small"
-									className="font-medium text-[var(--color-text-secondary)]"
+									className="font-medium text-gray-600"
 								>
 									액션
 								</Typography>
@@ -388,7 +388,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 								<tr
 									key={response.id}
 									className={cn(
-										"border-b border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-colors",
+										"border-b border-gray-200 hover:bg-gray-50 transition-colors",
 										isSelected && "bg-[var(--color-primary)]/5",
 									)}
 								>
@@ -398,12 +398,12 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 												type="checkbox"
 												checked={isSelected}
 												onChange={() => handleToggleSelect(response.id)}
-												className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[var(--color-dark)] text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
+												className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
 											/>
 										</td>
 									)}
 									<td className="px-4 py-3">
-										<Typography variant="small" className="font-medium">
+										<Typography variant="small" className="font-medium text-gray-900">
 											{studentName}
 										</Typography>
 									</td>
@@ -417,7 +417,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 										<div className="max-w-[350px]">
 											<Typography
 												variant="body-secondary"
-												className="text-sm line-clamp-3"
+												className="text-sm line-clamp-3 text-gray-700"
 											>
 												{response.originalMessage}
 											</Typography>
@@ -429,7 +429,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 												<textarea
 													value={editedText}
 													onChange={(e) => setEditedText(e.target.value)}
-													className="w-full p-2 bg-[var(--color-background)] border border-[rgba(255,255,255,0.1)] rounded text-xs text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)]"
+													className="w-full p-2 bg-white border border-gray-300 rounded text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)]"
 													rows={4}
 												/>
 												<div className="flex gap-1">
@@ -478,7 +478,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 									<td className="px-4 py-3">
 										<div className="flex items-center gap-1">
 											{getStatusIcon(response)}
-											<Typography variant="small" className="text-xs">
+											<Typography variant="small" className="text-xs text-gray-700">
 												{response.status === "pending"
 													? "대기"
 													: response.status === "approved"
@@ -492,7 +492,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 									<td className="px-4 py-3">
 										<Typography
 											variant="small"
-											className="text-xs text-[var(--color-text-secondary)]"
+											className="text-xs text-gray-600"
 										>
 											{formatTemporalDateTime(
 												response.createdAt,
@@ -544,10 +544,10 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 									className="px-4 py-16 text-center"
 								>
 									<div className="flex flex-col items-center justify-center">
-										<Bot className="h-16 w-16 text-[var(--color-text-secondary)]/30 mb-6" />
+										<Bot className="h-16 w-16 text-gray-300 mb-6" />
 										<Typography
 											variant="h3"
-											className="mb-2 text-[var(--color-text-primary)]"
+											className="mb-2 text-gray-900"
 										>
 											{selectedTab === "pending"
 												? "승인 대기 중인 응답이 없습니다"
@@ -555,7 +555,7 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 										</Typography>
 										<Typography
 											variant="body-secondary"
-											className="text-[var(--color-text-secondary)] text-center max-w-md"
+											className="text-gray-600 text-center max-w-md"
 										>
 											{selectedTab === "pending"
 												? "새로운 메시지가 들어오면 AI가 자동으로 분석하여 여기에 표시됩니다."

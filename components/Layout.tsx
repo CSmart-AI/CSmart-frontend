@@ -52,14 +52,14 @@ const Layout = ({ children }: LayoutProps) => {
 	];
 
 	return (
-		<div className="min-h-screen bg-[var(--color-background)]">
+		<div className="min-h-screen bg-gray-50">
 			{/* Header */}
-			<header className="bg-[var(--color-dark)] border-b border-[rgba(255,255,255,0.05)] backdrop-blur-[20px] sticky top-0 z-[var(--layer-header)]">
+			<header className="bg-white border-b border-gray-200 backdrop-blur-[20px] sticky top-0 z-[var(--layer-header)]">
 				<div className="w-full px-[var(--page-padding-inline)]">
 					<div className="flex items-center justify-between h-[var(--header-height)]">
 						<div className="flex items-center gap-3">
 							<Settings className="h-8 w-8 text-[var(--color-primary)]" />
-							<Typography variant="h4" as="h1">
+							<Typography variant="h4" as="h1" className="text-gray-900">
 								CSmart
 							</Typography>
 						</div>
@@ -78,7 +78,7 @@ const Layout = ({ children }: LayoutProps) => {
 													"flex items-center gap-2 px-4 py-2 rounded-[var(--radius-medium)] transition-all duration-100",
 													isActive
 														? "bg-[var(--color-primary)]/20 text-[var(--color-primary)] border border-[var(--color-primary)]/30"
-														: "text-[var(--color-text-secondary)] hover:bg-[var(--color-dark)]/50 hover:text-[var(--color-text-primary)]",
+														: "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
 												)}
 												title={item.description}
 											>
@@ -93,7 +93,7 @@ const Layout = ({ children }: LayoutProps) => {
 							</ul>
 						</nav>
 						<div className="flex items-center gap-4">
-							<span className="text-sm text-[var(--color-text-secondary)]">
+							<span className="text-sm text-gray-600">
 								관리자
 							</span>
 							<div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center">

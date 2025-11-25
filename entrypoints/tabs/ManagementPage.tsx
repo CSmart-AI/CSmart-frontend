@@ -69,7 +69,7 @@ const ManagementPage = () => {
 
 	const getScoreGrade = (score?: number) => {
 		if (!score)
-			return { grade: "N/A", color: "text-[var(--color-text-secondary)]" };
+			return { grade: "N/A", color: "text-gray-600" };
 		if (score >= 250) return { grade: "A", color: "text-[var(--color-green)]" };
 		if (score >= 200)
 			return { grade: "B", color: "text-[var(--color-primary)]" };
@@ -86,7 +86,7 @@ const ManagementPage = () => {
 	return (
 		<div className="flex min-h-[calc(100vh-var(--header-height))]">
 			{/* Main Content Area */}
-			<main className="flex-1 bg-[var(--color-background)]">
+			<main className="flex-1 bg-gray-50">
 				<div className="w-full px-[var(--page-padding-inline)] py-6">
 					{/* Page Header */}
 					<div className="mb-6">
@@ -202,7 +202,7 @@ const ManagementPage = () => {
 									/>
 								</div>
 								<div className="flex items-center gap-2">
-									<Filter className="h-4 w-4 text-[var(--color-text-secondary)]" />
+									<Filter className="h-4 w-4 text-gray-600" />
 									<select
 										value={sortBy}
 										onChange={(e) =>
@@ -210,7 +210,7 @@ const ManagementPage = () => {
 												e.target.value as "name" | "lastActivity" | "score",
 											)
 										}
-										className="px-3 py-2 bg-[var(--color-dark)] border border-[rgba(255,255,255,0.1)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
+										className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
 									>
 										<option value="lastActivity">최근 활동순</option>
 										<option value="name">이름순</option>
@@ -233,7 +233,7 @@ const ManagementPage = () => {
 									<Card
 										key={student.info.id}
 										padding="lg"
-										className="hover:border-[rgba(255,255,255,0.1)] transition-all border border-[rgba(255,255,255,0.05)]"
+										className="hover:border-gray-300 transition-all border border-gray-200"
 									>
 										<div className="flex justify-between items-start mb-4">
 											<div className="flex items-center gap-3">
@@ -316,7 +316,7 @@ const ManagementPage = () => {
 													마지막 활동
 												</Typography>
 												<div className="flex items-center gap-2">
-													<Clock className="h-4 w-4 text-[var(--color-text-secondary)]" />
+													<Clock className="h-4 w-4 text-gray-600" />
 													<Typography variant="small">
 														{formatTemporalDateTime(
 															student.lastActivity,
@@ -330,7 +330,7 @@ const ManagementPage = () => {
 										{/* Recent Message Preview */}
 										<Card
 											padding="sm"
-											className="bg-[var(--color-dark)]/50 mb-4 border border-[rgba(255,255,255,0.05)]"
+											className="bg-white/50 mb-4 border border-gray-200"
 										>
 											<div className="flex items-center justify-between mb-2">
 												<Typography
@@ -367,7 +367,7 @@ const ManagementPage = () => {
 
 										{/* Special Notes */}
 										{student.specialNotes && (
-											<div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
+											<div className="mt-4 pt-4 border-t border-gray-200">
 												<div className="flex items-start gap-2">
 													<AlertCircle className="h-4 w-4 text-[var(--color-yellow)] mt-0.5 flex-shrink-0" />
 													<Typography variant="small">
@@ -382,7 +382,7 @@ const ManagementPage = () => {
 
 							{filteredStudents.length === 0 && (
 								<Card padding="lg" className="text-center">
-									<User className="h-12 w-12 text-[var(--color-text-secondary)] mx-auto mb-4" />
+									<User className="h-12 w-12 text-gray-600 mx-auto mb-4" />
 									<Typography variant="h3" className="mb-2">
 										관리 중인 학생이 없습니다
 									</Typography>

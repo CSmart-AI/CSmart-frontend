@@ -33,7 +33,7 @@ const ConsultationPage = () => {
 	return (
 		<div className="flex min-h-[calc(100vh-var(--header-height))]">
 			{/* Main Content Area */}
-			<main className="flex-1 bg-[var(--color-background)]">
+			<main className="flex-1 bg-gray-50">
 				<div className="w-full px-[var(--page-padding-inline)] py-6">
 					{/* Page Header */}
 					<div className="mb-6">
@@ -51,7 +51,7 @@ const ConsultationPage = () => {
 								</Typography>
 								<Typography
 									variant="small"
-									className="text-[var(--color-text-secondary)]"
+									className="text-gray-600"
 								>
 									상담 대기 중
 								</Typography>
@@ -100,15 +100,15 @@ const ConsultationPage = () => {
 
 												<div className="grid grid-cols-2 gap-6 mb-4">
 													<div className="space-y-3">
-														<div className="flex items-center text-sm text-[var(--color-text-secondary)]">
+														<div className="flex items-center text-sm text-gray-600">
 															<Phone className="h-4 w-4 mr-2 shrink-0" />
 															{student.info.phone}
 														</div>
-														<div className="flex items-center text-sm text-[var(--color-text-secondary)]">
+														<div className="flex items-center text-sm text-gray-600">
 															<Clock className="h-4 w-4 mr-2 shrink-0" />
 															통화 가능: {student.info.availableCallTime}
 														</div>
-														<div className="flex items-center text-sm text-[var(--color-text-secondary)]">
+														<div className="flex items-center text-sm text-gray-600">
 															<MapPin className="h-4 w-4 mr-2 shrink-0" />
 															유입: {student.info.source}
 														</div>
@@ -118,7 +118,7 @@ const ConsultationPage = () => {
 															variant="body-secondary"
 															className="text-sm"
 														>
-															<span className="font-medium text-[var(--color-text-primary)]">
+															<span className="font-medium text-gray-900">
 																목표:
 															</span>{" "}
 															{student.info.targetUniversity}{" "}
@@ -128,7 +128,7 @@ const ConsultationPage = () => {
 															variant="body-secondary"
 															className="text-sm"
 														>
-															<span className="font-medium text-[var(--color-text-primary)]">
+															<span className="font-medium text-gray-900">
 																전적:
 															</span>{" "}
 															{student.info.previousEducation}
@@ -137,7 +137,7 @@ const ConsultationPage = () => {
 															variant="body-secondary"
 															className="text-sm"
 														>
-															<span className="font-medium text-[var(--color-text-primary)]">
+															<span className="font-medium text-gray-900">
 																계열:
 															</span>{" "}
 															{student.info.track}
@@ -148,7 +148,7 @@ const ConsultationPage = () => {
 												{student.info.message && (
 													<Card
 														padding="md"
-														className="mb-4 bg-[var(--color-primary)]/10 border border-[rgba(255,255,255,0.05)]"
+														className="mb-4 bg-[var(--color-primary)]/10 border border-gray-200"
 													>
 														<Typography
 															variant="body-secondary"
@@ -167,7 +167,7 @@ const ConsultationPage = () => {
 
 												<Card
 													padding="md"
-													className="bg-[var(--color-dark)]/50 border border-[rgba(255,255,255,0.05)]"
+													className="bg-white/50 border border-gray-200"
 												>
 													<div className="flex items-center justify-between mb-2">
 														<Typography variant="small" className="font-medium">
@@ -199,10 +199,10 @@ const ConsultationPage = () => {
 										</div>
 
 										{student.specialNotes && (
-											<div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
+											<div className="mt-4 pt-4 border-t border-gray-200">
 												<Card
 													padding="md"
-													className="bg-[var(--color-yellow)]/10 border border-[rgba(255,255,255,0.05)]"
+													className="bg-[var(--color-yellow)]/10 border border-gray-200"
 												>
 													<div className="flex items-center">
 														<Typography
@@ -227,7 +227,7 @@ const ConsultationPage = () => {
 
 							{filteredStudents.length === 0 && (
 								<Card padding="lg" className="text-center">
-									<User className="h-12 w-12 text-[var(--color-text-secondary)] mx-auto mb-4" />
+									<User className="h-12 w-12 text-gray-600 mx-auto mb-4" />
 									<Typography variant="h3" className="mb-2">
 										상담 대기 중인 학생이 없습니다
 									</Typography>

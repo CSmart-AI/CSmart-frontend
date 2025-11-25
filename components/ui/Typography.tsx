@@ -23,14 +23,14 @@ export const Typography = ({
 	const Component = getDefaultTag();
 
 	const variants = {
-		h1: "text-[40px] font-[590] leading-[44px] tracking-[-0.88px] text-[var(--color-text-primary)]",
-		h2: "text-2xl font-[590] leading-[1.33] text-[var(--color-text-primary)]",
-		h3: "text-xl font-[590] leading-[1.33] text-[var(--color-text-primary)]",
-		h4: "text-lg font-[590] leading-[1.33] text-[var(--color-text-primary)]",
-		body: "text-base font-normal leading-6 text-[var(--color-text-primary)]",
+		h1: "text-[40px] font-[590] leading-[44px] tracking-[-0.88px] text-gray-900",
+		h2: "text-2xl font-[590] leading-[1.33] text-gray-900",
+		h3: "text-xl font-[590] leading-[1.33] text-gray-900",
+		h4: "text-lg font-[590] leading-[1.33] text-gray-900",
+		body: "text-base font-normal leading-6 text-gray-900",
 		"body-secondary":
-			"text-[15px] font-normal leading-6 text-[var(--color-text-secondary)]",
-		small: "text-sm font-normal leading-5 text-[var(--color-text-secondary)]",
+			"text-[15px] font-normal leading-6 text-gray-600",
+		small: "text-sm font-normal leading-5 text-gray-600",
 	};
 
 	if (Component === "h1") {

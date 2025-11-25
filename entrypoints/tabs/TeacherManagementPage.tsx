@@ -142,7 +142,7 @@ const TeacherManagementPage = () => {
 	return (
 		<div className="flex min-h-[calc(100vh-var(--header-height))]">
 			{/* Main Content Area */}
-			<main className="flex-1 bg-[var(--color-background)]">
+			<main className="flex-1 bg-gray-50">
 				<div className="w-full px-[var(--page-padding-inline)] py-6">
 					{/* Page Header */}
 					<div className="mb-6">
@@ -180,7 +180,7 @@ const TeacherManagementPage = () => {
 										<Card
 											key={teacher.teacherId}
 											padding="lg"
-											className="border border-[rgba(255,255,255,0.05)]"
+											className="border border-gray-200"
 										>
 											<div className="flex justify-between items-start mb-4">
 												<div>
@@ -213,7 +213,7 @@ const TeacherManagementPage = () => {
 											<div className="space-y-2">
 												{teacher.phoneNumber && (
 													<Typography variant="small">
-														<span className="text-[var(--color-text-secondary)]">
+														<span className="text-gray-600">
 															전화번호:
 														</span>{" "}
 														<span className="font-medium">
@@ -223,7 +223,7 @@ const TeacherManagementPage = () => {
 												)}
 												{teacher.kakaoChannelId && (
 													<Typography variant="small">
-														<span className="text-[var(--color-text-secondary)]">
+														<span className="text-gray-600">
 															카카오 채널 ID:
 														</span>{" "}
 														<span className="font-medium">
@@ -233,7 +233,7 @@ const TeacherManagementPage = () => {
 												)}
 												{teacher.specialization && (
 													<Typography variant="small">
-														<span className="text-[var(--color-text-secondary)]">
+														<span className="text-gray-600">
 															전문분야:
 														</span>{" "}
 														<span className="font-medium">
@@ -242,7 +242,7 @@ const TeacherManagementPage = () => {
 													</Typography>
 												)}
 												<Typography variant="small">
-													<span className="text-[var(--color-text-secondary)]">
+													<span className="text-gray-600">
 														상태:
 													</span>{" "}
 													<Badge

@@ -13,8 +13,7 @@ export const Badge = ({
 	...props
 }: BadgeProps) => {
 	const variants = {
-		default:
-			"bg-[var(--color-dark)] text-[var(--color-text-secondary)] border border-[rgba(255,255,255,0.1)]",
+		default: "bg-gray-100 text-gray-700 border border-gray-300",
 		primary:
 			"bg-[var(--color-primary)]/20 text-[var(--color-primary)] border border-[var(--color-primary)]/30",
 		success:

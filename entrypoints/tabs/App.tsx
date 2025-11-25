@@ -43,7 +43,7 @@ function App() {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
+			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
 				<Typography variant="body-secondary">로딩 중...</Typography>
 			</div>
 		);
