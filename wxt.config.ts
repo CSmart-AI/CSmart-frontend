@@ -7,6 +7,7 @@ export default defineConfig({
 	modules: ["@wxt-dev/module-react"],
 	manifest: {
 		permissions: ["storage", "tabs"],
+		host_permissions: ["http://localhost:8080/*"],
 	},
 	vite: () => ({
 		// biome-ignore lint/suspicious/noExplicitAny: Vite 버전 충돌로 인한 타입 캐스팅 필요

@@ -1,264 +1,440 @@
+import { Eye, MessageCircle, Search, Send } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Badge, Button, Card, Input, Modal, Typography } from "./ui";
 import {
-	AlertTriangle,
-	Bot,
-	CheckCircle,
-	Clock,
-	Edit3,
-	FileText,
-	Filter,
-	MessageCircle,
-	Phone,
-	Search,
-	Send,
-	TrendingUp,
-	XCircle,
-} from "lucide-react";
-import { useMemo, useState } from "react";
+	aiResponseApi,
+	kakaoApi,
+	type AiResponseDTO,
+	type StudentDTO,
+	type ChannelType,
+} from "@/utils/api";
 import { cn } from "@/utils/cn";
-import { formatTemporalDateTime, toJSDate } from "@/utils/temporal";
-import { mockStudents } from "../data/mockData";
-import type { AIResponse } from "../types/student";
-import { Badge, Button, Card, Input, Typography } from "./ui";
+import {
+	extractGuidelineReferencesWithPositions,
+	getGuidelinesByLines,
+	type GuidelineReference,
+} from "@/utils/guideline";
 
-interface PageSpecificAIManagerProps {
-	responses: AIResponse[];
-	pageType: "consultation" | "registration" | "management";
-	title?: string;
-	description?: string;
+interface ChatItem {
+	id: string;
+	name: string;
+	studentId: number;
+	chatId: string; // talk_user.chat_id
+	lastMessage?: string;
+	lastLogSendAt?: number;
+	unreadCount?: number;
+	isReplied?: boolean;
+	isRead?: boolean;
 }
 
-const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
-	const [selectedTab, setSelectedTab] = useState<"pending" | "all">("pending");
-	const [filterCategory, setFilterCategory] = useState<string>("all");
+interface PageSpecificAIManagerProps {
+	chats: ChatItem[];
+	students: StudentDTO[];
+	channelType: ChannelType;
+	onMessageSent?: () => void;
+}
+
+const PageSpecificAIManager = ({
+	chats,
+	students,
+	channelType,
+	onMessageSent,
+}: PageSpecificAIManagerProps) => {
 	const [searchTerm, setSearchTerm] = useState("");
-	const [editingResponse, setEditingResponse] = useState<string | null>(null);
-	const [editedText, setEditedText] = useState("");
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+	const [messageInputs, setMessageInputs] = useState<Record<string, string>>(
+		{},
+	);
+	const [sendingIds, setSendingIds] = useState<Set<string>>(new Set());
+	const [errors, setErrors] = useState<Record<string, string>>({});
+	const [aiResponses, setAiResponses] = useState<
+		Record<number, AiResponseDTO | null>
+	>({});
+	const [loadingAiResponses, setLoadingAiResponses] = useState<Set<number>>(
+		new Set(),
+	);
+	const [selectedAiResponse, setSelectedAiResponse] =
+		useState<AiResponseDTO | null>(null);
+	const [guidelineData, setGuidelineData] = useState<
+		Map<string, { question: string; answer: string; category: string } | null>
+	>(new Map());
+	const [loadingGuidelines, setLoadingGuidelines] = useState(false);
+	const [guidelineReferences, setGuidelineReferences] = useState<
+		GuidelineReference[]
+	>([]);
+	const [selectedReference, setSelectedReference] = useState<string | null>(
+		null,
+	);
+	const [sourceLinkReferences, setSourceLinkReferences] = useState<
+		Array<{ url: string; startIndex: number; endIndex: number; text: string }>
+	>([]);
 
-	const filteredResponses = useMemo(
-		() =>
-			responses
-				.filter((response) => {
-					if (selectedTab === "pending" && response.status !== "pending")
-						return false;
-					if (filterCategory !== "all" && response.category !== filterCategory)
-						return false;
-					if (searchTerm) {
-						const student = mockStudents.find(
-							(s) => s.info.id === response.studentId,
-						);
-						const studentName = student?.info.name || "";
-						return (
-							response.originalMessage
-								.toLowerCase()
-								.includes(searchTerm.toLowerCase()) ||
-							response.suggestedResponse
-								.toLowerCase()
-								.includes(searchTerm.toLowerCase()) ||
-							studentName.toLowerCase().includes(searchTerm.toLowerCase())
-						);
+	// 학생 정보 맵 생성
+	const studentMap = useMemo(() => {
+		const map = new Map<number, StudentDTO>();
+		students.forEach((student) => {
+			map.set(student.studentId, student);
+		});
+		return map;
+	}, [students]);
+
+	/**
+	 * 각 학생의 대기 중인 AI 응답 가져오기
+	 */
+	useEffect(() => {
+		const loadAiResponses = async () => {
+			const studentIds = new Set(chats.map((chat) => chat.studentId));
+
+			for (const studentId of studentIds) {
+				// 로딩 시작
+				setLoadingAiResponses((prev) => {
+					if (prev.has(studentId)) {
+						return prev;
 					}
-					return true;
-				})
-				.sort(
-					(a, b) =>
-						toJSDate(b.createdAt).getTime() - toJSDate(a.createdAt).getTime(),
-				),
-		[responses, selectedTab, filterCategory, searchTerm],
-	);
+					return new Set(prev).add(studentId);
+				});
 
-	const pendingCount = responses.filter((r) => r.status === "pending").length;
-	const pendingResponses = filteredResponses.filter(
-		(r) => r.status === "pending",
-	);
-	const allSelected =
-		pendingResponses.length > 0 &&
-		pendingResponses.every((r) => selectedIds.has(r.id));
-	const someSelected =
-		pendingResponses.some((r) => selectedIds.has(r.id)) && !allSelected;
+				// 이미 데이터가 있는지 확인
+				setAiResponses((prev) => {
+					if (prev[studentId] !== undefined) {
+						setLoadingAiResponses((current) => {
+							const next = new Set(current);
+							next.delete(studentId);
+							return next;
+						});
+						return prev;
+					}
+					return prev;
+				});
 
-	const getStudentName = (studentId: string) => {
-		const student = mockStudents.find((s) => s.info.id === studentId);
-		return student?.info.name || "알 수 없음";
-	};
+				try {
+					const response = await aiResponseApi.getByStudent(studentId);
+					console.log(response);
+					if (response.isSuccess && response.result) {
+						// PENDING 상태인 가장 최근 응답 찾기
+						const pendingResponse = response.result.find(
+							(res) => res.status === "PENDING_REVIEW",
+						);
+						setAiResponses((prev) => ({
+							...prev,
+							[studentId]: pendingResponse || null,
+						}));
 
-	const getCategoryInfo = (category: string) => {
-		const categories = {
-			faq: {
-				label: "FAQ",
-				variant: "primary" as const,
-				icon: MessageCircle,
-			},
-			consultation: {
-				label: "상담",
-				variant: "success" as const,
-				icon: Phone,
-			},
-			complaint: {
-				label: "불만",
-				variant: "danger" as const,
-				icon: AlertTriangle,
-			},
-			schedule: {
-				label: "일정",
-				variant: "primary" as const,
-				icon: Clock,
-			},
-			payment: {
-				label: "결제",
-				variant: "warning" as const,
-				icon: TrendingUp,
-			},
-			placement_test: {
-				label: "배치고사",
-				variant: "primary" as const,
-				icon: FileText,
-			},
-			other: {
-				label: "기타",
-				variant: "default" as const,
-				icon: MessageCircle,
-			},
+						// AI 응답이 있으면 메시지 입력 필드에 자동 채우기
+						if (pendingResponse?.recommendedResponse) {
+							const chat = chats.find((c) => c.studentId === studentId);
+							if (chat) {
+								setMessageInputs((prev) => ({
+									...prev,
+									[chat.id]: pendingResponse.recommendedResponse,
+								}));
+							}
+						}
+					}
+				} catch (error) {
+					console.error(
+						`Failed to load AI response for student ${studentId}:`,
+						error,
+					);
+				} finally {
+					setLoadingAiResponses((prev) => {
+						const next = new Set(prev);
+						next.delete(studentId);
+						return next;
+					});
+				}
+			}
 		};
-		return categories[category as keyof typeof categories] || categories.other;
+
+		loadAiResponses();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [chats]);
+
+	const filteredChats = useMemo(
+		() =>
+			chats.filter((chat) => {
+				if (!searchTerm) return true;
+				const name = chat.name || "";
+				const lastMessage = chat.lastMessage || "";
+				return (
+					name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+					lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
+				);
+			}),
+		[chats, searchTerm],
+	);
+
+	const allSelected =
+		filteredChats.length > 0 &&
+		filteredChats.every((chat) => selectedIds.has(chat.id));
+	const someSelected =
+		filteredChats.some((chat) => selectedIds.has(chat.id)) && !allSelected;
+
+	/**
+	 * 메시지 입력값 업데이트
+	 */
+	const handleMessageChange = (chatId: string, value: string) => {
+		setMessageInputs((prev) => ({ ...prev, [chatId]: value }));
+		setErrors((prev) => {
+			const next = { ...prev };
+			delete next[chatId];
+			return next;
+		});
 	};
 
-	const getStatusIcon = (response: AIResponse) => {
-		switch (response.status) {
-			case "sent":
-				return <CheckCircle className="h-4 w-4 text-[var(--color-green)]" />;
-			case "approved":
-				return <Send className="h-4 w-4 text-[var(--color-primary)]" />;
-			case "rejected":
-				return <XCircle className="h-4 w-4 text-[var(--color-red)]" />;
-			default:
-				return <Clock className="h-4 w-4 text-[var(--color-yellow)]" />;
+	/**
+	 * 출처 링크 참조 추출
+	 * @param text 원본 텍스트
+	 * @returns 출처 링크 참조 배열
+	 */
+	const extractSourceLinkReferences = (
+		text: string,
+	): Array<{
+		url: string;
+		startIndex: number;
+		endIndex: number;
+		text: string;
+	}> => {
+		const references: Array<{
+			url: string;
+			startIndex: number;
+			endIndex: number;
+			text: string;
+		}> = [];
+		// (출처: https://...) 패턴 찾기
+		const sourceLinkRegex = /\(출처:\s*(https?:\/\/[^)]+)\)/gi;
+		const matches = Array.from(text.matchAll(sourceLinkRegex));
+
+		for (const match of matches) {
+			if (match.index !== undefined && match[1]) {
+				references.push({
+					url: match[1],
+					startIndex: match.index,
+					endIndex: match.index + match[0].length,
+					text: match[0],
+				});
+			}
+		}
+
+		return references;
+	};
+
+	/**
+	 * GuidelineDB 및 출처 링크 참조 제거 (메시지 전송 전)
+	 * @param text 원본 텍스트
+	 * @returns 참조가 제거된 텍스트
+	 */
+	const removeAllReferences = (text: string): string => {
+		let result = text;
+
+		// GuidelineDB 참조 위치 찾기
+		const guidelineReferences = extractGuidelineReferencesWithPositions(result);
+
+		// 참조 위치를 역순으로 정렬하여 뒤에서부터 제거 (인덱스 변경 방지)
+		const sortedGuidelineRefs = [...guidelineReferences].sort(
+			(a, b) => b.startIndex - a.startIndex,
+		);
+
+		// 각 GuidelineDB 참조에 대해 GuidelineDB부터 (line숫자)까지 제거
+		for (const ref of sortedGuidelineRefs) {
+			// GuidelineDB 시작 위치 찾기 (참조 앞에서 역방향으로 검색)
+			const beforeRef = result.slice(0, ref.startIndex);
+			const guidelineDBMatch = beforeRef.match(/GuidelineDB[^)]*?$/i);
+
+			if (guidelineDBMatch && guidelineDBMatch.index !== undefined) {
+				// GuidelineDB 시작부터 (line숫자) 끝까지 제거
+				const removeStart = guidelineDBMatch.index;
+				const removeEnd = ref.endIndex;
+				result = result.slice(0, removeStart) + result.slice(removeEnd);
+			} else {
+				// GuidelineDB를 찾지 못한 경우 (line숫자)만 제거
+				result = result.slice(0, ref.startIndex) + result.slice(ref.endIndex);
+			}
+		}
+
+		// 출처 링크 참조 제거
+		const sourceLinkRefs = extractSourceLinkReferences(result);
+		const sortedSourceRefs = [...sourceLinkRefs].sort(
+			(a, b) => b.startIndex - a.startIndex,
+		);
+
+		for (const ref of sortedSourceRefs) {
+			result = result.slice(0, ref.startIndex) + result.slice(ref.endIndex);
+		}
+
+		// 연속된 공백 정리
+		return result.replace(/\s+/g, " ").trim();
+	};
+
+	/**
+	 * 개별 메시지 전송
+	 */
+	const handleSendMessage = async (chat: ChatItem) => {
+		const chatId = chat.id;
+		const rawMessage = messageInputs[chatId]?.trim();
+
+		if (!rawMessage) {
+			setErrors((prev) => ({
+				...prev,
+				[chatId]: "메시지를 입력해주세요.",
+			}));
+			return;
+		}
+
+		// GuidelineDB 및 출처 링크 참조 제거
+		const message = removeAllReferences(rawMessage);
+
+		if (!message.trim()) {
+			setErrors((prev) => ({
+				...prev,
+				[chatId]: "메시지 내용이 없습니다.",
+			}));
+			return;
+		}
+
+		const student = studentMap.get(chat.studentId);
+		if (!student || !student.name) {
+			console.log(student);
+			setErrors((prev) => ({
+				...prev,
+				[chatId]: "학생 정보가 올바르지 않습니다.",
+			}));
+			return;
+		}
+
+		setSendingIds((prev) => new Set(prev).add(chatId));
+
+		try {
+			const response = await kakaoApi.sendMessage({
+				recipient: student.name,
+				message,
+				messageType: "text",
+				chatId: chat.chatId,
+			});
+
+			if (response.isSuccess) {
+				// 메시지 전송 성공 후 approve API 호출 (작동하지 않더라도 호출)
+				const aiResponse = aiResponses[chat.studentId];
+				if (aiResponse?.responseId) {
+					try {
+						await aiResponseApi.approve(aiResponse.responseId);
+					} catch (error) {
+						// approve 실패해도 무시 (사용자에게 에러 표시하지 않음)
+						console.warn("Approve API 호출 실패:", error);
+					}
+				}
+
+				setMessageInputs((prev) => {
+					const next = { ...prev };
+					delete next[chatId];
+					return next;
+				});
+				setErrors((prev) => {
+					const next = { ...prev };
+					delete next[chatId];
+					return next;
+				});
+				onMessageSent?.();
+			} else {
+				setErrors((prev) => ({
+					...prev,
+					[chatId]: response.message || "메시지 전송에 실패했습니다.",
+				}));
+			}
+		} catch (error) {
+			setErrors((prev) => ({
+				...prev,
+				[chatId]:
+					error instanceof Error
+						? error.message
+						: "메시지 전송 중 오류가 발생했습니다.",
+			}));
+		} finally {
+			setSendingIds((prev) => {
+				const next = new Set(prev);
+				next.delete(chatId);
+				return next;
+			});
 		}
 	};
 
-	const handleApprove = (responseId: string) => {
-		console.log("Approving response:", responseId);
+	/**
+	 * 일괄 메시지 전송
+	 */
+	const handleBulkSend = async () => {
+		const selectedChats = filteredChats.filter((chat) =>
+			selectedIds.has(chat.id || ""),
+		);
+
+		for (const chat of selectedChats) {
+			const chatId = chat.id || "";
+			const message = messageInputs[chatId]?.trim();
+
+			if (!message) {
+				setErrors((prev) => ({
+					...prev,
+					[chatId]: "메시지를 입력해주세요.",
+				}));
+				continue;
+			}
+
+			await handleSendMessage(chat);
+		}
 	};
 
-	const handleReject = (responseId: string) => {
-		console.log("Rejecting response:", responseId);
-	};
-
-	const handleEdit = (responseId: string, currentText: string) => {
-		setEditingResponse(responseId);
-		setEditedText(currentText);
-	};
-
-	const handleSaveEdit = (responseId: string) => {
-		console.log("Saving edited response:", responseId, editedText);
-		setEditingResponse(null);
-		setEditedText("");
-	};
-
-	const handleSendApproved = (responseId: string) => {
-		console.log("Sending approved response:", responseId);
-	};
-
-	const handleToggleSelect = (id: string) => {
+	/**
+	 * 선택 토글
+	 */
+	const handleToggleSelect = (chatId: string) => {
 		const newSelected = new Set(selectedIds);
-		if (newSelected.has(id)) {
-			newSelected.delete(id);
+		if (newSelected.has(chatId)) {
+			newSelected.delete(chatId);
 		} else {
-			newSelected.add(id);
+			newSelected.add(chatId);
 		}
 		setSelectedIds(newSelected);
 	};
 
+	/**
+	 * 전체 선택/해제
+	 */
 	const handleSelectAll = () => {
 		if (allSelected) {
 			setSelectedIds(new Set());
 		} else {
-			setSelectedIds(new Set(pendingResponses.map((r) => r.id)));
+			setSelectedIds(new Set(filteredChats.map((chat) => chat.id || "")));
 		}
-	};
-
-	const handleBulkApprove = () => {
-		console.log("Bulk approving:", Array.from(selectedIds));
-		setSelectedIds(new Set());
-	};
-
-	const handleBulkReject = () => {
-		console.log("Bulk rejecting:", Array.from(selectedIds));
-		setSelectedIds(new Set());
 	};
 
 	return (
 		<div className="space-y-6">
-			{/* Filters & Search - Linear Style */}
-			<div className="flex items-center gap-4">
-				{/* Tab Buttons */}
-				<div className="flex gap-2 border-b border-gray-200 -mb-px">
-					<button
-						type="button"
-						onClick={() => setSelectedTab("pending")}
-						className={cn(
-							"px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
-							selectedTab === "pending"
-								? "text-[var(--color-primary)] border-[var(--color-primary)]"
-								: "text-gray-600 border-transparent hover:text-gray-900",
-						)}
-					>
-						승인 대기
-						{pendingCount > 0 && (
-							<Badge
-								variant="danger"
-								className="ml-2 h-4 min-w-4 flex items-center justify-center px-1 text-[9px]"
-							>
-								{pendingCount}
-							</Badge>
-						)}
-					</button>
-					<button
-						type="button"
-						onClick={() => setSelectedTab("all")}
-						className={cn(
-							"px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
-							selectedTab === "all"
-								? "text-[var(--color-primary)] border-[var(--color-primary)]"
-								: "text-gray-600 border-transparent hover:text-gray-900",
-						)}
-					>
-						전체 응답
-					</button>
+			{/* Header */}
+			<div className="flex items-center justify-between">
+				<div>
+					<Typography variant="h2" className="mb-2">
+						카카오톡 메시지 관리
+					</Typography>
+					<Typography variant="body-secondary" className="text-gray-600">
+						채팅 목록을 확인하고 메시지를 전송할 수 있습니다
+					</Typography>
 				</div>
+			</div>
 
-				{/* Search */}
+			{/* Search */}
+			<div className="flex items-center gap-4">
 				<div className="flex-1 max-w-md">
 					<Input
 						type="text"
-						placeholder="메시지 내용 또는 학생명으로 검색..."
+						placeholder="채팅 이름 또는 메시지로 검색..."
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
 						icon={<Search className="h-4 w-4" />}
 					/>
 				</div>
-
-				{/* Filter */}
-				<div className="flex items-center gap-2">
-					<Filter className="h-4 w-4 text-gray-600" />
-					<select
-						value={filterCategory}
-						onChange={(e) => setFilterCategory(e.target.value)}
-						className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
-					>
-						<option value="all">전체 카테고리</option>
-						<option value="faq">FAQ</option>
-						<option value="consultation">상담</option>
-						<option value="placement_test">배치고사</option>
-						<option value="schedule">일정</option>
-						<option value="payment">결제</option>
-						<option value="other">기타</option>
-					</select>
-				</div>
 			</div>
 
 			{/* Bulk Actions */}
-			{selectedTab === "pending" && pendingResponses.length > 0 && (
+			{selectedIds.size > 0 && (
 				<Card
 					padding="md"
 					className="flex items-center justify-between bg-white border border-gray-200"
@@ -272,35 +448,22 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 									if (input) input.indeterminate = someSelected;
 								}}
 								onChange={handleSelectAll}
-								className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
+								className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-indigo)] focus:ring-2 focus:ring-[var(--color-indigo)]"
 							/>
 							<Typography variant="small" className="font-medium text-gray-900">
-								전체 선택 ({selectedIds.size}/{pendingResponses.length})
+								전체 선택 ({selectedIds.size}/{filteredChats.length})
 							</Typography>
 						</label>
 					</div>
-					{selectedIds.size > 0 && (
-						<div className="flex items-center gap-2">
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={handleBulkReject}
-								className="text-[var(--color-red)] hover:bg-[var(--color-red)]/10"
-							>
-								<XCircle className="h-4 w-4 mr-1" />
-								일괄 거절 ({selectedIds.size})
-							</Button>
-							<Button
-								variant="primary"
-								size="sm"
-								onClick={handleBulkApprove}
-								className="bg-[var(--color-green)] hover:opacity-90"
-							>
-								<CheckCircle className="h-4 w-4 mr-1" />
-								일괄 승인 ({selectedIds.size})
-							</Button>
-						</div>
-					)}
+					<Button
+						variant="primary"
+						size="sm"
+						onClick={handleBulkSend}
+						className="bg-[var(--color-green)] hover:opacity-90"
+					>
+						<Send className="h-4 w-4 mr-1" />
+						일괄 전송 ({selectedIds.size})
+					</Button>
 				</Card>
 			)}
 
@@ -312,49 +475,47 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 				<table className="w-full">
 					<thead>
 						<tr className="border-b border-gray-200 bg-gray-50">
-							{selectedTab === "pending" && (
-								<th className="px-4 py-3 text-left w-12">
-									<input
-										type="checkbox"
-										checked={allSelected}
-										ref={(input) => {
-											if (input) input.indeterminate = someSelected;
-										}}
-										onChange={handleSelectAll}
-										className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
-									/>
-								</th>
-							)}
-							<th className="px-4 py-3 text-left">
+							<th className="px-4 py-3 text-left w-12">
+								<input
+									type="checkbox"
+									checked={allSelected}
+									ref={(input) => {
+										if (input) input.indeterminate = someSelected;
+									}}
+									onChange={handleSelectAll}
+									className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-indigo)] focus:ring-2 focus:ring-[var(--color-indigo)]"
+								/>
+							</th>
+							<th className="px-4 py-3 text-left w-32">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
 								>
-									학생명
+									프로필
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left">
+							<th className="px-4 py-3 text-left min-w-[150px]">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
 								>
-									카테고리
+									이름
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left min-w-[350px]">
+							<th className="px-4 py-3 text-left min-w-[200px]">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
 								>
-									원본 메시지
+									마지막 메시지
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left min-w-[350px]">
+							<th className="px-4 py-3 text-left min-w-[300px]">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
 								>
-									AI 응답
+									전송할 메시지
 								</Typography>
 							</th>
 							<th className="px-4 py-3 text-left w-24">
@@ -384,191 +545,231 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 						</tr>
 					</thead>
 					<tbody>
-						{filteredResponses.map((response) => {
-							const categoryInfo = getCategoryInfo(response.category);
-							const CategoryIcon = categoryInfo.icon;
-							const studentName = getStudentName(response.studentId);
-							const isSelected = selectedIds.has(response.id);
+						{filteredChats.map((chat) => {
+							const chatId = chat.id;
+							// 이름이 "unknown"이면 "미등록 학생"으로 표시
+							const chatName =
+								chat.name?.toLowerCase() === "unknown"
+									? "미등록 학생"
+									: chat.name || "알 수 없음";
+							const isSelected = selectedIds.has(chatId);
+							const isSending = sendingIds.has(chatId);
+							const error = errors[chatId];
+							const message = messageInputs[chatId] || "";
+							const aiResponse = aiResponses[chat.studentId];
+							const isLoadingAiResponse = loadingAiResponses.has(
+								chat.studentId,
+							);
 
 							return (
 								<tr
-									key={response.id}
+									key={chatId}
 									className={cn(
 										"border-b border-gray-200 hover:bg-gray-50 transition-colors",
-										isSelected && "bg-[var(--color-primary)]/5",
+										isSelected && "bg-[var(--color-indigo)]/5",
 									)}
 								>
-									{selectedTab === "pending" && (
-										<td className="px-4 py-3">
-											<input
-												type="checkbox"
-												checked={isSelected}
-												onChange={() => handleToggleSelect(response.id)}
-												className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]"
-											/>
-										</td>
-									)}
+									<td className="px-4 py-3">
+										<input
+											type="checkbox"
+											checked={isSelected}
+											onChange={() => handleToggleSelect(chatId)}
+											className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-indigo)] focus:ring-2 focus:ring-[var(--color-indigo)]"
+										/>
+									</td>
+									<td className="px-4 py-3">
+										<div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+											<MessageCircle className="h-5 w-5 text-gray-400" />
+										</div>
+									</td>
 									<td className="px-4 py-3">
 										<Typography
 											variant="small"
 											className="font-medium text-gray-900"
 										>
-											{studentName}
+											{chatName}
 										</Typography>
-									</td>
-									<td className="px-4 py-3">
-										<Badge variant={categoryInfo.variant} className="text-xs">
-											<CategoryIcon className="h-3 w-3 inline mr-1" />
-											{categoryInfo.label}
-										</Badge>
-									</td>
-									<td className="px-4 py-3">
-										<div className="max-w-[350px]">
-											<Typography
-												variant="body-secondary"
-												className="text-sm line-clamp-3 text-gray-700"
-											>
-												{response.originalMessage}
-											</Typography>
-										</div>
-									</td>
-									<td className="px-4 py-3">
-										{editingResponse === response.id ? (
-											<div className="space-y-2 max-w-[350px]">
-												<textarea
-													value={editedText}
-													onChange={(e) => setEditedText(e.target.value)}
-													className="w-full p-2 bg-white border border-gray-300 rounded text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)]"
-													rows={4}
-												/>
-												<div className="flex gap-1">
-													<Button
-														size="sm"
-														onClick={() => handleSaveEdit(response.id)}
-														className="text-xs px-2 py-1"
-													>
-														저장
-													</Button>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => setEditingResponse(null)}
-														className="text-xs px-2 py-1"
-													>
-														취소
-													</Button>
-												</div>
-											</div>
-										) : (
-											<div className="max-w-[350px]">
-												<Typography
-													variant="body-secondary"
-													className="text-sm line-clamp-3 text-[var(--color-primary)]"
-												>
-													{response.suggestedResponse}
-												</Typography>
-												{response.status === "pending" && (
-													<button
-														type="button"
-														onClick={() =>
-															handleEdit(
-																response.id,
-																response.suggestedResponse,
-															)
-														}
-														className="mt-1 text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 transition-colors"
-													>
-														<Edit3 className="h-3 w-3" />
-													</button>
-												)}
-											</div>
-										)}
-									</td>
-									<td className="px-4 py-3">
-										<div className="flex items-center gap-1">
-											{getStatusIcon(response)}
-											<Typography
-												variant="small"
-												className="text-xs text-gray-700"
-											>
-												{response.status === "pending"
-													? "대기"
-													: response.status === "approved"
-														? "승인"
-														: response.status === "sent"
-															? "발송"
-															: "거절"}
-											</Typography>
-										</div>
 									</td>
 									<td className="px-4 py-3">
 										<Typography
-											variant="small"
-											className="text-xs text-gray-600"
+											variant="body-secondary"
+											className="text-sm line-clamp-2 max-w-[200px]"
 										>
-											{formatTemporalDateTime(
-												response.createdAt,
-												"MM/dd HH:mm",
-											)}
+											{chat.lastMessage || "메시지 없음"}
 										</Typography>
 									</td>
 									<td className="px-4 py-3">
-										<div className="flex items-center justify-end gap-1">
-											{response.status === "pending" && (
-												<>
-													<button
-														type="button"
-														onClick={() => handleReject(response.id)}
-														className="p-1.5 text-[var(--color-red)] hover:bg-[var(--color-red)]/10 rounded transition-colors"
-														title="거절"
-													>
-														<XCircle className="h-4 w-4" />
-													</button>
-													<button
-														type="button"
-														onClick={() => handleApprove(response.id)}
-														className="p-1.5 text-[var(--color-green)] hover:bg-[var(--color-green)]/10 rounded transition-colors"
-														title="승인"
-													>
-														<CheckCircle className="h-4 w-4" />
-													</button>
-												</>
+										<div className="space-y-2 min-w-[300px]">
+											{isLoadingAiResponse ? (
+												<div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-500">
+													AI 응답 로딩 중...
+												</div>
+											) : (
+												<textarea
+													value={message}
+													onChange={(e) =>
+														handleMessageChange(chatId, e.target.value)
+													}
+													placeholder={
+														aiResponse !== null && aiResponse !== undefined
+															? "AI 추천 응답이 자동으로 채워졌습니다. 수정 후 전송하세요."
+															: "메시지를 입력하세요..."
+													}
+													disabled={isSending}
+													className={cn(
+														"w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent transition-all duration-100 resize-none",
+														error && "border-[var(--color-red)]",
+														aiResponse !== null &&
+															aiResponse !== undefined &&
+															"bg-blue-50 border-blue-200 placeholder:text-blue-600",
+													)}
+													rows={2}
+												/>
 											)}
-											{response.status === "approved" && (
-												<button
-													type="button"
-													onClick={() => handleSendApproved(response.id)}
-													className="p-1.5 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded transition-colors"
-													title="발송"
+											{aiResponse !== null &&
+												aiResponse !== undefined &&
+												!isLoadingAiResponse && (
+													<div className="flex items-center gap-2">
+														<Typography
+															variant="small"
+															className="text-xs text-blue-600 flex items-center gap-1"
+														>
+															<MessageCircle className="h-3 w-3" />
+															AI 추천 응답이 있습니다
+														</Typography>
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() => {
+																setSelectedAiResponse(aiResponse);
+																// GuidelineDB 참조 추출 및 로드 (위치 정보 포함)
+																const referencesWithPositions =
+																	extractGuidelineReferencesWithPositions(
+																		aiResponse.recommendedResponse,
+																	);
+																setGuidelineReferences(referencesWithPositions);
+
+																// 출처 링크 참조 추출
+																const sourceLinks = extractSourceLinkReferences(
+																	aiResponse.recommendedResponse,
+																);
+																setSourceLinkReferences(sourceLinks);
+
+																const lineNumbers = referencesWithPositions.map(
+																	(ref) => ref.lineNumber,
+																);
+																console.log("추출된 라인 번호:", lineNumbers);
+																if (lineNumbers.length > 0) {
+																	setLoadingGuidelines(true);
+																	getGuidelinesByLines(lineNumbers).then(
+																		(data) => {
+																			console.log(
+																				"로드된 GuidelineDB 데이터:",
+																				data,
+																			);
+																			setGuidelineData(data);
+																			setLoadingGuidelines(false);
+																			// 첫 번째 참조 선택
+																			if (lineNumbers.length > 0) {
+																				setSelectedReference(lineNumbers[0]);
+																			}
+																		},
+																	);
+																} else {
+																	setGuidelineData(new Map());
+																	setSelectedReference(null);
+																}
+															}}
+															className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+														>
+															<Eye className="h-3 w-3 mr-1" />
+															자세히보기
+														</Button>
+													</div>
+												)}
+											{error && (
+												<Typography
+													variant="small"
+													className="text-[var(--color-red)]"
 												>
-													<Send className="h-4 w-4" />
-												</button>
+													{error}
+												</Typography>
 											)}
+										</div>
+									</td>
+									<td className="px-4 py-3">
+										<div className="flex items-center gap-2">
+											{chat.unreadCount && chat.unreadCount > 0 ? (
+												<Badge variant="danger" className="text-xs">
+													읽지 않음 ({chat.unreadCount})
+												</Badge>
+											) : (
+												<Badge variant="success" className="text-xs">
+													읽음
+												</Badge>
+											)}
+											{chat.isReplied && (
+												<Badge variant="primary" className="text-xs">
+													답변함
+												</Badge>
+											)}
+										</div>
+									</td>
+									<td className="px-4 py-3">
+										{chat.lastLogSendAt && (
+											<Typography
+												variant="small"
+												className="text-xs text-gray-600"
+											>
+												{new Date(chat.lastLogSendAt).toLocaleString("ko-KR", {
+													month: "2-digit",
+													day: "2-digit",
+													hour: "2-digit",
+													minute: "2-digit",
+												})}
+											</Typography>
+										)}
+									</td>
+									<td className="px-4 py-3">
+										<div className="flex items-center justify-end gap-1">
+											<Button
+												size="sm"
+												onClick={() => handleSendMessage(chat)}
+												disabled={isSending || !message.trim()}
+												className="bg-[var(--color-green)] hover:opacity-90"
+											>
+												{isSending ? (
+													<>
+														<MessageCircle className="h-3 w-3 mr-1 animate-spin" />
+														전송 중
+													</>
+												) : (
+													<>
+														<Send className="h-3 w-3 mr-1" />
+														전송
+													</>
+												)}
+											</Button>
 										</div>
 									</td>
 								</tr>
 							);
 						})}
-						{filteredResponses.length === 0 && (
+						{filteredChats.length === 0 && (
 							<tr>
-								<td
-									colSpan={selectedTab === "pending" ? 8 : 7}
-									className="px-4 py-16 text-center"
-								>
+								<td colSpan={8} className="px-4 py-16 text-center">
 									<div className="flex flex-col items-center justify-center">
-										<Bot className="h-16 w-16 text-gray-300 mb-6" />
+										<MessageCircle className="h-16 w-16 text-gray-300 mb-6" />
 										<Typography variant="h3" className="mb-2 text-gray-900">
-											{selectedTab === "pending"
-												? "승인 대기 중인 응답이 없습니다"
-												: "응답이 없습니다"}
+											채팅이 없습니다
 										</Typography>
 										<Typography
 											variant="body-secondary"
 											className="text-gray-600 text-center max-w-md"
 										>
-											{selectedTab === "pending"
-												? "새로운 메시지가 들어오면 AI가 자동으로 분석하여 여기에 표시됩니다."
-												: "검색 조건을 변경해보세요."}
+											{searchTerm
+												? "검색 조건을 변경해보세요."
+												: "카카오톡 채팅이 없습니다."}
 										</Typography>
 									</div>
 								</td>
@@ -577,6 +778,317 @@ const PageSpecificAIManager = ({ responses }: PageSpecificAIManagerProps) => {
 					</tbody>
 				</table>
 			</Card>
+
+			{/* AI 응답 상세 모달 */}
+			<Modal
+				isOpen={selectedAiResponse !== null}
+				onClose={() => {
+					setSelectedAiResponse(null);
+					setGuidelineData(new Map());
+					setGuidelineReferences([]);
+					setSelectedReference(null);
+				}}
+				title="AI 응답 상세"
+				size="xl"
+			>
+				{selectedAiResponse && (
+					<div className="flex gap-6 h-[calc(90vh-120px)]">
+						{/* 좌측: 응답 텍스트 */}
+						<div className="flex-1 overflow-y-auto">
+							<Typography
+								variant="small"
+								className="font-medium text-gray-700 mb-2"
+							>
+								전체 응답
+							</Typography>
+							<div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+								{(() => {
+									const text = selectedAiResponse.recommendedResponse;
+									const allReferences = [
+										...guidelineReferences.map((ref) => ({
+											type: "guideline" as const,
+											startIndex: ref.startIndex,
+											endIndex: ref.endIndex,
+											text: ref.text,
+											lineNumber: ref.lineNumber,
+										})),
+										...sourceLinkReferences.map((ref) => ({
+											type: "sourceLink" as const,
+											startIndex: ref.startIndex,
+											endIndex: ref.endIndex,
+											text: ref.text,
+											url: ref.url,
+										})),
+									].sort((a, b) => a.startIndex - b.startIndex);
+
+									if (allReferences.length === 0) {
+										return (
+											<Typography
+												variant="body"
+												className="text-gray-900 whitespace-pre-wrap leading-relaxed"
+											>
+												{text}
+											</Typography>
+										);
+									}
+
+									// 참조 위치를 기준으로 텍스트를 분할하고 하이라이트
+									const parts: Array<{
+										text: string;
+										isReference: boolean;
+										referenceType?: "guideline" | "sourceLink";
+										lineNumber?: string;
+										url?: string;
+										key: string;
+									}> = [];
+									let lastIndex = 0;
+
+									for (const ref of allReferences) {
+										// 참조 이전 텍스트
+										if (ref.startIndex > lastIndex) {
+											parts.push({
+												text: text.slice(lastIndex, ref.startIndex),
+												isReference: false,
+												key: `text-${lastIndex}-${ref.startIndex}`,
+											});
+										}
+										// 참조 텍스트
+										parts.push({
+											text: ref.text,
+											isReference: true,
+											referenceType: ref.type,
+											lineNumber:
+												ref.type === "guideline" ? ref.lineNumber : undefined,
+											url: ref.type === "sourceLink" ? ref.url : undefined,
+											key: `ref-${ref.type}-${ref.startIndex}`,
+										});
+										lastIndex = ref.endIndex;
+									}
+									// 마지막 참조 이후 텍스트
+									if (lastIndex < text.length) {
+										parts.push({
+											text: text.slice(lastIndex),
+											isReference: false,
+											key: `text-${lastIndex}-end`,
+										});
+									}
+
+									return (
+										<Typography
+											variant="body"
+											className="text-gray-900 whitespace-pre-wrap leading-relaxed"
+										>
+											{parts.map((part) => {
+												if (part.isReference) {
+													if (
+														part.referenceType === "guideline" &&
+														part.lineNumber
+													) {
+														const isSelected =
+															selectedReference === part.lineNumber;
+														const lineNum = part.lineNumber;
+														return (
+															<button
+																type="button"
+																key={part.key}
+																onClick={() => {
+																	if (lineNum) {
+																		setSelectedReference(lineNum);
+																	}
+																}}
+																onKeyDown={(e) => {
+																	if (
+																		(e.key === "Enter" || e.key === " ") &&
+																		lineNum
+																	) {
+																		e.preventDefault();
+																		setSelectedReference(lineNum);
+																	}
+																}}
+																className={cn(
+																	"cursor-pointer px-1 py-0.5 rounded transition-colors inline",
+																	isSelected
+																		? "bg-blue-500 text-white font-semibold"
+																		: "bg-blue-200 text-blue-800 hover:bg-blue-300",
+																)}
+															>
+																{part.text}
+															</button>
+														);
+													} else if (
+														part.referenceType === "sourceLink" &&
+														part.url
+													) {
+														return (
+															<a
+																href={part.url}
+																target="_blank"
+																rel="noopener noreferrer"
+																key={part.key}
+																className="cursor-pointer px-1 py-0.5 rounded transition-colors inline bg-green-200 text-green-800 hover:bg-green-300 underline"
+															>
+																{part.text}
+															</a>
+														);
+													}
+												}
+												return <span key={part.key}>{part.text}</span>;
+											})}
+										</Typography>
+									);
+								})()}
+							</div>
+						</div>
+
+						{/* 우측: GuidelineDB 참조 정보 및 출처 링크 */}
+						<div className="w-96 flex-shrink-0 overflow-y-auto border-l border-gray-200 pl-6">
+							{/* GuidelineDB 참조 */}
+							<div className="mb-6">
+								<Typography
+									variant="small"
+									className="font-medium text-gray-700 mb-3"
+								>
+									GuidelineDB 참조 출처
+								</Typography>
+								{loadingGuidelines ? (
+									<div className="text-center py-4">
+										<Typography
+											variant="body-secondary"
+											className="text-gray-500"
+										>
+											GuidelineDB 데이터를 불러오는 중...
+										</Typography>
+									</div>
+								) : guidelineData.size === 0 ? (
+									<div className="text-center py-8">
+										<Typography
+											variant="body-secondary"
+											className="text-gray-500"
+										>
+											GuidelineDB 참조가 없습니다.
+										</Typography>
+									</div>
+								) : (
+									<div className="space-y-3">
+										{Array.from(guidelineData.entries()).map(
+											([lineNumber, data]) => {
+												const isSelected = selectedReference === lineNumber;
+												return (
+													<button
+														type="button"
+														key={lineNumber}
+														onClick={() => setSelectedReference(lineNumber)}
+														onKeyDown={(e) => {
+															if (e.key === "Enter" || e.key === " ") {
+																e.preventDefault();
+																setSelectedReference(lineNumber);
+															}
+														}}
+														className={cn(
+															"w-full text-left rounded-lg p-4 border transition-all cursor-pointer",
+															isSelected
+																? "bg-blue-100 border-blue-400 shadow-md"
+																: "bg-blue-50 border-blue-200 hover:bg-blue-100",
+														)}
+													>
+														<div className="flex items-start justify-between mb-2">
+															<Badge
+																variant="primary"
+																className="text-xs font-semibold"
+															>
+																{lineNumber}
+															</Badge>
+															{data?.category && (
+																<Badge variant="default" className="text-xs">
+																	{data.category}
+																</Badge>
+															)}
+														</div>
+														{data ? (
+															<div className="space-y-2">
+																<div>
+																	<Typography
+																		variant="small"
+																		className="font-medium text-gray-700 mb-1"
+																	>
+																		질문
+																	</Typography>
+																	<Typography
+																		variant="body-secondary"
+																		className="text-sm text-gray-900"
+																	>
+																		{data.question}
+																	</Typography>
+																</div>
+																<div>
+																	<Typography
+																		variant="small"
+																		className="font-medium text-gray-700 mb-1"
+																	>
+																		답변
+																	</Typography>
+																	<Typography
+																		variant="body-secondary"
+																		className="text-sm text-gray-900 whitespace-pre-wrap"
+																	>
+																		{data.answer}
+																	</Typography>
+																</div>
+															</div>
+														) : (
+															<Typography
+																variant="body-secondary"
+																className="text-sm text-gray-500"
+															>
+																해당 라인을 찾을 수 없습니다.
+															</Typography>
+														)}
+													</button>
+												);
+											},
+										)}
+									</div>
+								)}
+							</div>
+
+							{/* 출처 링크 */}
+							{sourceLinkReferences.length > 0 && (
+								<div>
+									<Typography
+										variant="small"
+										className="font-medium text-gray-700 mb-3"
+									>
+										출처 링크
+									</Typography>
+									<div className="space-y-2">
+										{sourceLinkReferences.map((ref) => (
+											<a
+												key={`${ref.startIndex}-${ref.endIndex}`}
+												href={ref.url}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="block w-full text-left rounded-lg p-3 border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
+											>
+												<div className="flex items-center gap-2">
+													<Badge variant="success" className="text-xs">
+														링크
+													</Badge>
+													<Typography
+														variant="body-secondary"
+														className="text-sm text-gray-900 break-all"
+													>
+														{ref.url}
+													</Typography>
+												</div>
+											</a>
+										))}
+									</div>
+								</div>
+							)}
+						</div>
+					</div>
+				)}
+			</Modal>
 		</div>
 	);
 };

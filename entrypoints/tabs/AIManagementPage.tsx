@@ -1,193 +1,293 @@
-import { FileText, MessageCircle, Phone } from "lucide-react";
-import { useState } from "react";
+import { MessageCircle, RefreshCw, Search } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import PageSpecificAIManager from "@/components/PageSpecificAIManager";
-import { Badge, Typography } from "@/components/ui";
+import { Badge, Button, Input, Typography } from "@/components/ui";
+import { authStorage } from "@/utils/auth";
 import {
-	consultationAIResponses,
-	managementAIResponses,
-	registrationAIResponses,
-} from "@/data/aiResponseData";
+	kakaoApi,
+	studentApi,
+	aiApi,
+	type StudentDTO,
+	type ChannelType,
+} from "@/utils/api";
 import { cn } from "@/utils/cn";
 
-type PageType = "consultation" | "registration" | "management";
+// ChatItem 타입
+interface ChatItem {
+	id: string;
+	name: string;
+	studentId: number;
+	chatId: string; // talk_user.chat_id
+	lastMessage?: string;
+	lastLogSendAt?: number;
+	unreadCount?: number;
+	isReplied?: boolean;
+	isRead?: boolean;
+}
 
 const AIManagementPage = () => {
-	const [activePageType, setActivePageType] =
-		useState<PageType>("consultation");
+	const [chats, setChats] = useState<ChatItem[]>([]);
+	const [students, setStudents] = useState<StudentDTO[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [searchTerm, setSearchTerm] = useState("");
+	const [channelType, setChannelType] = useState<ChannelType>("ADMIN");
 
-	const getPageConfig = (pageType: PageType) => {
-		switch (pageType) {
-			case "consultation":
-				return {
-					responses: consultationAIResponses,
-					title: "상담 AI 응답 관리",
-					description:
-						"전화상담 예약 및 상담 문의에 대한 AI 자동응답을 관리합니다",
-					icon: Phone,
-				};
-			case "registration":
-				return {
-					responses: registrationAIResponses,
-					title: "등록 AI 응답 관리",
-					description:
-						"배치고사 안내 및 등록 관련 문의에 대한 AI 자동응답을 관리합니다",
-					icon: FileText,
-				};
-			case "management":
-				return {
-					responses: managementAIResponses,
-					title: "관리 AI 응답 관리",
-					description:
-						"편입 일정 문의 및 학습 관련 질문에 대한 AI 자동응답을 관리합니다",
-					icon: MessageCircle,
-				};
+	const loadData = useCallback(async (triggerAI = false) => {
+		setLoading(true);
+		try {
+			// AI 스케줄러 트리거 (새로고침 시에만)
+			if (triggerAI) {
+				try {
+					await aiApi.triggerOnce();
+				} catch (error) {
+					console.error("Failed to trigger AI scheduler:", error);
+					// AI 트리거 실패해도 데이터는 가져옴
+				}
+			}
+
+			const authState = await authStorage.get();
+			const userChannelType: ChannelType =
+				authState.role === "admin" ? "ADMIN" : "TEACHER";
+			setChannelType(userChannelType);
+
+			// 채팅 목록과 학생 정보를 병렬로 가져오기
+			const [chatListResponse, studentsResponse] = await Promise.all([
+				kakaoApi.getChatList(),
+				studentApi.getAll(),
+			]);
+
+			const loadedStudents =
+				studentsResponse.isSuccess && studentsResponse.result
+					? studentsResponse.result
+					: [];
+			setStudents(loadedStudents);
+
+			// 학생을 이름으로 매핑 (nickname과 매칭하기 위해)
+			const studentByName = new Map<string, StudentDTO>();
+			loadedStudents.forEach((student) => {
+				if (student.name) {
+					// 대소문자 구분 없이 매칭하기 위해 소문자로 변환
+					const nameKey = student.name.toLowerCase().trim();
+					studentByName.set(nameKey, student);
+				}
+			});
+
+			// 채팅 목록을 ChatItem 형태로 변환
+			if (
+				chatListResponse.isSuccess &&
+				chatListResponse.result?.data?.chatList?.items
+			) {
+				const chatItems: ChatItem[] =
+					chatListResponse.result.data.chatList.items
+						.map((item) => {
+							const chatId = item.talk_user?.chat_id || "";
+							const nickname = item.talk_user?.nickname || "";
+
+							// nickname으로 학생 찾기 (대소문자 구분 없이)
+							const nameKey = nickname.toLowerCase().trim();
+							const student =
+								studentByName.get(nameKey) || studentByName.get("unknown"); // "unknown"도 체크
+
+							// 이름이 "unknown"이면 "미등록 학생"으로 표시
+							const displayName =
+								nickname?.toLowerCase() === "unknown"
+									? "미등록 학생"
+									: nickname || "알 수 없음";
+
+							return {
+								id: chatId || item.id || "",
+								name: displayName,
+								studentId: student?.studentId || 0,
+								chatId: chatId, // talk_user.chat_id를 그대로 사용
+								lastMessage: item.last_message,
+								lastLogSendAt: item.last_log_send_at,
+								unreadCount: item.unread_count || 0,
+								isReplied: item.is_replied || false,
+								isRead: item.is_read || false,
+							};
+						})
+						.filter((chat) => chat.chatId) // chatId가 있는 것만 필터링
+						.sort((a, b) => {
+							const timeA = a.lastLogSendAt || 0;
+							const timeB = b.lastLogSendAt || 0;
+							return timeB - timeA;
+						});
+
+				setChats(chatItems);
+			}
+		} catch (error) {
+			console.error("Failed to load data:", error);
+		} finally {
+			setLoading(false);
 		}
-	};
+	}, []);
 
-	const getPendingCount = (pageType: PageType) => {
-		const config = getPageConfig(pageType);
-		return config.responses.filter((r) => r.status === "pending").length;
-	};
+	useEffect(() => {
+		loadData();
+	}, [loadData]);
 
-	const getTotalCount = (pageType: PageType) => {
-		const config = getPageConfig(pageType);
-		return config.responses.length;
-	};
+	const filteredChats = chats.filter((chat) => {
+		if (!searchTerm) return true;
+		const name = chat.name || "";
+		const lastMessage = chat.lastMessage || "";
+		return (
+			name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
+		);
+	});
 
-	const getSentCount = (pageType: PageType) => {
-		const config = getPageConfig(pageType);
-		return config.responses.filter((r) => r.status === "sent").length;
-	};
-
-	const pageConfig = getPageConfig(activePageType);
-
-	const pageTypes: Array<{
-		type: PageType;
-		label: string;
-		icon: typeof Phone;
-	}> = [
-		{ type: "consultation", label: "상담", icon: Phone },
-		{ type: "registration", label: "등록", icon: FileText },
-		{ type: "management", label: "관리", icon: MessageCircle },
-	];
+	const unreadCount = chats.reduce(
+		(sum, chat) => sum + (chat.unreadCount || 0),
+		0,
+	);
 
 	return (
 		<div className="flex min-h-[calc(100vh-var(--header-height))]">
-			{/* Sidebar Navigation - Linear Style */}
-			<aside className="w-64 border-r border-gray-200 bg-white flex-shrink-0 flex flex-col">
+			{/* Sidebar - Chat List */}
+			<aside className="w-80 border-r border-gray-200 bg-white flex-shrink-0 flex flex-col">
 				{/* Sidebar Header */}
 				<div className="p-6 border-b border-gray-200">
-					<Typography
-						variant="h3"
-						className="flex items-center gap-2 mb-1 text-gray-900"
-					>
-						AI 응답 관리
-					</Typography>
-					<Typography variant="small" className="text-gray-600">
-						모든 페이지의 AI 자동응답을 한 곳에서 관리합니다
-					</Typography>
+					<div className="flex items-center justify-between mb-4">
+						<Typography
+							variant="h3"
+							className="flex items-center gap-2 text-gray-900"
+						>
+							<MessageCircle className="h-5 w-5 text-[var(--color-indigo)]" />
+							카카오톡 채팅
+						</Typography>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => loadData(true)}
+							disabled={loading}
+							className="p-2"
+						>
+							<RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+						</Button>
+					</div>
+					<Input
+						type="text"
+						placeholder="채팅 검색..."
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						icon={<Search className="h-4 w-4" />}
+					/>
 				</div>
 
-				{/* Navigation Items */}
-				<nav className="flex-1 p-3">
-					<div className="space-y-1">
-						{pageTypes.map(({ type, label, icon: Icon }) => {
-							const isActive = activePageType === type;
-							const pendingCount = getPendingCount(type);
+				{/* Chat List */}
+				<nav className="flex-1 overflow-y-auto p-2">
+					{loading ? (
+						<div className="flex items-center justify-center py-8">
+							<Typography variant="body-secondary">로딩 중...</Typography>
+						</div>
+					) : filteredChats.length === 0 ? (
+						<div className="flex flex-col items-center justify-center py-8">
+							<MessageCircle className="h-12 w-12 text-gray-300 mb-4" />
+							<Typography variant="body-secondary" className="text-center">
+								{searchTerm ? "검색 결과가 없습니다" : "채팅이 없습니다"}
+							</Typography>
+						</div>
+					) : (
+						<div className="space-y-1">
+							{filteredChats.map((chat) => {
+								// 이름이 "unknown"이면 "미등록 학생"으로 표시
+								const chatName =
+									chat.name?.toLowerCase() === "unknown"
+										? "미등록 학생"
+										: chat.name || "알 수 없음";
+								const unread = chat.unreadCount || 0;
 
-							return (
-								<button
-									key={type}
-									type="button"
-									onClick={() => setActivePageType(type)}
-									className={cn(
-										"w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-100 text-left group",
-										isActive
-											? "bg-[var(--color-primary)]/20 text-gray-900"
-											: "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-									)}
-								>
-									<div className="flex items-center gap-2.5">
-										<Icon
-											className={cn(
-												"h-4 w-4",
-												isActive
-													? "text-[var(--color-primary)]"
-													: "text-gray-600 group-hover:text-gray-900",
-											)}
-										/>
-										<Typography variant="small" className="font-medium">
-											{label}
-										</Typography>
+								return (
+									<div
+										key={chat.id}
+										className={cn(
+											"w-full flex items-start gap-3 px-3 py-3 rounded-lg transition-all duration-100 text-left group",
+											"hover:bg-gray-50 border border-transparent",
+										)}
+									>
+										<div className="flex-shrink-0">
+											<div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+												<MessageCircle className="h-6 w-6 text-gray-400" />
+											</div>
+										</div>
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center justify-between mb-1">
+												<Typography
+													variant="small"
+													className="font-medium text-gray-900 truncate"
+												>
+													{chatName}
+												</Typography>
+												{chat.lastLogSendAt && (
+													<Typography
+														variant="small"
+														className="text-gray-500 text-xs flex-shrink-0 ml-2"
+													>
+														{new Date(chat.lastLogSendAt).toLocaleTimeString(
+															"ko-KR",
+															{
+																hour: "2-digit",
+																minute: "2-digit",
+															},
+														)}
+													</Typography>
+												)}
+											</div>
+											<div className="flex items-center justify-between">
+												<Typography
+													variant="body-secondary"
+													className="text-sm truncate flex-1"
+												>
+													{chat.lastMessage || "메시지 없음"}
+												</Typography>
+												{unread > 0 && (
+													<Badge
+														variant="danger"
+														className="h-5 min-w-5 flex items-center justify-center px-1.5 text-[10px] font-semibold ml-2 flex-shrink-0"
+													>
+														{unread}
+													</Badge>
+												)}
+											</div>
+										</div>
 									</div>
-									{pendingCount > 0 && (
-										<Badge
-											variant="danger"
-											className="h-5 min-w-5 flex items-center justify-center px-1.5 text-[10px] font-semibold"
-										>
-											{pendingCount}
-										</Badge>
-									)}
-								</button>
-							);
-						})}
-					</div>
+								);
+							})}
+						</div>
+					)}
 				</nav>
 
-				{/* Sidebar Footer Stats */}
-				<div className="p-4 border-t border-gray-200 space-y-3">
+				{/* Sidebar Footer */}
+				<div className="p-4 border-t border-gray-200">
 					<div className="flex items-center justify-between">
 						<Typography variant="small" className="text-gray-600">
-							총 응답
+							총 채팅
 						</Typography>
 						<Typography variant="small" className="font-semibold text-gray-900">
-							{getTotalCount(activePageType)}
+							{chats.length}
 						</Typography>
 					</div>
-					<div className="flex items-center justify-between">
-						<Typography variant="small" className="text-gray-600">
-							승인 대기
-						</Typography>
-						<Typography
-							variant="small"
-							className="font-semibold text-[var(--color-yellow)]"
-						>
-							{getPendingCount(activePageType)}
-						</Typography>
-					</div>
-					<div className="flex items-center justify-between">
-						<Typography variant="small" className="text-gray-600">
-							발송 완료
-						</Typography>
-						<Typography
-							variant="small"
-							className="font-semibold text-[var(--color-green)]"
-						>
-							{getSentCount(activePageType)}
-						</Typography>
-					</div>
+					{unreadCount > 0 && (
+						<div className="flex items-center justify-between mt-2">
+							<Typography variant="small" className="text-gray-600">
+								읽지 않음
+							</Typography>
+							<Badge variant="danger" className="text-xs">
+								{unreadCount}
+							</Badge>
+						</div>
+					)}
 				</div>
 			</aside>
 
 			{/* Main Content Area */}
-			<main className="flex-1 bg-gray-50">
-				<div className="w-full px-[var(--page-padding-inline)] py-6">
-					{/* Page Header */}
-					<div className="mb-4">
-						<div className="flex items-center gap-2">
-							<pageConfig.icon className="h-5 w-5 text-[var(--color-primary)]" />
-							<Typography variant="h3" className="text-gray-900">
-								{pageConfig.title}
-							</Typography>
-						</div>
-					</div>
-
-					{/* AI Manager Content */}
+			<main className="flex-1 bg-[var(--color-background-primary)]">
+				<div className="w-full px-[var(--page-padding-inline)] py-[var(--page-padding-block)]">
 					<PageSpecificAIManager
-						responses={pageConfig.responses}
-						pageType={activePageType}
-						title={pageConfig.title}
-						description={pageConfig.description}
+						chats={chats}
+						students={students}
+						channelType={channelType}
+						onMessageSent={() => loadData(false)}
 					/>
 				</div>
 			</main>
