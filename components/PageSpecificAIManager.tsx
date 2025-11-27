@@ -39,12 +39,12 @@ interface PageSpecificAIManagerProps {
 const PageSpecificAIManager = ({
 	chats,
 	students,
-	channelType,
+	channelType: _channelType,
 	loading = false,
 	onRefresh,
 	onMessageSent,
 }: PageSpecificAIManagerProps) => {
-	const [searchTerm, setSearchTerm] = useState("");
+	const [searchTerm, _setSearchTerm] = useState("");
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [messageInputs, setMessageInputs] = useState<Record<string, string>>(
 		{},
@@ -380,7 +380,8 @@ const PageSpecificAIManager = ({
 		let result = text;
 
 		// 모든 참조 위치 찾기
-		const guidelineReferences = extractGuidelineReferencesWithPositions(result);
+		const _guidelineReferences =
+			extractGuidelineReferencesWithPositions(result);
 		const sourceLinkRefs = extractSourceLinkReferences(result);
 		const pdfRefs = extractPdfReferences(result);
 
@@ -1173,6 +1174,7 @@ const PageSpecificAIManager = ({
 														);
 													} else if (part.referenceType === "pdf") {
 														return (
+															// biome-ignore lint/a11y/useSemanticElements: button을 사용하면 여러 줄에서 깨지므로 span 사용
 															<span
 																key={part.key}
 																role="button"

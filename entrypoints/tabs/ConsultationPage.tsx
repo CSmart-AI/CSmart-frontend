@@ -1,13 +1,13 @@
 import { Clock, MapPin, Phone, User } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Button, Card, Input, Typography } from "@/components/ui";
+import { Badge, Button, Card, Typography } from "@/components/ui";
 import { mockStudents } from "@/data/mockData";
 import type { Student } from "@/types/student";
 import { formatTemporalDateTime } from "@/utils/temporal";
 
 const ConsultationPage = () => {
-	const [searchTerm, setSearchTerm] = useState("");
+	const [searchTerm, _setSearchTerm] = useState("");
 
 	const consultationStudents = mockStudents.filter(
 		(student) => student.status === "consultation",

@@ -219,12 +219,13 @@ export function extractGuidelineReferencesWithPositions(
 	text: string,
 ): GuidelineReference[] {
 	const matches: GuidelineReference[] = [];
-	const lineNumberRegex = /\(line(\d+)\)/g;
 
 	// GuidelineDB가 포함된 괄호 전체를 찾기 (예: (GuidelineDB ...) 또는 (GuidelineDB ... (line5)))
 	// 괄호 안에 GuidelineDB가 포함된 경우를 찾음
 	const guidelineDBWithBracketsRegex = /\([^)]*GuidelineDB[^)]*\)/gi;
-	const guidelineMatches = Array.from(text.matchAll(guidelineDBWithBracketsRegex));
+	const guidelineMatches = Array.from(
+		text.matchAll(guidelineDBWithBracketsRegex),
+	);
 
 	for (const guidelineMatch of guidelineMatches) {
 		if (guidelineMatch.index === undefined) continue;
@@ -234,7 +235,8 @@ export function extractGuidelineReferencesWithPositions(
 		const endIndex = startIndex + matchText.length;
 
 		// line 숫자가 있는지 확인
-		const lineMatch = matchText.match(/\(line(\d+)\)/);
+		const lineNumberRegex = /\(line(\d+)\)/;
+		const lineMatch = matchText.match(lineNumberRegex);
 		if (lineMatch) {
 			// line 숫자가 있으면 line 부분만 추출
 			const lineNumber = `line${lineMatch[1]}`;

@@ -64,7 +64,7 @@ const RegistrationPage = () => {
 	const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
 	const [isAnalyzingModalOpen, setIsAnalyzingModalOpen] = useState(false);
 	const [isResultModalOpen, setIsResultModalOpen] = useState(false);
-	const [selectedTeacherName, setSelectedTeacherName] = useState<string>("");
+	const [_selectedTeacherName, setSelectedTeacherName] = useState<string>("");
 
 	const filteredStudents = students;
 
@@ -386,8 +386,11 @@ const RegistrationPage = () => {
 														(s) => s.info.id === selectedStudentId,
 													) ||
 													students[0],
-											).map((info, index) => (
-												<div key={`info-${index}`} className="flex gap-2">
+											).map((info) => (
+												<div
+													key={`${info.label}-${info.value}`}
+													className="flex gap-2"
+												>
 													<Typography
 														variant="small"
 														className="font-medium text-gray-600 min-w-[120px]"

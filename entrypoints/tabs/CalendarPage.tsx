@@ -6,17 +6,13 @@ import {
 	ChevronRight,
 	Clock,
 	FileText,
-	Filter,
-	Phone,
-	Plus,
-	Search,
 	Star,
 	Users,
 	XCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Button, Card, Input, Typography } from "@/components/ui";
+import { Badge, Button, Card, Typography } from "@/components/ui";
 import { mockCalendarEvents } from "@/data/calendarData";
 import { cn } from "@/utils/cn";
 import {
@@ -37,8 +33,8 @@ import {
 const CalendarPage = () => {
 	const [currentDate, setCurrentDate] = useState(new Date());
 	const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-	const [filterType, setFilterType] = useState<string>("all");
-	const [searchTerm, setSearchTerm] = useState("");
+	const [filterType, _setFilterType] = useState<string>("all");
+	const [searchTerm, _setSearchTerm] = useState("");
 
 	const monthStart = startOfMonth(currentDate);
 	const monthEnd = endOfMonth(currentDate);

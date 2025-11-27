@@ -28,16 +28,32 @@ export const Modal = ({
 	};
 
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: button을 사용하면 중복된 참조가 제거되지 않음
 		<div
+			role="button"
+			tabIndex={0}
 			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
 			onClick={onClose}
+			onKeyDown={(e) => {
+				if (e.key === "Escape") {
+					onClose();
+				}
+			}}
 		>
 			<div
+				role="dialog"
+				aria-modal="true"
 				className={cn(
 					"bg-white rounded-lg shadow-xl w-full max-h-[90vh] flex flex-col",
 					sizeClasses[size],
 				)}
 				onClick={(e) => e.stopPropagation()}
+				onKeyDown={(e) => {
+					if (e.key === "Escape") {
+						e.stopPropagation();
+						onClose();
+					}
+				}}
 			>
 				{/* Header */}
 				<div className="flex items-center justify-between p-6 border-b border-gray-200">

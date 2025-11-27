@@ -11,7 +11,6 @@ import {
 	MessageCircle,
 	Phone,
 	Save,
-	Send,
 	Trophy,
 	User,
 	X,
@@ -48,7 +47,7 @@ const StudentDetailPage = () => {
 		);
 	}
 
-	const handleSendMessage = () => {
+	const _handleSendMessage = () => {
 		if (newMessage.trim()) {
 			// In a real app, this would send the message to the server
 			console.log("Sending message:", newMessage);
