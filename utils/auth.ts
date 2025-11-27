@@ -1,4 +1,5 @@
 import { browser } from "wxt/browser";
+import { authApi } from "./api";
 
 export type UserRole = "admin" | "teacher";
 
@@ -67,4 +68,59 @@ export const authStorage = {
 			]);
 		}
 	},
+};
+
+/**
+ * Refresh token을 사용하여 새로운 access token과 refresh token을 받아옵니다
+ */
+export const refreshAccessToken = async (): Promise<boolean> => {
+	try {
+		const authState = await authStorage.get();
+		if (!authState.refreshToken) {
+			console.warn("Refresh token이 없습니다.");
+			return false;
+		}
+
+		const response = await authApi.refreshToken(authState.refreshToken);
+
+		if (response.isSuccess && response.result) {
+			// 새로운 토큰으로 auth state 업데이트
+			const updatedState: AuthState = {
+				...authState,
+				accessToken: response.result.accessToken,
+				refreshToken: response.result.refreshToken,
+			};
+
+			await authStorage.set(updatedState);
+			console.log("토큰이 성공적으로 갱신되었습니다.");
+			return true;
+		}
+
+		console.error("토큰 갱신 실패:", response.message);
+		return false;
+	} catch (error) {
+		console.error("토큰 갱신 중 오류 발생:", error);
+		return false;
+	}
+};
+
+/**
+ * 1분마다 자동으로 refresh token을 받아오는 interval을 시작합니다
+ * @returns interval을 정리하는 함수
+ */
+export const startTokenRefreshInterval = (): (() => void) => {
+	// 즉시 한 번 실행
+	refreshAccessToken();
+
+	// 1분(60000ms)마다 실행
+	const intervalId = setInterval(() => {
+		refreshAccessToken().catch((error) => {
+			console.error("자동 토큰 갱신 실패:", error);
+		});
+	}, 60000); // 1분 = 60000ms
+
+	// interval을 정리하는 함수 반환
+	return () => {
+		clearInterval(intervalId);
+	};
 };

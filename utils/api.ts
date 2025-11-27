@@ -298,17 +298,29 @@ export const authApi = {
 
 	/**
 	 * 토큰 재발급
+	 * refresh token 엔드포인트는 Authorization 헤더 없이 호출
 	 */
 	refreshToken: async (
 		refreshToken: string,
 	): Promise<ApiResponse<{ accessToken: string; refreshToken: string }>> => {
-		return apiRequest<{ accessToken: string; refreshToken: string }>(
-			"/auth/refresh",
-			{
-				method: "POST",
-				body: JSON.stringify({ refreshToken }),
+		// refresh token API는 Authorization 헤더 없이 호출
+		const url = `${API_BASE_URL}/auth/refresh`;
+		const response = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
 			},
-		);
+			body: JSON.stringify({ refreshToken }),
+		});
+
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({}));
+			throw new Error(
+				errorData.message || `토큰 갱신 실패: ${response.status}`,
+			);
+		}
+
+		return response.json();
 	},
 };
 

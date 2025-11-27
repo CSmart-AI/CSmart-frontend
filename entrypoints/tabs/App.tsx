@@ -8,7 +8,11 @@ import {
 import AdminLayout from "../../components/AdminLayout.tsx";
 import TeacherLayout from "../../components/TeacherLayout.tsx";
 import { Typography } from "../../components/ui";
-import { authStorage, type UserRole } from "../../utils/auth";
+import {
+	authStorage,
+	startTokenRefreshInterval,
+	type UserRole,
+} from "../../utils/auth";
 import AIManagementPage from "./AIManagementPage.tsx";
 import CalendarPage from "./CalendarPage.tsx";
 import ConsultationPage from "./ConsultationPage.tsx";
@@ -29,6 +33,8 @@ function App() {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
+		let cleanup: (() => void) | null = null;
+
 		const loadAuthState = async () => {
 			const state = await authStorage.get();
 			setAuthState({
@@ -36,9 +42,21 @@ function App() {
 				role: state.role,
 			});
 			setLoading(false);
+
+			// 인증된 경우에만 토큰 자동 갱신 시작
+			if (state.isAuthenticated && state.refreshToken) {
+				cleanup = startTokenRefreshInterval();
+			}
 		};
 
 		loadAuthState();
+
+		// 컴포넌트 언마운트 시 interval 정리
+		return () => {
+			if (cleanup) {
+				cleanup();
+			}
+		};
 	}, []);
 
 	if (loading) {
