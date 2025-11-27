@@ -221,39 +221,42 @@ export function extractGuidelineReferencesWithPositions(
 	const matches: GuidelineReference[] = [];
 	const lineNumberRegex = /\(line(\d+)\)/g;
 
-	// GuidelineDB가 포함된 부분 찾기
-	const guidelineDBRegex = /GuidelineDB[^)]*?/gi;
-	const guidelineMatches = Array.from(text.matchAll(guidelineDBRegex));
+	// GuidelineDB가 포함된 괄호 전체를 찾기 (예: (GuidelineDB ...) 또는 (GuidelineDB ... (line5)))
+	// 괄호 안에 GuidelineDB가 포함된 경우를 찾음
+	const guidelineDBWithBracketsRegex = /\([^)]*GuidelineDB[^)]*\)/gi;
+	const guidelineMatches = Array.from(text.matchAll(guidelineDBWithBracketsRegex));
 
 	for (const guidelineMatch of guidelineMatches) {
 		if (guidelineMatch.index === undefined) continue;
 
-		const guidelineEndIndex = guidelineMatch.index + guidelineMatch[0].length;
+		const matchText = guidelineMatch[0];
+		const startIndex = guidelineMatch.index;
+		const endIndex = startIndex + matchText.length;
 
-		// GuidelineDB 다음 부분에서 모든 (line숫자) 찾기
-		const remainingText = text.slice(guidelineEndIndex);
+		// line 숫자가 있는지 확인
+		const lineMatch = matchText.match(/\(line(\d+)\)/);
+		if (lineMatch) {
+			// line 숫자가 있으면 line 부분만 추출
+			const lineNumber = `line${lineMatch[1]}`;
+			const lineText = lineMatch[0];
+			const lineStartInMatch = matchText.indexOf(lineText);
+			const lineStartIndex = startIndex + lineStartInMatch;
+			const lineEndIndex = lineStartIndex + lineText.length;
 
-		// 다음 GuidelineDB나 문장 끝까지의 텍스트에서 (line숫자) 찾기
-		const nextGuidelineIndex = remainingText.search(/GuidelineDB/gi);
-		const searchText =
-			nextGuidelineIndex > 0
-				? remainingText.slice(0, nextGuidelineIndex)
-				: remainingText;
-
-		// searchText에서 모든 (line숫자) 패턴 찾기
-		const lineMatches = Array.from(searchText.matchAll(lineNumberRegex));
-		for (const lineMatch of lineMatches) {
-			if (lineMatch.index !== undefined && lineMatch[1]) {
-				const absoluteStartIndex = guidelineEndIndex + lineMatch.index;
-				const absoluteEndIndex = absoluteStartIndex + lineMatch[0].length;
-
-				matches.push({
-					lineNumber: `line${lineMatch[1]}`,
-					startIndex: absoluteStartIndex,
-					endIndex: absoluteEndIndex,
-					text: lineMatch[0],
-				});
-			}
+			matches.push({
+				lineNumber,
+				startIndex: lineStartIndex,
+				endIndex: lineEndIndex,
+				text: lineText,
+			});
+		} else {
+			// line 숫자가 없으면 GuidelineDB 전체를 하이라이트 (빈 lineNumber로 표시)
+			matches.push({
+				lineNumber: "",
+				startIndex,
+				endIndex,
+				text: matchText,
+			});
 		}
 	}
 

@@ -72,6 +72,9 @@ const PageSpecificAIManager = ({
 	const [sourceLinkReferences, setSourceLinkReferences] = useState<
 		Array<{ url: string; startIndex: number; endIndex: number; text: string }>
 	>([]);
+	const [pdfReferences, setPdfReferences] = useState<
+		Array<{ startIndex: number; endIndex: number; text: string }>
+	>([]);
 	const [showPdfViewer, setShowPdfViewer] = useState(false);
 	const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
@@ -226,6 +229,89 @@ const PageSpecificAIManager = ({
 	};
 
 	/**
+	 * PDF 참조 추출 (.pdf가 포함된 괄호)
+	 * 중첩된 괄호도 처리 가능
+	 * @param text 원본 텍스트
+	 * @returns PDF 참조 배열
+	 */
+	const extractPdfReferences = (
+		text: string,
+	): Array<{
+		startIndex: number;
+		endIndex: number;
+		text: string;
+	}> => {
+		const references: Array<{
+			startIndex: number;
+			endIndex: number;
+			text: string;
+		}> = [];
+
+		// .pdf가 포함된 위치 찾기
+		const pdfRegex = /\.pdf/gi;
+		const pdfMatches = Array.from(text.matchAll(pdfRegex));
+
+		for (const pdfMatch of pdfMatches) {
+			if (pdfMatch.index === undefined) continue;
+
+			const pdfIndex = pdfMatch.index;
+
+			// .pdf 앞에서 가장 가까운 여는 괄호 찾기 (중첩된 괄호 고려)
+			let openBracketIndex = -1;
+			let bracketDepth = 0;
+
+			for (let i = pdfIndex - 1; i >= 0; i--) {
+				if (text[i] === ")") {
+					bracketDepth++;
+				} else if (text[i] === "(") {
+					if (bracketDepth === 0) {
+						openBracketIndex = i;
+						break;
+					}
+					bracketDepth--;
+				}
+			}
+
+			// .pdf 뒤에서 가장 가까운 닫는 괄호 찾기 (중첩된 괄호 고려)
+			let closeBracketIndex = -1;
+			bracketDepth = 0;
+
+			for (let i = pdfIndex + pdfMatch[0].length; i < text.length; i++) {
+				if (text[i] === "(") {
+					bracketDepth++;
+				} else if (text[i] === ")") {
+					if (bracketDepth === 0) {
+						closeBracketIndex = i;
+						break;
+					}
+					bracketDepth--;
+				}
+			}
+
+			// 여는 괄호와 닫는 괄호를 모두 찾았으면 참조 추가
+			if (openBracketIndex !== -1 && closeBracketIndex !== -1) {
+				const bracketText = text.slice(openBracketIndex, closeBracketIndex + 1);
+				// 이미 추가된 참조와 겹치지 않는지 확인
+				const isDuplicate = references.some(
+					(ref) =>
+						ref.startIndex === openBracketIndex &&
+						ref.endIndex === closeBracketIndex + 1,
+				);
+
+				if (!isDuplicate) {
+					references.push({
+						startIndex: openBracketIndex,
+						endIndex: closeBracketIndex + 1,
+						text: bracketText,
+					});
+				}
+			}
+		}
+
+		return references;
+	};
+
+	/**
 	 * 중앙대 관련 링크인지 확인
 	 * @param url 링크 URL
 	 * @param text 링크 텍스트
@@ -240,6 +326,22 @@ const PageSpecificAIManager = ({
 			lowerText.includes("중앙대") ||
 			lowerText.includes("chungang")
 		);
+	};
+
+	/**
+	 * PDF 참조 클릭 핸들러
+	 * @param e 이벤트 객체 (선택적)
+	 */
+	const handlePdfReferenceClick = (
+		e?: React.MouseEvent | React.KeyboardEvent,
+	) => {
+		if (e) {
+			e.preventDefault();
+		}
+		// public 폴더의 중앙대.pdf 경로, 12페이지 표시
+		const pdfPath = "/중앙대.pdf#page=16";
+		setPdfUrl(pdfPath);
+		setShowPdfViewer(true);
 	};
 
 	/**
@@ -260,8 +362,8 @@ const PageSpecificAIManager = ({
 			isChungangRelated(url, text)
 		) {
 			e.preventDefault();
-			// public 폴더의 중앙대.pdf 경로
-			const pdfPath = "/중앙대.pdf";
+			// public 폴더의 중앙대.pdf 경로, 12페이지 표시
+			const pdfPath = "/중앙대.pdf#page=12";
 			setPdfUrl(pdfPath);
 			setShowPdfViewer(true);
 		}
@@ -269,56 +371,58 @@ const PageSpecificAIManager = ({
 	};
 
 	/**
-	 * GuidelineDB 및 출처 링크 참조 제거 (메시지 전송 전)
+	 * GuidelineDB, 출처 링크, PDF 참조 제거 (메시지 전송 전)
+	 * 모든 참조는 괄호 전체를 포함해서 제거됨
 	 * @param text 원본 텍스트
 	 * @returns 참조가 제거된 텍스트
 	 */
 	const removeAllReferences = (text: string): string => {
 		let result = text;
 
-		// GuidelineDB 참조 위치 찾기
+		// 모든 참조 위치 찾기
 		const guidelineReferences = extractGuidelineReferencesWithPositions(result);
+		const sourceLinkRefs = extractSourceLinkReferences(result);
+		const pdfRefs = extractPdfReferences(result);
 
-		// 참조 위치를 역순으로 정렬하여 뒤에서부터 제거 (인덱스 변경 방지)
-		const sortedGuidelineRefs = [...guidelineReferences].sort(
-			(a, b) => b.startIndex - a.startIndex,
+		// GuidelineDB 참조는 괄호 전체를 찾아서 제거
+		const guidelineBrackets: Array<{
+			startIndex: number;
+			endIndex: number;
+		}> = [];
+
+		// GuidelineDB가 포함된 괄호 전체 찾기
+		const guidelineDBWithBracketsRegex = /\([^)]*GuidelineDB[^)]*\)/gi;
+		const guidelineBracketMatches = Array.from(
+			result.matchAll(guidelineDBWithBracketsRegex),
 		);
 
-		// 각 GuidelineDB 참조에 대해 GuidelineDB부터 (line숫자)까지 제거
-		for (const ref of sortedGuidelineRefs) {
-			// GuidelineDB 시작 위치 찾기 (참조 앞에서 역방향으로 검색)
-			const beforeRef = result.slice(0, ref.startIndex);
-			const guidelineDBMatch = beforeRef.match(/GuidelineDB[^)]*?$/i);
-
-			if (guidelineDBMatch && guidelineDBMatch.index !== undefined) {
-				// GuidelineDB 시작부터 (line숫자) 끝까지 제거
-				let removeStart = guidelineDBMatch.index;
-				let removeEnd = ref.endIndex;
-
-				// GuidelineDB 앞에 여는 괄호가 있는지 확인
-				if (removeStart > 0 && result[removeStart - 1] === "(") {
-					// 닫는 괄호가 있는지 확인 (removeEnd 뒤에)
-					if (removeEnd < result.length && result[removeEnd] === ")") {
-						// 앞뒤 괄호도 함께 제거
-						removeStart = removeStart - 1;
-						removeEnd = removeEnd + 1;
-					}
-				}
-
-				result = result.slice(0, removeStart) + result.slice(removeEnd);
-			} else {
-				// GuidelineDB를 찾지 못한 경우 (line숫자)만 제거
-				result = result.slice(0, ref.startIndex) + result.slice(ref.endIndex);
+		for (const match of guidelineBracketMatches) {
+			if (match.index !== undefined) {
+				guidelineBrackets.push({
+					startIndex: match.index,
+					endIndex: match.index + match[0].length,
+				});
 			}
 		}
 
-		// 출처 링크 참조 제거
-		const sourceLinkRefs = extractSourceLinkReferences(result);
-		const sortedSourceRefs = [...sourceLinkRefs].sort(
-			(a, b) => b.startIndex - a.startIndex,
-		);
+		// 모든 참조를 하나의 배열로 합치고 역순으로 정렬 (뒤에서부터 제거하여 인덱스 변경 방지)
+		const allRefs: Array<{
+			startIndex: number;
+			endIndex: number;
+		}> = [
+			...guidelineBrackets,
+			...sourceLinkRefs.map((ref) => ({
+				startIndex: ref.startIndex,
+				endIndex: ref.endIndex,
+			})),
+			...pdfRefs.map((ref) => ({
+				startIndex: ref.startIndex,
+				endIndex: ref.endIndex,
+			})),
+		].sort((a, b) => b.startIndex - a.startIndex);
 
-		for (const ref of sortedSourceRefs) {
+		// 각 참조를 제거 (괄호 전체를 포함)
+		for (const ref of allRefs) {
 			result = result.slice(0, ref.startIndex) + result.slice(ref.endIndex);
 		}
 
@@ -731,15 +835,43 @@ const PageSpecificAIManager = ({
 																	);
 																setGuidelineReferences(referencesWithPositions);
 
-																// 출처 링크 참조 추출
-																const sourceLinks = extractSourceLinkReferences(
+																// PDF 참조 추출 (먼저 추출하여 중복 제거에 사용)
+																const pdfRefs = extractPdfReferences(
 																	aiResponse.recommendedResponse,
+																);
+																setPdfReferences(pdfRefs);
+
+																// 출처 링크 참조 추출 (PDF 참조와 겹치지 않는 것만)
+																const allSourceLinks =
+																	extractSourceLinkReferences(
+																		aiResponse.recommendedResponse,
+																	);
+																// PDF 참조와 겹치지 않는 출처 링크만 필터링
+																const sourceLinks = allSourceLinks.filter(
+																	(sourceLink) => {
+																		// PDF 참조와 겹치는지 확인
+																		return !pdfRefs.some(
+																			(pdfRef) =>
+																				(sourceLink.startIndex >=
+																					pdfRef.startIndex &&
+																					sourceLink.startIndex <
+																						pdfRef.endIndex) ||
+																				(sourceLink.endIndex >
+																					pdfRef.startIndex &&
+																					sourceLink.endIndex <=
+																						pdfRef.endIndex) ||
+																				(sourceLink.startIndex <=
+																					pdfRef.startIndex &&
+																					sourceLink.endIndex >=
+																						pdfRef.endIndex),
+																		);
+																	},
 																);
 																setSourceLinkReferences(sourceLinks);
 
-																const lineNumbers = referencesWithPositions.map(
-																	(ref) => ref.lineNumber,
-																);
+																const lineNumbers = referencesWithPositions
+																	.map((ref) => ref.lineNumber)
+																	.filter((line) => line !== ""); // 빈 lineNumber 제외
 																console.log("추출된 라인 번호:", lineNumbers);
 																if (lineNumbers.length > 0) {
 																	setLoadingGuidelines(true);
@@ -868,6 +1000,8 @@ const PageSpecificAIManager = ({
 					setSelectedAiResponse(null);
 					setGuidelineData(new Map());
 					setGuidelineReferences([]);
+					setSourceLinkReferences([]);
+					setPdfReferences([]);
 					setSelectedReference(null);
 				}}
 				title="AI 응답 상세"
@@ -901,6 +1035,12 @@ const PageSpecificAIManager = ({
 											text: ref.text,
 											url: ref.url,
 										})),
+										...pdfReferences.map((ref) => ({
+											type: "pdf" as const,
+											startIndex: ref.startIndex,
+											endIndex: ref.endIndex,
+											text: ref.text,
+										})),
 									].sort((a, b) => a.startIndex - b.startIndex);
 
 									if (allReferences.length === 0) {
@@ -918,7 +1058,7 @@ const PageSpecificAIManager = ({
 									const parts: Array<{
 										text: string;
 										isReference: boolean;
-										referenceType?: "guideline" | "sourceLink";
+										referenceType?: "guideline" | "sourceLink" | "pdf";
 										lineNumber?: string;
 										url?: string;
 										key: string;
@@ -962,41 +1102,51 @@ const PageSpecificAIManager = ({
 										>
 											{parts.map((part) => {
 												if (part.isReference) {
-													if (
-														part.referenceType === "guideline" &&
-														part.lineNumber
-													) {
-														const isSelected =
-															selectedReference === part.lineNumber;
-														const lineNum = part.lineNumber;
-														return (
-															<button
-																type="button"
-																key={part.key}
-																onClick={() => {
-																	if (lineNum) {
-																		setSelectedReference(lineNum);
-																	}
-																}}
-																onKeyDown={(e) => {
-																	if (
-																		(e.key === "Enter" || e.key === " ") &&
-																		lineNum
-																	) {
-																		e.preventDefault();
-																		setSelectedReference(lineNum);
-																	}
-																}}
-																className={cn(
-																	"cursor-pointer px-1 py-0.5 rounded transition-colors inline",
-																	isSelected
-																		? "bg-blue-500 text-white font-semibold"
-																		: "bg-blue-200 text-blue-800 hover:bg-blue-300",
-																)}
-															>
-																{part.text}
-															</button>
-														);
+													if (part.referenceType === "guideline") {
+														// lineNumber가 있으면 클릭 가능, 없으면 하이라이트만
+														if (part.lineNumber) {
+															const isSelected =
+																selectedReference === part.lineNumber;
+															const lineNum = part.lineNumber;
+															return (
+																<button
+																	type="button"
+																	key={part.key}
+																	onClick={() => {
+																		if (lineNum) {
+																			setSelectedReference(lineNum);
+																		}
+																	}}
+																	onKeyDown={(e) => {
+																		if (
+																			(e.key === "Enter" || e.key === " ") &&
+																			lineNum
+																		) {
+																			e.preventDefault();
+																			setSelectedReference(lineNum);
+																		}
+																	}}
+																	className={cn(
+																		"cursor-pointer px-1 py-0.5 rounded transition-colors inline",
+																		isSelected
+																			? "bg-blue-500 text-white font-semibold"
+																			: "bg-blue-200 text-blue-800 hover:bg-blue-300",
+																	)}
+																>
+																	{part.text}
+																</button>
+															);
+														} else {
+															// lineNumber가 없으면 하이라이트만
+															return (
+																<span
+																	key={part.key}
+																	className="px-1 py-0.5 rounded bg-blue-200 text-blue-800 inline"
+																>
+																	{part.text}
+																</span>
+															);
+														}
 													} else if (
 														part.referenceType === "sourceLink" &&
 														part.url
@@ -1020,6 +1170,24 @@ const PageSpecificAIManager = ({
 															>
 																{part.text}
 															</a>
+														);
+													} else if (part.referenceType === "pdf") {
+														return (
+															<span
+																key={part.key}
+																role="button"
+																tabIndex={0}
+																onClick={handlePdfReferenceClick}
+																onKeyDown={(e) => {
+																	if (e.key === "Enter" || e.key === " ") {
+																		e.preventDefault();
+																		handlePdfReferenceClick(e);
+																	}
+																}}
+																className="text-purple-800 cursor-pointer hover:text-purple-900 hover:underline"
+															>
+																{part.text}
+															</span>
 														);
 													}
 												}
@@ -1144,7 +1312,7 @@ const PageSpecificAIManager = ({
 
 							{/* 출처 링크 */}
 							{sourceLinkReferences.length > 0 && (
-								<div>
+								<div className="mb-6">
 									<Typography
 										variant="small"
 										className="font-medium text-gray-700 mb-3"
@@ -1175,6 +1343,40 @@ const PageSpecificAIManager = ({
 													</Typography>
 												</div>
 											</a>
+										))}
+									</div>
+								</div>
+							)}
+
+							{/* PDF 참조 */}
+							{pdfReferences.length > 0 && (
+								<div>
+									<Typography
+										variant="small"
+										className="font-medium text-gray-700 mb-3"
+									>
+										PDF 참조
+									</Typography>
+									<div className="space-y-2">
+										{pdfReferences.map((ref) => (
+											<button
+												key={`${ref.startIndex}-${ref.endIndex}`}
+												type="button"
+												onClick={handlePdfReferenceClick}
+												className="block w-full text-left rounded-lg p-3 border border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors"
+											>
+												<div className="flex items-center gap-2">
+													<Badge variant="default" className="text-xs">
+														PDF
+													</Badge>
+													<Typography
+														variant="body-secondary"
+														className="text-sm text-gray-900 break-all"
+													>
+														{ref.text}
+													</Typography>
+												</div>
+											</button>
 										))}
 									</div>
 								</div>

@@ -672,3 +672,48 @@ export const aiApi = {
 		});
 	},
 };
+
+// Transfer API
+export interface TransferToTeacherRequestDTO {
+	studentId: number;
+	teacherId: number;
+}
+
+export interface ExtractedStudentInfo {
+	name?: string;
+	age?: number;
+	previousSchool?: string;
+	targetUniversity?: string;
+	phoneNumber?: string;
+	major?: string;
+	currentGrade?: string;
+	desiredSemester?: string;
+	additionalInfo?: Record<string, unknown>;
+}
+
+export interface TransferToTeacherResponseDTO {
+	studentId: number;
+	assignedTeacherId: number;
+	teacherName: string;
+	studentName: string;
+	extractedInfo?: ExtractedStudentInfo;
+	savedMessageCount?: number;
+	transferStatus: string;
+}
+
+export const transferApi = {
+	/**
+	 * 학생을 선생님 채널로 전환
+	 */
+	transferToTeacher: async (
+		data: TransferToTeacherRequestDTO,
+	): Promise<ApiResponse<TransferToTeacherResponseDTO>> => {
+		return apiRequest<TransferToTeacherResponseDTO>(
+			"/api/transfer/to-teacher",
+			{
+				method: "POST",
+				body: JSON.stringify(data),
+			},
+		);
+	},
+};
