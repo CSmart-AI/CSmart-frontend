@@ -4,14 +4,13 @@ import {
 	Filter,
 	MessageCircle,
 	Search,
-	TrendingUp,
-	Trophy,
 	User,
 	Users,
+	X,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Button, Card, Input, Typography } from "@/components/ui";
+import { Badge, Button, Card, Typography } from "@/components/ui";
 import { mockStudents } from "@/data/mockData";
 import type { Student } from "@/types/student";
 import { cn } from "@/utils/cn";
@@ -77,11 +76,6 @@ const ManagementPage = () => {
 		return { grade: "D", color: "text-[var(--color-red)]" };
 	};
 
-	const totalUnread = managementStudents.reduce(
-		(sum, student) => sum + getUnreadCount(student),
-		0,
-	);
-
 	return (
 		<div className="flex min-h-[calc(100vh-var(--header-height))]">
 			{/* Main Content Area */}
@@ -99,128 +93,69 @@ const ManagementPage = () => {
 					</div>
 
 					<div className="space-y-6">
-						{/* Stats */}
-						<Card padding="lg">
-							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-								<Card
-									padding="md"
-									className="bg-[var(--color-primary)]/10 border-[var(--color-primary)]/20"
-								>
-									<div className="flex items-center">
-										<User className="h-8 w-8 text-[var(--color-primary)]" />
-										<div className="ml-3">
-											<Typography
-												variant="h2"
-												className="text-[var(--color-primary)]"
-											>
-												{managementStudents.length}
-											</Typography>
-											<Typography variant="small">총 수강생</Typography>
-										</div>
-									</div>
-								</Card>
-
-								<Card
-									padding="md"
-									className="bg-[var(--color-red)]/10 border-[var(--color-red)]/20"
-								>
-									<div className="flex items-center">
-										<MessageCircle className="h-8 w-8 text-[var(--color-red)]" />
-										<div className="ml-3">
-											<Typography
-												variant="h2"
-												className="text-[var(--color-red)]"
-											>
-												{totalUnread}
-											</Typography>
-											<Typography variant="small">읽지 않은 메시지</Typography>
-										</div>
-									</div>
-								</Card>
-
-								<Card
-									padding="md"
-									className="bg-[var(--color-green)]/10 border-[var(--color-green)]/20"
-								>
-									<div className="flex items-center">
-										<Trophy className="h-8 w-8 text-[var(--color-green)]" />
-										<div className="ml-3">
-											<Typography
-												variant="h2"
-												className="text-[var(--color-green)]"
-											>
-												{Math.round(
-													managementStudents.reduce(
-														(sum, s) =>
-															sum + (s.placementTest?.totalScore || 0),
-														0,
-													) / managementStudents.length,
-												)}
-											</Typography>
-											<Typography variant="small">평균 점수</Typography>
-										</div>
-									</div>
-								</Card>
-
-								<Card
-									padding="md"
-									className="bg-[var(--color-primary)]/10 border-[var(--color-primary)]/20"
-								>
-									<div className="flex items-center">
-										<TrendingUp className="h-8 w-8 text-[var(--color-primary)]" />
-										<div className="ml-3">
-											<Typography
-												variant="h2"
-												className="text-[var(--color-primary)]"
-											>
-												{
-													managementStudents.filter(
-														(s) =>
-															toJSDate(s.lastActivity) >
-															new Date(Date.now() - 24 * 60 * 60 * 1000),
-													).length
-												}
-											</Typography>
-											<Typography variant="small">24시간 내 활동</Typography>
-										</div>
-									</div>
-								</Card>
-							</div>
-						</Card>
-
 						{/* Search & Filter */}
-						<Card padding="md">
-							<div className="flex flex-col md:flex-row gap-4">
-								<div className="flex-1">
-									<Input
+						<div className="flex flex-col sm:flex-row gap-3">
+							{/* 검색 입력 */}
+							<div className="flex-1 relative">
+								<div className="relative">
+									<Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+									<input
 										type="text"
 										placeholder="학생 이름, 전화번호, 목표대학으로 검색..."
 										value={searchTerm}
 										onChange={(e) => setSearchTerm(e.target.value)}
-										icon={<Search className="h-4 w-4" />}
+										className="w-full pl-11 pr-10 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent transition-all shadow-sm hover:border-gray-300"
 									/>
-								</div>
-								<div className="flex items-center gap-2">
-									<Filter className="h-4 w-4 text-gray-600" />
-									<select
-										value={sortBy}
-										onChange={(e) =>
-											setSortBy(
-												e.target.value as "name" | "lastActivity" | "score",
-											)
-										}
-										className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
-									>
-										<option value="lastActivity">최근 활동순</option>
-										<option value="name">이름순</option>
-										<option value="score">점수순</option>
-									</select>
+									{searchTerm && (
+										<button
+											type="button"
+											onClick={() => setSearchTerm("")}
+											className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+											aria-label="검색어 지우기"
+										>
+											<X className="h-4 w-4 text-gray-400" />
+										</button>
+									)}
 								</div>
 							</div>
-						</Card>
+
+							{/* 정렬 필터 */}
+							<div className="relative">
+								<select
+									value={sortBy}
+									onChange={(e) =>
+										setSortBy(
+											e.target.value as "name" | "lastActivity" | "score",
+										)
+									}
+									className="px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent transition-all shadow-sm hover:border-gray-300 appearance-none cursor-pointer min-w-[160px]"
+								>
+									<option value="lastActivity">최근 활동순</option>
+									<option value="name">이름순</option>
+									<option value="score">점수순</option>
+								</select>
+								<div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+									<svg
+										className="h-4 w-4 text-gray-400"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+										aria-hidden="true"
+									>
+										<title>드롭다운 화살표</title>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M19 9l-7 7-7-7"
+										/>
+									</svg>
+								</div>
+							</div>
+						</div>
 
 						{/* Students Grid */}
-						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 							{filteredStudents.map((student) => {
 								const unreadCount = getUnreadCount(student);
 								const lastMessage = getLastMessage(student);
@@ -236,9 +171,6 @@ const ManagementPage = () => {
 									>
 										<div className="flex justify-between items-start mb-4">
 											<div className="flex items-center gap-3">
-												<div className="w-12 h-12 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary)]/70 rounded-full flex items-center justify-center text-white font-semibold">
-													{student.info.name[0]}
-												</div>
 												<div>
 													<Typography variant="h3">
 														{student.info.name}
@@ -380,15 +312,19 @@ const ManagementPage = () => {
 							})}
 
 							{filteredStudents.length === 0 && (
-								<Card padding="lg" className="text-center">
-									<User className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-									<Typography variant="h3" className="mb-2">
-										관리 중인 학생이 없습니다
-									</Typography>
-									<Typography variant="body-secondary">
-										등록이 완료된 학생들이 여기에 표시됩니다.
-									</Typography>
-								</Card>
+								<div className="col-span-full">
+									<Card padding="lg" className="text-center">
+										<User className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+										<Typography variant="h3" className="mb-2">
+											관리 중인 학생이 없습니다
+										</Typography>
+										<Typography variant="body-secondary">
+											{searchTerm
+												? "검색 결과가 없습니다."
+												: "등록이 완료된 학생들이 여기에 표시됩니다."}
+										</Typography>
+									</Card>
+								</div>
 							)}
 						</div>
 					</div>

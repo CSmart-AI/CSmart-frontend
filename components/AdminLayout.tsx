@@ -64,7 +64,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 				<div className="w-full px-[var(--page-padding-inline)]">
 					<div className="flex items-center justify-between h-[var(--header-height)]">
 						<div className="flex items-center gap-3">
-							<Settings className="h-8 w-8 text-[var(--color-primary)]" />
 							<Typography variant="h4" as="h1" className="text-gray-900">
 								CSmart
 							</Typography>

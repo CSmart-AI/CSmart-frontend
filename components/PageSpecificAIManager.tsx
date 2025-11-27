@@ -1,4 +1,4 @@
-import { Eye, MessageCircle, Search, Send } from "lucide-react";
+import { Eye, MessageCircle, RefreshCw, Send } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
 	type AiResponseDTO,
@@ -13,7 +13,7 @@ import {
 	type GuidelineReference,
 	getGuidelinesByLines,
 } from "@/utils/guideline";
-import { Badge, Button, Card, Input, Modal, Typography } from "./ui";
+import { Badge, Button, Card, Modal, Typography } from "./ui";
 
 interface ChatItem {
 	id: string;
@@ -31,6 +31,8 @@ interface PageSpecificAIManagerProps {
 	chats: ChatItem[];
 	students: StudentDTO[];
 	channelType: ChannelType;
+	loading?: boolean;
+	onRefresh?: () => void;
 	onMessageSent?: () => void;
 }
 
@@ -38,6 +40,8 @@ const PageSpecificAIManager = ({
 	chats,
 	students,
 	channelType,
+	loading = false,
+	onRefresh,
 	onMessageSent,
 }: PageSpecificAIManagerProps) => {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -477,6 +481,17 @@ const PageSpecificAIManager = ({
 						채팅 목록을 확인하고 메시지를 전송할 수 있습니다
 					</Typography>
 				</div>
+				{onRefresh && (
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={onRefresh}
+						disabled={loading}
+						className="p-2"
+					>
+						<RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+					</Button>
+				)}
 			</div>
 
 			{/* Search */}

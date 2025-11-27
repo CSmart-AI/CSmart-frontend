@@ -80,17 +80,6 @@ const RegistrationPage = () => {
 					</div>
 
 					<div className="space-y-6">
-						{/* Search */}
-						<Card padding="md">
-							<Input
-								type="text"
-								placeholder="학생 이름 또는 전화번호로 검색..."
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								icon={<User className="h-4 w-4" />}
-							/>
-						</Card>
-
 						{/* Students List */}
 						<div className="space-y-4">
 							{filteredStudents.map((student) => {
