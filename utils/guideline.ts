@@ -51,8 +51,6 @@ async function loadGuidelineDB(): Promise<GuidelineRow[]> {
 				}
 			} catch (error) {
 				console.warn(`경로 ${path}에서 로드 실패:`, error);
-				// 다음 경로 시도
-				continue;
 			}
 		}
 

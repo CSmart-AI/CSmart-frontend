@@ -2,14 +2,14 @@ import { MessageCircle, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import PageSpecificAIManager from "@/components/PageSpecificAIManager";
 import { Badge, Button, Input, Typography } from "@/components/ui";
-import { authStorage } from "@/utils/auth";
 import {
-	kakaoApi,
-	studentApi,
 	aiApi,
-	type StudentDTO,
 	type ChannelType,
+	kakaoApi,
+	type StudentDTO,
+	studentApi,
 } from "@/utils/api";
+import { authStorage } from "@/utils/auth";
 import { cn } from "@/utils/cn";
 
 // ChatItem 타입
@@ -123,7 +123,16 @@ const AIManagementPage = () => {
 	}, []);
 
 	useEffect(() => {
-		loadData();
+		loadData(true); // 처음 페이지 진입 시 AI 응답 생성 트리거
+	}, [loadData]);
+
+	// AI 응답이 들어올 때를 대비해 주기적으로 자동 새로고침
+	useEffect(() => {
+		const interval = setInterval(() => {
+			loadData(false); // AI 트리거 없이 데이터만 새로고침
+		}, 30000); // 30초마다 새로고침
+
+		return () => clearInterval(interval);
 	}, [loadData]);
 
 	const filteredChats = chats.filter((chat) => {

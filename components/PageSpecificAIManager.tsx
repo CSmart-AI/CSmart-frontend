@@ -1,19 +1,19 @@
 import { Eye, MessageCircle, Search, Send } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, Button, Card, Input, Modal, Typography } from "./ui";
 import {
-	aiResponseApi,
-	kakaoApi,
 	type AiResponseDTO,
-	type StudentDTO,
+	aiResponseApi,
 	type ChannelType,
+	kakaoApi,
+	type StudentDTO,
 } from "@/utils/api";
 import { cn } from "@/utils/cn";
 import {
 	extractGuidelineReferencesWithPositions,
-	getGuidelinesByLines,
 	type GuidelineReference,
+	getGuidelinesByLines,
 } from "@/utils/guideline";
+import { Badge, Button, Card, Input, Modal, Typography } from "./ui";
 
 interface ChatItem {
 	id: string;
@@ -68,6 +68,8 @@ const PageSpecificAIManager = ({
 	const [sourceLinkReferences, setSourceLinkReferences] = useState<
 		Array<{ url: string; startIndex: number; endIndex: number; text: string }>
 	>([]);
+	const [showPdfViewer, setShowPdfViewer] = useState(false);
+	const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
 	// 학생 정보 맵 생성
 	const studentMap = useMemo(() => {
@@ -220,6 +222,49 @@ const PageSpecificAIManager = ({
 	};
 
 	/**
+	 * 중앙대 관련 링크인지 확인
+	 * @param url 링크 URL
+	 * @param text 링크 텍스트
+	 * @returns 중앙대 관련 여부
+	 */
+	const isChungangRelated = (url: string, text: string): boolean => {
+		const lowerUrl = url.toLowerCase();
+		const lowerText = text.toLowerCase();
+		return (
+			lowerUrl.includes("중앙대") ||
+			lowerUrl.includes("chungang") ||
+			lowerText.includes("중앙대") ||
+			lowerText.includes("chungang")
+		);
+	};
+
+	/**
+	 * 출처 링크 클릭 핸들러
+	 * @param url 링크 URL
+	 * @param text 링크 텍스트
+	 * @param e 이벤트 객체
+	 */
+	const handleSourceLinkClick = (
+		url: string,
+		text: string,
+		e: React.MouseEvent<HTMLAnchorElement>,
+	) => {
+		// PDF 파일이고 중앙대 관련이면 뷰어로 표시
+		if (
+			(url.toLowerCase().endsWith(".pdf") ||
+				text.toLowerCase().includes(".pdf")) &&
+			isChungangRelated(url, text)
+		) {
+			e.preventDefault();
+			// public 폴더의 중앙대.pdf 경로
+			const pdfPath = "/중앙대.pdf";
+			setPdfUrl(pdfPath);
+			setShowPdfViewer(true);
+		}
+		// 그 외의 경우는 기본 동작 (새 탭에서 열기)
+	};
+
+	/**
 	 * GuidelineDB 및 출처 링크 참조 제거 (메시지 전송 전)
 	 * @param text 원본 텍스트
 	 * @returns 참조가 제거된 텍스트
@@ -243,8 +288,19 @@ const PageSpecificAIManager = ({
 
 			if (guidelineDBMatch && guidelineDBMatch.index !== undefined) {
 				// GuidelineDB 시작부터 (line숫자) 끝까지 제거
-				const removeStart = guidelineDBMatch.index;
-				const removeEnd = ref.endIndex;
+				let removeStart = guidelineDBMatch.index;
+				let removeEnd = ref.endIndex;
+
+				// GuidelineDB 앞에 여는 괄호가 있는지 확인
+				if (removeStart > 0 && result[removeStart - 1] === "(") {
+					// 닫는 괄호가 있는지 확인 (removeEnd 뒤에)
+					if (removeEnd < result.length && result[removeEnd] === ")") {
+						// 앞뒤 괄호도 함께 제거
+						removeStart = removeStart - 1;
+						removeEnd = removeEnd + 1;
+					}
+				}
+
 				result = result.slice(0, removeStart) + result.slice(removeEnd);
 			} else {
 				// GuidelineDB를 찾지 못한 경우 (line숫자)만 제거
@@ -261,6 +317,9 @@ const PageSpecificAIManager = ({
 		for (const ref of sortedSourceRefs) {
 			result = result.slice(0, ref.startIndex) + result.slice(ref.endIndex);
 		}
+
+		// 빈 괄호 쌍 제거 (참조 제거 후 남은 괄호들)
+		result = result.replace(/\(\s*\)/g, "");
 
 		// 연속된 공백 정리
 		return result.replace(/\s+/g, " ").trim();
@@ -421,7 +480,7 @@ const PageSpecificAIManager = ({
 			</div>
 
 			{/* Search */}
-			<div className="flex items-center gap-4">
+			{/* <div className="flex items-center gap-4">
 				<div className="flex-1 max-w-md">
 					<Input
 						type="text"
@@ -431,7 +490,7 @@ const PageSpecificAIManager = ({
 						icon={<Search className="h-4 w-4" />}
 					/>
 				</div>
-			</div>
+			</div> */}
 
 			{/* Bulk Actions */}
 			{selectedIds.size > 0 && (
@@ -486,7 +545,7 @@ const PageSpecificAIManager = ({
 									className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-indigo)] focus:ring-2 focus:ring-[var(--color-indigo)]"
 								/>
 							</th>
-							<th className="px-4 py-3 text-left w-32">
+							<th className="px-4 py-3 text-left w-20">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -494,7 +553,7 @@ const PageSpecificAIManager = ({
 									프로필
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left min-w-[150px]">
+							<th className="px-4 py-3 text-left min-w-[100px]">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -502,7 +561,7 @@ const PageSpecificAIManager = ({
 									이름
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left min-w-[200px]">
+							<th className="px-4 py-3 text-left min-w-[300px]">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -510,7 +569,7 @@ const PageSpecificAIManager = ({
 									마지막 메시지
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left min-w-[300px]">
+							<th className="px-4 py-3 text-left min-w-[450px]">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -518,7 +577,7 @@ const PageSpecificAIManager = ({
 									전송할 메시지
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left w-24">
+							<th className="px-4 py-3 text-middle w-24">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -526,7 +585,7 @@ const PageSpecificAIManager = ({
 									상태
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left w-32">
+							<th className="px-4 py-3 text-middle w-32">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -534,7 +593,7 @@ const PageSpecificAIManager = ({
 									시간
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-right w-32">
+							<th className="px-4 py-3 text-middle w-32">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -591,15 +650,23 @@ const PageSpecificAIManager = ({
 										</Typography>
 									</td>
 									<td className="px-4 py-3">
-										<Typography
-											variant="body-secondary"
-											className="text-sm line-clamp-2 max-w-[200px]"
-										>
-											{chat.lastMessage || "메시지 없음"}
-										</Typography>
+										<div className="relative group">
+											<Typography
+												variant="body-secondary"
+												className="text-sm line-clamp-2 max-w-[300px] cursor-pointer"
+											>
+												{chat.lastMessage || "메시지 없음"}
+											</Typography>
+											{chat.lastMessage && (
+												<div className="absolute left-0 top-full mt-2 z-50 hidden group-hover:block bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg max-w-md whitespace-pre-wrap break-words">
+													{chat.lastMessage}
+													<div className="absolute -top-1 left-4 w-2 h-2 bg-gray-900 rotate-45"></div>
+												</div>
+											)}
+										</div>
 									</td>
 									<td className="px-4 py-3">
-										<div className="space-y-2 min-w-[300px]">
+										<div className="space-y-2 min-w-[450px]">
 											{isLoadingAiResponse ? (
 												<div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-500">
 													AI 응답 로딩 중...
@@ -698,18 +765,18 @@ const PageSpecificAIManager = ({
 										</div>
 									</td>
 									<td className="px-4 py-3">
-										<div className="flex items-center gap-2">
+										<div className="flex flex-col items-center gap-2">
 											{chat.unreadCount && chat.unreadCount > 0 ? (
-												<Badge variant="danger" className="text-xs">
+												<Badge variant="danger" className="text-xs shrink-0">
 													읽지 않음 ({chat.unreadCount})
 												</Badge>
 											) : (
-												<Badge variant="success" className="text-xs">
+												<Badge variant="success" className="text-xs shrink-0">
 													읽음
 												</Badge>
 											)}
 											{chat.isReplied && (
-												<Badge variant="primary" className="text-xs">
+												<Badge variant="primary" className="text-xs shrink-0">
 													답변함
 												</Badge>
 											)}
@@ -925,6 +992,15 @@ const PageSpecificAIManager = ({
 																target="_blank"
 																rel="noopener noreferrer"
 																key={part.key}
+																onClick={(e) => {
+																	if (part.url) {
+																		handleSourceLinkClick(
+																			part.url,
+																			part.text,
+																			e,
+																		);
+																	}
+																}}
 																className="cursor-pointer px-1 py-0.5 rounded transition-colors inline bg-green-200 text-green-800 hover:bg-green-300 underline"
 															>
 																{part.text}
@@ -1067,6 +1143,9 @@ const PageSpecificAIManager = ({
 												href={ref.url}
 												target="_blank"
 												rel="noopener noreferrer"
+												onClick={(e) =>
+													handleSourceLinkClick(ref.url, ref.text, e)
+												}
 												className="block w-full text-left rounded-lg p-3 border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
 											>
 												<div className="flex items-center gap-2">
@@ -1086,6 +1165,27 @@ const PageSpecificAIManager = ({
 								</div>
 							)}
 						</div>
+					</div>
+				)}
+			</Modal>
+
+			{/* PDF 뷰어 모달 */}
+			<Modal
+				isOpen={showPdfViewer}
+				onClose={() => {
+					setShowPdfViewer(false);
+					setPdfUrl(null);
+				}}
+				title="중앙대 모집요강 PDF"
+				size="xl"
+			>
+				{pdfUrl && (
+					<div className="w-full h-[calc(90vh-120px)]">
+						<iframe
+							src={pdfUrl}
+							className="w-full h-full border-0 rounded-lg"
+							title="중앙대 모집요강 PDF"
+						/>
 					</div>
 				)}
 			</Modal>

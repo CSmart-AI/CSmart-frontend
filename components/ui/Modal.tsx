@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
-import { Button, Typography } from "./index";
 import { cn } from "@/utils/cn";
+import { Button, Typography } from "./index";
 
 interface ModalProps {
 	isOpen: boolean;
