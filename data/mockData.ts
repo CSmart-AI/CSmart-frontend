@@ -416,7 +416,8 @@ export const mockStudents: Student[] = [
 			hasToeic: true,
 			hasPartTimeJob: true,
 			availableCallTime: "주말 오후 2-6시",
-			message: "KAIST로 편입하는 것이 꿈입니다. 수학 실력 향상에 집중하고 싶어요.",
+			message:
+				"KAIST로 편입하는 것이 꿈입니다. 수학 실력 향상에 집중하고 싶어요.",
 			source: "기타",
 			phone: "010-6666-1111",
 			createdAt: Temporal.PlainDate.from("2024-01-14"),
@@ -462,7 +463,8 @@ export const mockStudents: Student[] = [
 			{
 				id: "msg19",
 				studentId: "7",
-				message: "수학 점수가 생각보다 잘 나왔어요! 다음 모의고사 일정 알려주세요.",
+				message:
+					"수학 점수가 생각보다 잘 나왔어요! 다음 모의고사 일정 알려주세요.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-30T13:15:00"),
 				isRead: true,
@@ -499,7 +501,8 @@ export const mockStudents: Student[] = [
 			hasToeic: false,
 			hasPartTimeJob: false,
 			availableCallTime: "평일 오후 1-5시",
-			message: "연세대 사회학과로 편입하고 싶습니다. 기초부터 차근차근 배우고 싶어요.",
+			message:
+				"연세대 사회학과로 편입하고 싶습니다. 기초부터 차근차근 배우고 싶어요.",
 			source: "블로그",
 			phone: "010-8888-2222",
 			createdAt: Temporal.PlainDate.from("2024-01-22"),
@@ -574,7 +577,8 @@ export const mockStudents: Student[] = [
 			hasToeic: true,
 			hasPartTimeJob: false,
 			availableCallTime: "평일 저녁 6-9시",
-			message: "POSTECH 컴공으로 편입하는 것이 목표입니다. 수학과 영어 모두 집중적으로 공부하고 싶어요.",
+			message:
+				"POSTECH 컴공으로 편입하는 것이 목표입니다. 수학과 영어 모두 집중적으로 공부하고 싶어요.",
 			source: "인스타",
 			phone: "010-9999-3333",
 			createdAt: Temporal.PlainDate.from("2024-01-17"),
@@ -620,7 +624,8 @@ export const mockStudents: Student[] = [
 			{
 				id: "msg26",
 				studentId: "9",
-				message: "배치고사 점수가 목표보다 높게 나왔어요! 다음 단계 학습 계획 알려주세요.",
+				message:
+					"배치고사 점수가 목표보다 높게 나왔어요! 다음 단계 학습 계획 알려주세요.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-31T19:30:00"),
 				isRead: false,
@@ -628,6 +633,7 @@ export const mockStudents: Student[] = [
 		],
 		status: "management",
 		lastActivity: Temporal.PlainDateTime.from("2024-01-31T19:30:00"),
-		specialNotes: "수학과 영어 실력 모두 우수. 국어 보완 필요. 목표 의식 매우 강함.",
+		specialNotes:
+			"수학과 영어 실력 모두 우수. 국어 보완 필요. 목표 의식 매우 강함.",
 	},
 ];
