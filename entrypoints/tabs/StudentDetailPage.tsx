@@ -110,9 +110,6 @@ const StudentDetailPage = () => {
 									>
 										<ArrowLeft className="h-5 w-5 text-gray-600" />
 									</Link>
-									<div className="w-16 h-16 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary)]/70 rounded-full flex items-center justify-center text-white text-xl font-bold">
-										{student.info.name[0]}
-									</div>
 									<div>
 										<Typography variant="h2">{student.info.name}</Typography>
 										<Typography variant="body-secondary">
@@ -496,7 +493,7 @@ const StudentDetailPage = () => {
 								</Typography>
 
 								{/* Messages */}
-								<div className="space-y-4 mb-4 max-h-96 overflow-y-auto">
+								<div className="space-y-3 mb-4 max-h-96 overflow-y-auto pr-2">
 									{student.kakaoMessages.map((message) => (
 										<div
 											key={message.id}
@@ -508,22 +505,29 @@ const StudentDetailPage = () => {
 										>
 											<div
 												className={cn(
-													"max-w-xs px-4 py-2 rounded-lg",
+													"max-w-xs px-4 py-2.5 rounded-2xl border shadow-sm",
 													message.sender === "admin"
-														? "bg-[var(--color-primary)] text-white"
-														: "bg-white/50 text-gray-900",
+														? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]/20"
+														: "bg-gray-100 text-gray-900 border-gray-200",
 												)}
 											>
-												<Typography variant="small">
+												<Typography
+													variant="small"
+													className={cn(
+														message.sender === "admin"
+															? "text-white"
+															: "text-gray-900",
+													)}
+												>
 													{message.message}
 												</Typography>
 												<Typography
 													variant="small"
 													className={cn(
-														"text-xs mt-1",
+														"text-xs mt-1.5",
 														message.sender === "admin"
-															? "text-white/70"
-															: "text-gray-600",
+															? "text-white/80"
+															: "text-gray-500",
 													)}
 												>
 													{formatTemporalDateTime(
@@ -534,25 +538,6 @@ const StudentDetailPage = () => {
 											</div>
 										</div>
 									))}
-								</div>
-
-								{/* Message Input */}
-								<div className="border-t border-gray-300 pt-4">
-									<div className="flex gap-2">
-										<input
-											type="text"
-											value={newMessage}
-											onChange={(e) => setNewMessage(e.target.value)}
-											placeholder="메시지를 입력하세요..."
-											className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
-											onKeyPress={(e) =>
-												e.key === "Enter" && handleSendMessage()
-											}
-										/>
-										<Button size="sm" onClick={handleSendMessage}>
-											<Send className="h-4 w-4" />
-										</Button>
-									</div>
 								</div>
 							</Card>
 						</div>
