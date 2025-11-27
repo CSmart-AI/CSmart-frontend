@@ -3,15 +3,13 @@ import {
 	Calculator,
 	CheckCircle,
 	Clock,
-	CreditCard,
 	FileText,
 	MessageCircle,
-	User,
 	XCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Button, Card, Input, Typography } from "@/components/ui";
+import { Badge, Button, Card, Typography } from "@/components/ui";
 import { mockStudents } from "@/data/mockData";
 import type { Student } from "@/types/student";
 import { formatTemporalDate, formatTemporalDateTime } from "@/utils/temporal";
@@ -38,19 +36,6 @@ const RegistrationPage = () => {
 		return student.kakaoMessages.filter(
 			(msg) => !msg.isRead && msg.sender === "student",
 		).length;
-	};
-
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case "완료":
-				return "success";
-			case "대기":
-				return "warning";
-			case "취소":
-				return "danger";
-			default:
-				return "default";
-		}
 	};
 
 	return (
@@ -109,108 +94,11 @@ const RegistrationPage = () => {
 											</div>
 										</div>
 
-										<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-											{/* Payment Information */}
-											<Card
-												padding="md"
-												className="bg-[var(--color-primary)]/10 border border-gray-200"
-											>
-												<div className="flex items-center mb-3">
-													<CreditCard className="h-5 w-5 text-[var(--color-primary)] mr-2" />
-													<Typography
-														variant="h4"
-														className="text-[var(--color-primary)]"
-													>
-														결제 정보
-													</Typography>
-												</div>
-												{student.payment ? (
-													<div className="space-y-2">
-														<div className="flex justify-between items-center">
-															<Typography
-																variant="body-secondary"
-																className="text-sm"
-															>
-																상태:
-															</Typography>
-															<Badge
-																variant={
-																	getStatusColor(student.payment.status) as
-																		| "default"
-																		| "primary"
-																		| "success"
-																		| "warning"
-																		| "danger"
-																}
-															>
-																{student.payment.status}
-															</Badge>
-														</div>
-														<div className="flex justify-between items-center">
-															<Typography
-																variant="body-secondary"
-																className="text-sm"
-															>
-																금액:
-															</Typography>
-															<Typography
-																variant="small"
-																className="font-medium"
-															>
-																{student.payment.amount.toLocaleString()}원
-															</Typography>
-														</div>
-														<div className="flex justify-between items-center">
-															<Typography
-																variant="body-secondary"
-																className="text-sm"
-															>
-																방법:
-															</Typography>
-															<Typography variant="small">
-																{student.payment.method}
-															</Typography>
-														</div>
-														<div className="flex justify-between items-center">
-															<Typography
-																variant="body-secondary"
-																className="text-sm"
-															>
-																과정:
-															</Typography>
-															<Typography variant="small">
-																{student.payment.course}
-															</Typography>
-														</div>
-														<div className="flex justify-between items-center">
-															<Typography
-																variant="body-secondary"
-																className="text-sm"
-															>
-																일시:
-															</Typography>
-															<Typography variant="small">
-																{formatTemporalDate(
-																	student.payment.paymentDate,
-																	"MM/dd",
-																)}
-															</Typography>
-														</div>
-													</div>
-												) : (
-													<Typography
-														variant="body-secondary"
-														className="text-sm"
-													>
-														결제 정보 없음
-													</Typography>
-												)}
-											</Card>
-
+										<div className="flex flex-col lg:flex-row gap-6">
 											{/* Placement Test */}
 											<Card
 												padding="md"
-												className="bg-[var(--color-green)]/10 border border-gray-200"
+												className="bg-[var(--color-green)]/10 border border-gray-200 flex-1"
 											>
 												<div className="flex items-center mb-3">
 													<Calculator className="h-5 w-5 text-[var(--color-green)] mr-2" />
@@ -318,7 +206,7 @@ const RegistrationPage = () => {
 											{/* Progress Status */}
 											<Card
 												padding="md"
-												className="bg-[var(--color-primary)]/10 border border-gray-200"
+												className="bg-[var(--color-primary)]/10 border border-gray-200 flex-1"
 											>
 												<div className="flex items-center mb-3">
 													<Award className="h-5 w-5 text-[var(--color-primary)] mr-2" />
@@ -330,19 +218,6 @@ const RegistrationPage = () => {
 													</Typography>
 												</div>
 												<div className="space-y-3">
-													<div className="flex items-center justify-between">
-														<Typography
-															variant="body-secondary"
-															className="text-sm"
-														>
-															결제
-														</Typography>
-														{student.payment?.status === "완료" ? (
-															<CheckCircle className="h-4 w-4 text-[var(--color-green)]" />
-														) : (
-															<Clock className="h-4 w-4 text-[var(--color-yellow)]" />
-														)}
-													</div>
 													<div className="flex items-center justify-between">
 														<Typography
 															variant="body-secondary"
@@ -383,61 +258,65 @@ const RegistrationPage = () => {
 														size="sm"
 														className="w-full mt-3"
 													>
-														개별 채널 안내(??)
+														개별 채널 안내
 													</Button>
 												</div>
 											</Card>
-										</div>
 
-										{/* Recent Message */}
-										<Card
-											padding="md"
-											className="mt-6 bg-white/50 border border-gray-200"
-										>
-											<div className="flex items-center justify-between mb-2">
-												<Typography
-													variant="small"
-													className="font-medium flex items-center"
+											{/* Right Column: Recent Message and Special Notes */}
+											<div className="flex flex-col gap-6 flex-1">
+												{/* Recent Message */}
+												<Card
+													padding="md"
+													className="bg-white/50 border border-gray-200"
 												>
-													<MessageCircle className="h-4 w-4 mr-2" />
-													최근 카카오톡
-												</Typography>
-												<Typography variant="small" className="text-xs">
-													{formatTemporalDateTime(
-														student.lastActivity,
-														"MM/dd HH:mm",
-													)}
-												</Typography>
-											</div>
-											<Typography
-												variant="body-secondary"
-												className="line-clamp-2 text-sm"
-											>
-												{lastMessage}
-											</Typography>
-										</Card>
+													<div className="flex items-center justify-between mb-2">
+														<Typography
+															variant="small"
+															className="font-medium flex items-center"
+														>
+															<MessageCircle className="h-4 w-4 mr-2" />
+															최근 카카오톡
+														</Typography>
+														<Typography variant="small" className="text-xs">
+															{formatTemporalDateTime(
+																student.lastActivity,
+																"MM/dd HH:mm",
+															)}
+														</Typography>
+													</div>
+													<Typography
+														variant="body-secondary"
+														className="line-clamp-2 text-sm"
+													>
+														{lastMessage}
+													</Typography>
+												</Card>
 
-										{student.specialNotes && (
-											<Card
-												padding="sm"
-												className="mt-4 bg-[var(--color-yellow)]/10 border border-gray-200"
-											>
-												<div className="flex items-center">
-													<Typography
-														variant="small"
-														className="font-medium text-[var(--color-yellow)] mr-2"
+												{/* Special Notes */}
+												{student.specialNotes ? (
+													<Card
+														padding="sm"
+														className="bg-[var(--color-yellow)]/10 border border-gray-200"
 													>
-														특이사항:
-													</Typography>
-													<Typography
-														variant="small"
-														className="text-[var(--color-yellow)]"
-													>
-														{student.specialNotes}
-													</Typography>
-												</div>
-											</Card>
-										)}
+														<div className="flex-col items-center">
+															<Typography
+																variant="small"
+																className="font-medium text-[var(--color-yellow)] mr-2"
+															>
+																특이사항:
+															</Typography>
+															<Typography
+																variant="small"
+																className="text-[var(--color-yellow)]"
+															>
+																{student.specialNotes}
+															</Typography>
+														</div>
+													</Card>
+												) : null}
+											</div>
+										</div>
 									</Card>
 								);
 							})}
