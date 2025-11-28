@@ -38,7 +38,6 @@ interface PageSpecificAIManagerProps {
 
 const PageSpecificAIManager = ({
 	chats,
-	students,
 	channelType: _channelType,
 	loading = false,
 	onRefresh,
