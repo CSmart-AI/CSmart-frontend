@@ -210,6 +210,7 @@ const PageSpecificAIManager = ({
 			endIndex: number;
 			text: string;
 		}> = [];
+
 		// (출처: https://...) 패턴 찾기
 		const sourceLinkRegex = /\(출처:\s*(https?:\/\/[^)]+)\)/gi;
 		const matches = Array.from(text.matchAll(sourceLinkRegex));
@@ -218,6 +219,23 @@ const PageSpecificAIManager = ({
 			if (match.index !== undefined && match[1]) {
 				references.push({
 					url: match[1],
+					startIndex: match.index,
+					endIndex: match.index + match[0].length,
+					text: match[0],
+				});
+			}
+		}
+
+		// (설명 (https://...)) 패턴 찾기 (중첩된 괄호)
+		// 예: (블로그 (https://blog.naver.com/...))
+		const nestedLinkRegex = /\(([^(]+)\s*\((https?:\/\/[^)]+)\)\)/gi;
+		const nestedMatches = Array.from(text.matchAll(nestedLinkRegex));
+
+		for (const match of nestedMatches) {
+			if (match.index !== undefined && match[2]) {
+				// 전체 괄호를 하나의 링크로 처리
+				references.push({
+					url: match[2],
 					startIndex: match.index,
 					endIndex: match.index + match[0].length,
 					text: match[0],
@@ -363,7 +381,7 @@ const PageSpecificAIManager = ({
 		) {
 			e.preventDefault();
 			// public 폴더의 중앙대.pdf 경로, 12페이지 표시
-			const pdfPath = "/중앙대.pdf#page=12";
+			const pdfPath = "/중앙대.pdf#page=16";
 			setPdfUrl(pdfPath);
 			setShowPdfViewer(true);
 		}
