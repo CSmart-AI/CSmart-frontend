@@ -300,7 +300,7 @@ const RegistrationPage = () => {
 						>
 							<div className="space-y-4">
 								<Typography variant="body-secondary">
-									학생을 전송할 선생님을 선택해주세요.
+									학생을 담당할 선생님을 선택해주세요.
 								</Typography>
 								<div className="space-y-2 max-h-[400px] overflow-y-auto">
 									{teachers.length === 0 ? (

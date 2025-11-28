@@ -76,6 +76,9 @@ const PageSpecificAIManager = ({
 	>([]);
 	const [showPdfViewer, setShowPdfViewer] = useState(false);
 	const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+	const [editingResponse, setEditingResponse] = useState<string>("");
+	const [editingChatId, setEditingChatId] = useState<string | null>(null);
+	const [isEditingMode, setIsEditingMode] = useState(false);
 
 	/**
 	 * 각 학생의 대기 중인 AI 응답 가져오기
@@ -894,6 +897,11 @@ const PageSpecificAIManager = ({
 															size="sm"
 															onClick={() => {
 																setSelectedAiResponse(aiResponse);
+																setEditingChatId(chatId);
+																setEditingResponse(
+																	aiResponse.recommendedResponse,
+																);
+																setIsEditingMode(false);
 																// GuidelineDB 참조 추출 및 로드 (위치 정보 포함)
 																const referencesWithPositions =
 																	extractGuidelineReferencesWithPositions(
@@ -1064,6 +1072,9 @@ const PageSpecificAIManager = ({
 					setSourceLinkReferences([]);
 					setPdfReferences([]);
 					setSelectedReference(null);
+					setEditingResponse("");
+					setEditingChatId(null);
+					setIsEditingMode(false);
 				}}
 				title="AI 응답 상세"
 				size="xl"
@@ -1072,192 +1083,255 @@ const PageSpecificAIManager = ({
 					<div className="flex gap-6 h-[calc(90vh-120px)]">
 						{/* 좌측: 응답 텍스트 */}
 						<div className="flex-1 overflow-y-auto">
-							<Typography
-								variant="small"
-								className="font-medium text-gray-700 mb-2"
-							>
-								전체 응답
-							</Typography>
+							<div className="flex items-center justify-between mb-2">
+								<Typography
+									variant="small"
+									className="font-medium text-gray-700"
+								>
+									전체 응답
+								</Typography>
+								<div className="flex items-center gap-2">
+									{!isEditingMode ? (
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => {
+												setIsEditingMode(true);
+												setEditingResponse(
+													selectedAiResponse.recommendedResponse,
+												);
+											}}
+											className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+										>
+											수정
+										</Button>
+									) : (
+										<>
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() => {
+													setIsEditingMode(false);
+													setEditingResponse(
+														selectedAiResponse.recommendedResponse,
+													);
+												}}
+												className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+											>
+												취소
+											</Button>
+											{editingChatId && (
+												<Button
+													variant="primary"
+													size="sm"
+													onClick={() => {
+														if (editingChatId && editingResponse.trim()) {
+															setMessageInputs((prev) => ({
+																...prev,
+																[editingChatId]: editingResponse,
+															}));
+															setIsEditingMode(false);
+														}
+													}}
+													className="bg-[var(--color-green)] hover:opacity-90"
+												>
+													<Send className="h-3 w-3 mr-1" />
+													메시지 입력란에 반영
+												</Button>
+											)}
+										</>
+									)}
+								</div>
+							</div>
 							<div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-								{(() => {
-									const text = selectedAiResponse.recommendedResponse;
-									const allReferences = [
-										...guidelineReferences.map((ref) => ({
-											type: "guideline" as const,
-											startIndex: ref.startIndex,
-											endIndex: ref.endIndex,
-											text: ref.text,
-											lineNumber: ref.lineNumber,
-										})),
-										...sourceLinkReferences.map((ref) => ({
-											type: "sourceLink" as const,
-											startIndex: ref.startIndex,
-											endIndex: ref.endIndex,
-											text: ref.text,
-											url: ref.url,
-										})),
-										...pdfReferences.map((ref) => ({
-											type: "pdf" as const,
-											startIndex: ref.startIndex,
-											endIndex: ref.endIndex,
-											text: ref.text,
-										})),
-									].sort((a, b) => a.startIndex - b.startIndex);
+								{isEditingMode ? (
+									<textarea
+										value={editingResponse}
+										onChange={(e) => setEditingResponse(e.target.value)}
+										className="w-full min-h-[400px] px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent transition-all duration-100 resize-none whitespace-pre-wrap"
+										placeholder="AI 응답을 수정하세요..."
+									/>
+								) : (
+									(() => {
+										const text = selectedAiResponse.recommendedResponse;
+										const allReferences = [
+											...guidelineReferences.map((ref) => ({
+												type: "guideline" as const,
+												startIndex: ref.startIndex,
+												endIndex: ref.endIndex,
+												text: ref.text,
+												lineNumber: ref.lineNumber,
+											})),
+											...sourceLinkReferences.map((ref) => ({
+												type: "sourceLink" as const,
+												startIndex: ref.startIndex,
+												endIndex: ref.endIndex,
+												text: ref.text,
+												url: ref.url,
+											})),
+											...pdfReferences.map((ref) => ({
+												type: "pdf" as const,
+												startIndex: ref.startIndex,
+												endIndex: ref.endIndex,
+												text: ref.text,
+											})),
+										].sort((a, b) => a.startIndex - b.startIndex);
 
-									if (allReferences.length === 0) {
+										if (allReferences.length === 0) {
+											return (
+												<Typography
+													variant="body"
+													className="text-gray-900 whitespace-pre-wrap leading-relaxed"
+												>
+													{text}
+												</Typography>
+											);
+										}
+
+										// 참조 위치를 기준으로 텍스트를 분할하고 하이라이트
+										const parts: Array<{
+											text: string;
+											isReference: boolean;
+											referenceType?: "guideline" | "sourceLink" | "pdf";
+											lineNumber?: string;
+											url?: string;
+											key: string;
+										}> = [];
+										let lastIndex = 0;
+
+										for (const ref of allReferences) {
+											// 참조 이전 텍스트
+											if (ref.startIndex > lastIndex) {
+												parts.push({
+													text: text.slice(lastIndex, ref.startIndex),
+													isReference: false,
+													key: `text-${lastIndex}-${ref.startIndex}`,
+												});
+											}
+											// 참조 텍스트
+											parts.push({
+												text: ref.text,
+												isReference: true,
+												referenceType: ref.type,
+												lineNumber:
+													ref.type === "guideline" ? ref.lineNumber : undefined,
+												url: ref.type === "sourceLink" ? ref.url : undefined,
+												key: `ref-${ref.type}-${ref.startIndex}`,
+											});
+											lastIndex = ref.endIndex;
+										}
+										// 마지막 참조 이후 텍스트
+										if (lastIndex < text.length) {
+											parts.push({
+												text: text.slice(lastIndex),
+												isReference: false,
+												key: `text-${lastIndex}-end`,
+											});
+										}
+
 										return (
 											<Typography
 												variant="body"
 												className="text-gray-900 whitespace-pre-wrap leading-relaxed"
 											>
-												{text}
-											</Typography>
-										);
-									}
-
-									// 참조 위치를 기준으로 텍스트를 분할하고 하이라이트
-									const parts: Array<{
-										text: string;
-										isReference: boolean;
-										referenceType?: "guideline" | "sourceLink" | "pdf";
-										lineNumber?: string;
-										url?: string;
-										key: string;
-									}> = [];
-									let lastIndex = 0;
-
-									for (const ref of allReferences) {
-										// 참조 이전 텍스트
-										if (ref.startIndex > lastIndex) {
-											parts.push({
-												text: text.slice(lastIndex, ref.startIndex),
-												isReference: false,
-												key: `text-${lastIndex}-${ref.startIndex}`,
-											});
-										}
-										// 참조 텍스트
-										parts.push({
-											text: ref.text,
-											isReference: true,
-											referenceType: ref.type,
-											lineNumber:
-												ref.type === "guideline" ? ref.lineNumber : undefined,
-											url: ref.type === "sourceLink" ? ref.url : undefined,
-											key: `ref-${ref.type}-${ref.startIndex}`,
-										});
-										lastIndex = ref.endIndex;
-									}
-									// 마지막 참조 이후 텍스트
-									if (lastIndex < text.length) {
-										parts.push({
-											text: text.slice(lastIndex),
-											isReference: false,
-											key: `text-${lastIndex}-end`,
-										});
-									}
-
-									return (
-										<Typography
-											variant="body"
-											className="text-gray-900 whitespace-pre-wrap leading-relaxed"
-										>
-											{parts.map((part) => {
-												if (part.isReference) {
-													if (part.referenceType === "guideline") {
-														// lineNumber가 있으면 클릭 가능, 없으면 하이라이트만
-														if (part.lineNumber) {
-															const isSelected =
-																selectedReference === part.lineNumber;
-															const lineNum = part.lineNumber;
+												{parts.map((part) => {
+													if (part.isReference) {
+														if (part.referenceType === "guideline") {
+															// lineNumber가 있으면 클릭 가능, 없으면 하이라이트만
+															if (part.lineNumber) {
+																const isSelected =
+																	selectedReference === part.lineNumber;
+																const lineNum = part.lineNumber;
+																return (
+																	<button
+																		type="button"
+																		key={part.key}
+																		onClick={() => {
+																			if (lineNum) {
+																				setSelectedReference(lineNum);
+																			}
+																		}}
+																		onKeyDown={(e) => {
+																			if (
+																				(e.key === "Enter" || e.key === " ") &&
+																				lineNum
+																			) {
+																				e.preventDefault();
+																				setSelectedReference(lineNum);
+																			}
+																		}}
+																		className={cn(
+																			"cursor-pointer px-1 py-0.5 rounded transition-colors inline",
+																			isSelected
+																				? "bg-blue-500 text-white font-semibold"
+																				: "bg-blue-200 text-blue-800 hover:bg-blue-300",
+																		)}
+																	>
+																		{part.text}
+																	</button>
+																);
+															} else {
+																// lineNumber가 없으면 하이라이트만
+																return (
+																	<span
+																		key={part.key}
+																		className="px-1 py-0.5 rounded bg-blue-200 text-blue-800 inline"
+																	>
+																		{part.text}
+																	</span>
+																);
+															}
+														} else if (
+															part.referenceType === "sourceLink" &&
+															part.url
+														) {
 															return (
-																<button
-																	type="button"
+																<a
+																	href={part.url}
+																	target="_blank"
+																	rel="noopener noreferrer"
 																	key={part.key}
-																	onClick={() => {
-																		if (lineNum) {
-																			setSelectedReference(lineNum);
+																	onClick={(e) => {
+																		if (part.url) {
+																			handleSourceLinkClick(
+																				part.url,
+																				part.text,
+																				e,
+																			);
 																		}
 																	}}
-																	onKeyDown={(e) => {
-																		if (
-																			(e.key === "Enter" || e.key === " ") &&
-																			lineNum
-																		) {
-																			e.preventDefault();
-																			setSelectedReference(lineNum);
-																		}
-																	}}
-																	className={cn(
-																		"cursor-pointer px-1 py-0.5 rounded transition-colors inline",
-																		isSelected
-																			? "bg-blue-500 text-white font-semibold"
-																			: "bg-blue-200 text-blue-800 hover:bg-blue-300",
-																	)}
+																	className="cursor-pointer px-1 py-0.5 rounded transition-colors inline bg-green-200 text-green-800 hover:bg-green-300 underline"
 																>
 																	{part.text}
-																</button>
+																</a>
 															);
-														} else {
-															// lineNumber가 없으면 하이라이트만
+														} else if (part.referenceType === "pdf") {
 															return (
+																// biome-ignore lint/a11y/useSemanticElements: button을 사용하면 여러 줄에서 깨지므로 span 사용
 																<span
 																	key={part.key}
-																	className="px-1 py-0.5 rounded bg-blue-200 text-blue-800 inline"
+																	role="button"
+																	tabIndex={0}
+																	onClick={handlePdfReferenceClick}
+																	onKeyDown={(e) => {
+																		if (e.key === "Enter" || e.key === " ") {
+																			e.preventDefault();
+																			handlePdfReferenceClick(e);
+																		}
+																	}}
+																	className="text-purple-800 cursor-pointer hover:text-purple-900 hover:underline"
 																>
 																	{part.text}
 																</span>
 															);
 														}
-													} else if (
-														part.referenceType === "sourceLink" &&
-														part.url
-													) {
-														return (
-															<a
-																href={part.url}
-																target="_blank"
-																rel="noopener noreferrer"
-																key={part.key}
-																onClick={(e) => {
-																	if (part.url) {
-																		handleSourceLinkClick(
-																			part.url,
-																			part.text,
-																			e,
-																		);
-																	}
-																}}
-																className="cursor-pointer px-1 py-0.5 rounded transition-colors inline bg-green-200 text-green-800 hover:bg-green-300 underline"
-															>
-																{part.text}
-															</a>
-														);
-													} else if (part.referenceType === "pdf") {
-														return (
-															// biome-ignore lint/a11y/useSemanticElements: button을 사용하면 여러 줄에서 깨지므로 span 사용
-															<span
-																key={part.key}
-																role="button"
-																tabIndex={0}
-																onClick={handlePdfReferenceClick}
-																onKeyDown={(e) => {
-																	if (e.key === "Enter" || e.key === " ") {
-																		e.preventDefault();
-																		handlePdfReferenceClick(e);
-																	}
-																}}
-																className="text-purple-800 cursor-pointer hover:text-purple-900 hover:underline"
-															>
-																{part.text}
-															</span>
-														);
 													}
-												}
-												return <span key={part.key}>{part.text}</span>;
-											})}
-										</Typography>
-									);
-								})()}
+													return <span key={part.key}>{part.text}</span>;
+												})}
+											</Typography>
+										);
+									})()
+								)}
 							</div>
 						</div>
 
