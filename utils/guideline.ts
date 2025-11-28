@@ -220,47 +220,102 @@ export function extractGuidelineReferencesWithPositions(
 ): GuidelineReference[] {
 	const matches: GuidelineReference[] = [];
 
-	// GuidelineDB가 포함된 괄호 전체를 찾기 (예: (GuidelineDB ...) 또는 (GuidelineDB ... (line5)))
-	// 괄호 안에 GuidelineDB가 포함된 경우를 찾음
-	const guidelineDBWithBracketsRegex = /\([^)]*GuidelineDB[^)]*\)/gi;
-	const guidelineMatches = Array.from(
-		text.matchAll(guidelineDBWithBracketsRegex),
-	);
+	// GuidelineDB가 포함된 모든 위치 찾기
+	const guidelineDBRegex = /GuidelineDB/gi;
+	const guidelineDBMatches = Array.from(text.matchAll(guidelineDBRegex));
 
-	for (const guidelineMatch of guidelineMatches) {
-		if (guidelineMatch.index === undefined) continue;
+	for (const dbMatch of guidelineDBMatches) {
+		if (dbMatch.index === undefined) continue;
 
-		const matchText = guidelineMatch[0];
-		const startIndex = guidelineMatch.index;
-		const endIndex = startIndex + matchText.length;
+		const dbStartIndex = dbMatch.index;
+		const dbEndIndex = dbStartIndex + dbMatch[0].length;
 
-		// line 숫자가 있는지 확인
-		const lineNumberRegex = /\(line(\d+)\)/;
-		const lineMatch = matchText.match(lineNumberRegex);
-		if (lineMatch) {
-			// line 숫자가 있으면 line 부분만 추출
-			const lineNumber = `line${lineMatch[1]}`;
-			const lineText = lineMatch[0];
-			const lineStartInMatch = matchText.indexOf(lineText);
-			const lineStartIndex = startIndex + lineStartInMatch;
-			const lineEndIndex = lineStartIndex + lineText.length;
+		// GuidelineDB 앞에서 가장 가까운 여는 괄호 찾기 (중첩된 괄호 고려)
+		let openBracketIndex = -1;
+		let bracketDepth = 0;
 
-			matches.push({
-				lineNumber,
-				startIndex: lineStartIndex,
-				endIndex: lineEndIndex,
-				text: lineText,
-			});
-		} else {
-			// line 숫자가 없으면 GuidelineDB 전체를 하이라이트 (빈 lineNumber로 표시)
-			matches.push({
-				lineNumber: "",
-				startIndex,
-				endIndex,
-				text: matchText,
-			});
+		for (let i = dbStartIndex - 1; i >= 0; i--) {
+			if (text[i] === ")") {
+				bracketDepth++;
+			} else if (text[i] === "(") {
+				if (bracketDepth === 0) {
+					openBracketIndex = i;
+					break;
+				}
+				bracketDepth--;
+			}
+		}
+
+		// GuidelineDB 뒤에서 가장 가까운 닫는 괄호 찾기 (중첩된 괄호 고려)
+		let closeBracketIndex = -1;
+		bracketDepth = 0;
+
+		for (let i = dbEndIndex; i < text.length; i++) {
+			if (text[i] === "(") {
+				bracketDepth++;
+			} else if (text[i] === ")") {
+				if (bracketDepth === 0) {
+					closeBracketIndex = i;
+					break;
+				}
+				bracketDepth--;
+			}
+		}
+
+		// 괄호를 찾았으면 해당 블록 내에서 (line숫자) 패턴 찾기
+		if (openBracketIndex !== -1 && closeBracketIndex !== -1) {
+			const bracketText = text.slice(openBracketIndex, closeBracketIndex + 1);
+
+			// 괄호 블록 내에서 모든 (line숫자) 패턴 찾기
+			const lineNumberRegex = /\(line(\d+)\)/g;
+			const lineMatches = Array.from(bracketText.matchAll(lineNumberRegex));
+
+			if (lineMatches.length > 0) {
+				// 각 (line숫자) 패턴을 개별 참조로 추가
+				for (const lineMatch of lineMatches) {
+					if (lineMatch.index !== undefined && lineMatch[1]) {
+						const lineNumber = `line${lineMatch[1]}`;
+						const lineText = lineMatch[0];
+						const lineStartIndex = openBracketIndex + lineMatch.index;
+						const lineEndIndex = lineStartIndex + lineText.length;
+
+						// 중복 체크
+						const isDuplicate = matches.some(
+							(m) =>
+								m.startIndex === lineStartIndex && m.endIndex === lineEndIndex,
+						);
+
+						if (!isDuplicate) {
+							matches.push({
+								lineNumber,
+								startIndex: lineStartIndex,
+								endIndex: lineEndIndex,
+								text: lineText,
+							});
+						}
+					}
+				}
+			} else {
+				// line 숫자가 없으면 GuidelineDB가 포함된 괄호 전체를 하이라이트 (빈 lineNumber로 표시)
+				// 중복 체크
+				const isDuplicate = matches.some(
+					(m) =>
+						m.startIndex === openBracketIndex &&
+						m.endIndex === closeBracketIndex + 1,
+				);
+
+				if (!isDuplicate) {
+					matches.push({
+						lineNumber: "",
+						startIndex: openBracketIndex,
+						endIndex: closeBracketIndex + 1,
+						text: bracketText,
+					});
+				}
+			}
 		}
 	}
 
-	return matches;
+	// startIndex 기준으로 정렬
+	return matches.sort((a, b) => a.startIndex - b.startIndex);
 }

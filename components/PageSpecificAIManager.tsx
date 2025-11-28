@@ -78,15 +78,6 @@ const PageSpecificAIManager = ({
 	const [showPdfViewer, setShowPdfViewer] = useState(false);
 	const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-	// 학생 정보 맵 생성
-	const studentMap = useMemo(() => {
-		const map = new Map<number, StudentDTO>();
-		students.forEach((student) => {
-			map.set(student.studentId, student);
-		});
-		return map;
-	}, [students]);
-
 	/**
 	 * 각 학생의 대기 중인 AI 응답 가져오기
 	 */
@@ -391,6 +382,7 @@ const PageSpecificAIManager = ({
 	/**
 	 * GuidelineDB, 출처 링크, PDF 참조 제거 (메시지 전송 전)
 	 * 모든 참조는 괄호 전체를 포함해서 제거됨
+	 * 중첩된 괄호도 올바르게 처리함
 	 * @param text 원본 텍스트
 	 * @returns 참조가 제거된 텍스트
 	 */
@@ -398,29 +390,72 @@ const PageSpecificAIManager = ({
 		let result = text;
 
 		// 모든 참조 위치 찾기
-		const _guidelineReferences =
-			extractGuidelineReferencesWithPositions(result);
 		const sourceLinkRefs = extractSourceLinkReferences(result);
 		const pdfRefs = extractPdfReferences(result);
 
-		// GuidelineDB 참조는 괄호 전체를 찾아서 제거
+		// GuidelineDB 참조는 괄호 전체를 찾아서 제거 (중첩된 괄호 고려)
 		const guidelineBrackets: Array<{
 			startIndex: number;
 			endIndex: number;
 		}> = [];
 
-		// GuidelineDB가 포함된 괄호 전체 찾기
-		const guidelineDBWithBracketsRegex = /\([^)]*GuidelineDB[^)]*\)/gi;
-		const guidelineBracketMatches = Array.from(
-			result.matchAll(guidelineDBWithBracketsRegex),
-		);
+		// GuidelineDB가 포함된 모든 위치 찾기
+		const guidelineDBRegex = /GuidelineDB/gi;
+		const guidelineDBMatches = Array.from(result.matchAll(guidelineDBRegex));
 
-		for (const match of guidelineBracketMatches) {
-			if (match.index !== undefined) {
-				guidelineBrackets.push({
-					startIndex: match.index,
-					endIndex: match.index + match[0].length,
-				});
+		for (const dbMatch of guidelineDBMatches) {
+			if (dbMatch.index === undefined) continue;
+
+			const dbStartIndex = dbMatch.index;
+			const dbEndIndex = dbStartIndex + dbMatch[0].length;
+
+			// GuidelineDB 앞에서 가장 가까운 여는 괄호 찾기 (중첩된 괄호 고려)
+			let openBracketIndex = -1;
+			let bracketDepth = 0;
+
+			for (let i = dbStartIndex - 1; i >= 0; i--) {
+				if (result[i] === ")") {
+					bracketDepth++;
+				} else if (result[i] === "(") {
+					if (bracketDepth === 0) {
+						openBracketIndex = i;
+						break;
+					}
+					bracketDepth--;
+				}
+			}
+
+			// GuidelineDB 뒤에서 가장 가까운 닫는 괄호 찾기 (중첩된 괄호 고려)
+			let closeBracketIndex = -1;
+			bracketDepth = 0;
+
+			for (let i = dbEndIndex; i < result.length; i++) {
+				if (result[i] === "(") {
+					bracketDepth++;
+				} else if (result[i] === ")") {
+					if (bracketDepth === 0) {
+						closeBracketIndex = i;
+						break;
+					}
+					bracketDepth--;
+				}
+			}
+
+			// 괄호를 찾았으면 해당 블록 전체를 제거 대상에 추가
+			if (openBracketIndex !== -1 && closeBracketIndex !== -1) {
+				// 중복 체크
+				const isDuplicate = guidelineBrackets.some(
+					(bracket) =>
+						bracket.startIndex === openBracketIndex &&
+						bracket.endIndex === closeBracketIndex + 1,
+				);
+
+				if (!isDuplicate) {
+					guidelineBrackets.push({
+						startIndex: openBracketIndex,
+						endIndex: closeBracketIndex + 1,
+					});
+				}
 			}
 		}
 
@@ -453,6 +488,20 @@ const PageSpecificAIManager = ({
 	};
 
 	/**
+	 * Student ID를 이름으로 매핑
+	 * @param studentId 학생 ID
+	 * @returns 학생 이름
+	 */
+	const getStudentNameById = (studentId: number): string | null => {
+		const nameMap: Record<number, string> = {
+			1: "임경빈",
+			2: "이성재",
+			3: "한지강",
+		};
+		return nameMap[studentId] || null;
+	};
+
+	/**
 	 * 개별 메시지 전송
 	 */
 	const handleSendMessage = async (chat: ChatItem) => {
@@ -478,9 +527,8 @@ const PageSpecificAIManager = ({
 			return;
 		}
 
-		const student = studentMap.get(chat.studentId);
-		if (!student || !student.name) {
-			console.log(student);
+		const studentName = getStudentNameById(chat.studentId);
+		if (!studentName) {
 			setErrors((prev) => ({
 				...prev,
 				[chatId]: "학생 정보가 올바르지 않습니다.",
@@ -492,7 +540,7 @@ const PageSpecificAIManager = ({
 
 		try {
 			const response = await kakaoApi.sendMessage({
-				recipient: student.name,
+				recipient: studentName,
 				message,
 				messageType: "text",
 				chatId: chat.chatId,
@@ -939,11 +987,6 @@ const PageSpecificAIManager = ({
 											) : (
 												<Badge variant="success" className="text-xs shrink-0">
 													읽음
-												</Badge>
-											)}
-											{chat.isReplied && (
-												<Badge variant="primary" className="text-xs shrink-0">
-													답변함
 												</Badge>
 											)}
 										</div>

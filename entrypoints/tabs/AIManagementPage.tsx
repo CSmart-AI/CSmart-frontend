@@ -58,15 +58,20 @@ const AIManagementPage = () => {
 					: [];
 			setStudents(loadedStudents);
 
-			// 학생을 이름으로 매핑 (nickname과 매칭하기 위해)
-			const studentByName = new Map<string, StudentDTO>();
-			loadedStudents.forEach((student) => {
-				if (student.name) {
-					// 대소문자 구분 없이 매칭하기 위해 소문자로 변환
-					const nameKey = student.name.toLowerCase().trim();
-					studentByName.set(nameKey, student);
-				}
-			});
+			/**
+			 * nickname을 student ID로 매핑
+			 * @param nickname 카카오톡 nickname
+			 * @returns student ID (매칭되지 않으면 0)
+			 */
+			const getStudentIdByNickname = (nickname: string): number => {
+				const nameKey = nickname.toLowerCase().trim();
+				const nameToIdMap: Record<string, number> = {
+					임경빈: 1,
+					이성재: 2,
+					한지강: 3,
+				};
+				return nameToIdMap[nameKey] || 0;
+			};
 
 			// 채팅 목록을 ChatItem 형태로 변환
 			if (
@@ -79,10 +84,8 @@ const AIManagementPage = () => {
 							const chatId = item.talk_user?.chat_id || "";
 							const nickname = item.talk_user?.nickname || "";
 
-							// nickname으로 학생 찾기 (대소문자 구분 없이)
-							const nameKey = nickname.toLowerCase().trim();
-							const student =
-								studentByName.get(nameKey) || studentByName.get("unknown"); // "unknown"도 체크
+							// nickname으로 student ID 찾기
+							const studentId = getStudentIdByNickname(nickname);
 
 							// 이름이 "unknown"이면 "미등록 학생"으로 표시
 							const displayName =
@@ -93,7 +96,7 @@ const AIManagementPage = () => {
 							return {
 								id: chatId || item.id || "",
 								name: displayName,
-								studentId: student?.studentId || 0,
+								studentId: studentId,
 								chatId: chatId, // talk_user.chat_id를 그대로 사용
 								lastMessage: item.last_message,
 								lastLogSendAt: item.last_log_send_at,
