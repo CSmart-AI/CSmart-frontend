@@ -340,17 +340,35 @@ const PageSpecificAIManager = ({
 	};
 
 	/**
+	 * GuidelineDB 참조에서 페이지 번호 추출
+	 * @param text GuidelineDB 참조 텍스트 (예: "GuidelineDB (cau2025-page7)")
+	 * @returns 페이지 번호 (없으면 null)
+	 */
+	const extractPageNumberFromGuidelineRef = (text: string): number | null => {
+		// cau2025-page7 형식에서 페이지 번호 추출
+		const pageMatch = text.match(/page(\d+)/i);
+		if (pageMatch?.[1]) {
+			const pageNum = parseInt(pageMatch[1], 10);
+			return Number.isNaN(pageNum) ? null : pageNum;
+		}
+		return null;
+	};
+
+	/**
 	 * PDF 참조 클릭 핸들러
+	 * @param pageNumber 페이지 번호 (선택적, 없으면 기본값 16)
 	 * @param e 이벤트 객체 (선택적)
 	 */
 	const handlePdfReferenceClick = (
+		pageNumber?: number,
 		e?: React.MouseEvent | React.KeyboardEvent,
 	) => {
 		if (e) {
 			e.preventDefault();
 		}
-		// public 폴더의 중앙대.pdf 경로, 12페이지 표시
-		const pdfPath = "/중앙대.pdf#page=16";
+		// public 폴더의 중앙대.pdf 경로, 페이지 번호가 있으면 해당 페이지, 없으면 16페이지 표시
+		const page = pageNumber || 16;
+		const pdfPath = `/중앙대.pdf#page=${page}`;
 		setPdfUrl(pdfPath);
 		setShowPdfViewer(true);
 	};
@@ -1237,11 +1255,18 @@ const PageSpecificAIManager = ({
 												{parts.map((part) => {
 													if (part.isReference) {
 														if (part.referenceType === "guideline") {
-															// lineNumber가 있으면 클릭 가능, 없으면 하이라이트만
-															if (part.lineNumber) {
-																const isSelected =
-																	selectedReference === part.lineNumber;
-																const lineNum = part.lineNumber;
+															// 페이지 번호 추출 (예: "GuidelineDB (cau2025-page7)"에서 7 추출)
+															const pageNumber =
+																extractPageNumberFromGuidelineRef(part.text);
+															const hasLineNumber =
+																part.lineNumber && part.lineNumber.length > 0;
+															const isSelected = hasLineNumber
+																? selectedReference === part.lineNumber
+																: false;
+															const lineNum = part.lineNumber;
+
+															// lineNumber가 있거나 페이지 번호가 있으면 클릭 가능
+															if (hasLineNumber || pageNumber !== null) {
 																return (
 																	<button
 																		type="button"
@@ -1250,14 +1275,21 @@ const PageSpecificAIManager = ({
 																			if (lineNum) {
 																				setSelectedReference(lineNum);
 																			}
+																			// 페이지 번호가 있으면 PDF 뷰어 열기
+																			if (pageNumber !== null) {
+																				handlePdfReferenceClick(pageNumber);
+																			}
 																		}}
 																		onKeyDown={(e) => {
-																			if (
-																				(e.key === "Enter" || e.key === " ") &&
-																				lineNum
-																			) {
+																			if (e.key === "Enter" || e.key === " ") {
 																				e.preventDefault();
-																				setSelectedReference(lineNum);
+																				if (lineNum) {
+																					setSelectedReference(lineNum);
+																				}
+																				// 페이지 번호가 있으면 PDF 뷰어 열기
+																				if (pageNumber !== null) {
+																					handlePdfReferenceClick(pageNumber);
+																				}
 																			}
 																		}}
 																		className={cn(
@@ -1271,7 +1303,7 @@ const PageSpecificAIManager = ({
 																	</button>
 																);
 															} else {
-																// lineNumber가 없으면 하이라이트만
+																// lineNumber도 없고 페이지 번호도 없으면 하이라이트만
 																return (
 																	<span
 																		key={part.key}
@@ -1306,17 +1338,26 @@ const PageSpecificAIManager = ({
 																</a>
 															);
 														} else if (part.referenceType === "pdf") {
+															// PDF 참조 텍스트에서도 페이지 번호 추출 시도
+															const pdfPageNumber =
+																extractPageNumberFromGuidelineRef(part.text);
 															return (
 																// biome-ignore lint/a11y/useSemanticElements: button을 사용하면 여러 줄에서 깨지므로 span 사용
 																<span
 																	key={part.key}
 																	role="button"
 																	tabIndex={0}
-																	onClick={handlePdfReferenceClick}
+																	onClick={() =>
+																		handlePdfReferenceClick(
+																			pdfPageNumber || undefined,
+																		)
+																	}
 																	onKeyDown={(e) => {
 																		if (e.key === "Enter" || e.key === " ") {
 																			e.preventDefault();
-																			handlePdfReferenceClick(e);
+																			handlePdfReferenceClick(
+																				pdfPageNumber || undefined,
+																			);
 																		}
 																	}}
 																	className="text-purple-800 cursor-pointer hover:text-purple-900 hover:underline"
@@ -1368,15 +1409,33 @@ const PageSpecificAIManager = ({
 										{Array.from(guidelineData.entries()).map(
 											([lineNumber, data]) => {
 												const isSelected = selectedReference === lineNumber;
+												// 해당 lineNumber의 GuidelineDB 참조 텍스트 찾기
+												const guidelineRef = guidelineReferences.find(
+													(ref) => ref.lineNumber === lineNumber,
+												);
+												// 페이지 번호 추출
+												const pageNumber = guidelineRef
+													? extractPageNumberFromGuidelineRef(guidelineRef.text)
+													: null;
 												return (
 													<button
 														type="button"
 														key={lineNumber}
-														onClick={() => setSelectedReference(lineNumber)}
+														onClick={() => {
+															setSelectedReference(lineNumber);
+															// 페이지 번호가 있으면 PDF 뷰어 열기
+															if (pageNumber !== null) {
+																handlePdfReferenceClick(pageNumber);
+															}
+														}}
 														onKeyDown={(e) => {
 															if (e.key === "Enter" || e.key === " ") {
 																e.preventDefault();
 																setSelectedReference(lineNumber);
+																// 페이지 번호가 있으면 PDF 뷰어 열기
+																if (pageNumber !== null) {
+																	handlePdfReferenceClick(pageNumber);
+																}
 															}
 														}}
 														className={cn(
@@ -1494,26 +1553,34 @@ const PageSpecificAIManager = ({
 										PDF 참조
 									</Typography>
 									<div className="space-y-2">
-										{pdfReferences.map((ref) => (
-											<button
-												key={`${ref.startIndex}-${ref.endIndex}`}
-												type="button"
-												onClick={handlePdfReferenceClick}
-												className="block w-full text-left rounded-lg p-3 border border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors"
-											>
-												<div className="flex items-center gap-2">
-													<Badge variant="default" className="text-xs">
-														PDF
-													</Badge>
-													<Typography
-														variant="body-secondary"
-														className="text-sm text-gray-900 break-all"
-													>
-														{ref.text}
-													</Typography>
-												</div>
-											</button>
-										))}
+										{pdfReferences.map((ref) => {
+											// PDF 참조 텍스트에서 페이지 번호 추출 시도
+											const pdfPageNumber = extractPageNumberFromGuidelineRef(
+												ref.text,
+											);
+											return (
+												<button
+													key={`${ref.startIndex}-${ref.endIndex}`}
+													type="button"
+													onClick={() =>
+														handlePdfReferenceClick(pdfPageNumber || undefined)
+													}
+													className="block w-full text-left rounded-lg p-3 border border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors"
+												>
+													<div className="flex items-center gap-2">
+														<Badge variant="default" className="text-xs">
+															PDF
+														</Badge>
+														<Typography
+															variant="body-secondary"
+															className="text-sm text-gray-900 break-all"
+														>
+															{ref.text}
+														</Typography>
+													</div>
+												</button>
+											);
+										})}
 									</div>
 								</div>
 							)}
