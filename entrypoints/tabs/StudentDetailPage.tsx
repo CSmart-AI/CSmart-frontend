@@ -7,6 +7,7 @@ import {
 	CreditCard,
 	Edit3,
 	GraduationCap,
+	Loader2,
 	MapPin,
 	MessageCircle,
 	Phone,
@@ -15,22 +16,99 @@ import {
 	User,
 	X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Badge, Button, Card, Typography } from "@/components/ui";
 import { mockStudents } from "@/data/mockData";
+import type { Student } from "@/types/student";
+import type { MessageDTO, StudentDTO } from "@/utils/api";
+import { messageApi, studentApi } from "@/utils/api";
 import { cn } from "@/utils/cn";
-import { formatTemporalDate, formatTemporalDateTime } from "@/utils/temporal";
+import {
+	formatTemporalDate,
+	formatTemporalDateTime,
+	fromJSDate,
+} from "@/utils/temporal";
+
+// API 데이터와 목업 데이터를 통합한 타입
+interface StudentData {
+	// API 데이터 (있을 수도 있고 없을 수도 있음)
+	apiStudent?: StudentDTO;
+	apiMessages?: MessageDTO[];
+	// 목업 데이터 (API 데이터가 없을 때 사용)
+	mockStudent?: Student;
+}
 
 const StudentDetailPage = () => {
 	const { id } = useParams<{ id: string }>();
 	const [newMessage, setNewMessage] = useState("");
 	const [isEditingNotes, setIsEditingNotes] = useState(false);
 	const [editedNotes, setEditedNotes] = useState("");
+	const [studentData, setStudentData] = useState<StudentData | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
 
-	const student = mockStudents.find((s) => s.info.id === id);
+	// 학생 정보와 메시지 가져오기
+	useEffect(() => {
+		const fetchStudentData = async () => {
+			if (!id) return;
 
-	if (!student) {
+			setIsLoading(true);
+			try {
+				const studentId = parseInt(id, 10);
+
+				// API에서 학생 정보 가져오기
+				const studentResponse = await studentApi.getById(studentId);
+
+				if (studentResponse.isSuccess && studentResponse.result) {
+					// API에서 메시지 가져오기
+					const messagesResponse = await messageApi.getByStudent(studentId);
+
+					const messages =
+						messagesResponse.isSuccess && messagesResponse.result
+							? messagesResponse.result
+							: [];
+
+					setStudentData({
+						apiStudent: studentResponse.result,
+						apiMessages: messages,
+					});
+				} else {
+					// API에서 없으면 목업 데이터 사용
+					const mockStudent = mockStudents.find((s) => s.info.id === id);
+					if (mockStudent) {
+						setStudentData({ mockStudent });
+					} else {
+						setStudentData(null);
+					}
+				}
+			} catch (error) {
+				console.error("학생 정보 조회 실패:", error);
+				// 에러 발생 시 목업 데이터 사용
+				const mockStudent = mockStudents.find((s) => s.info.id === id);
+				if (mockStudent) {
+					setStudentData({ mockStudent });
+				} else {
+					setStudentData(null);
+				}
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchStudentData();
+	}, [id]);
+
+	// 로딩 중
+	if (isLoading) {
+		return (
+			<div className="flex justify-center items-center min-h-[calc(100vh-var(--header-height))]">
+				<Loader2 className="h-8 w-8 text-[var(--color-primary)] animate-spin" />
+			</div>
+		);
+	}
+
+	// 학생 데이터가 없음
+	if (!studentData) {
 		return (
 			<Card padding="lg" className="text-center">
 				<User className="h-12 w-12 text-gray-600 mx-auto mb-4" />
@@ -47,6 +125,85 @@ const StudentDetailPage = () => {
 		);
 	}
 
+	// API 데이터가 있으면 API 데이터 사용, 없으면 목업 데이터 사용
+	const isApiData = !!studentData.apiStudent;
+	const mockStudent = studentData.mockStudent;
+	if (!studentData.apiStudent && !mockStudent) {
+		return (
+			<Card padding="lg" className="text-center">
+				<User className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+				<Typography variant="h3" className="mb-2">
+					학생을 찾을 수 없습니다
+				</Typography>
+				<Link
+					to="/management"
+					className="text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium"
+				>
+					관리 페이지로 돌아가기
+				</Link>
+			</Card>
+		);
+	}
+
+	// student는 위의 체크에서 확실히 존재함
+	const student: Student = studentData.apiStudent
+		? {
+				info: {
+					id: String(studentData.apiStudent.studentId),
+					name: studentData.apiStudent.name || "",
+					age: studentData.apiStudent.age || 0,
+					type: "일반" as const,
+					track: "문과" as const,
+					phone: studentData.apiStudent.phoneNumber || "",
+					previousEducation: studentData.apiStudent.previousSchool || "",
+					targetUniversity: studentData.apiStudent.targetUniversity || "",
+					targetMajor: "",
+					mathGrade: undefined,
+					englishGrade: undefined,
+					examType: "수능" as const,
+					previousCourse: "",
+					isRetaking: false,
+					isSunungRetaking: false,
+					hasToeic: false,
+					hasPartTimeJob: false,
+					availableCallTime: "",
+					message: "",
+					source: "기타" as const,
+					createdAt: studentData.apiStudent.createdAt
+						? fromJSDate(
+								new Date(studentData.apiStudent.createdAt),
+							).toPlainDate()
+						: fromJSDate(new Date()).toPlainDate(),
+					updatedAt: studentData.apiStudent.updatedAt
+						? fromJSDate(
+								new Date(studentData.apiStudent.updatedAt),
+							).toPlainDate()
+						: fromJSDate(new Date()).toPlainDate(),
+				},
+				placementTest: undefined,
+				payment: undefined,
+				kakaoMessages: (studentData.apiMessages || []).map((msg) => ({
+					id: String(msg.messageId),
+					studentId: String(msg.studentId || ""),
+					message: msg.content,
+					sender:
+						msg.senderType === "STUDENT"
+							? ("student" as const)
+							: ("admin" as const),
+					timestamp: msg.sentAt
+						? fromJSDate(new Date(msg.sentAt))
+						: fromJSDate(new Date()),
+					isRead: true,
+				})),
+				status: (studentData.apiStudent.registrationStatus?.toLowerCase() ||
+					"management") as "consultation" | "registration" | "management",
+				lastActivity: studentData.apiMessages?.[0]?.sentAt
+					? fromJSDate(new Date(studentData.apiMessages[0].sentAt))
+					: fromJSDate(new Date()),
+				specialNotes: "",
+			}
+		: (mockStudent as Student);
+
 	const _handleSendMessage = () => {
 		if (newMessage.trim()) {
 			// In a real app, this would send the message to the server
@@ -56,7 +213,7 @@ const StudentDetailPage = () => {
 	};
 
 	const handleEditNotes = () => {
-		setEditedNotes(student.specialNotes);
+		setEditedNotes(student.specialNotes || "");
 		setIsEditingNotes(true);
 	};
 
@@ -77,7 +234,15 @@ const StudentDetailPage = () => {
 			registration: { label: "등록", variant: "primary" as const },
 			management: { label: "관리", variant: "success" as const },
 		};
-		const badge = badges[status as keyof typeof badges];
+		// status를 소문자로 변환하고 기본값 처리
+		const normalizedStatus = status?.toLowerCase() || "management";
+		const badge = badges[normalizedStatus as keyof typeof badges];
+
+		// badge가 없으면 기본값 사용
+		if (!badge) {
+			return <Badge variant="default">{status || "알 수 없음"}</Badge>;
+		}
+
 		return <Badge variant={badge.variant}>{badge.label}</Badge>;
 	};
 
@@ -119,6 +284,11 @@ const StudentDetailPage = () => {
 								</div>
 								<div className="flex items-center gap-3">
 									{getStatusBadge(student.status)}
+									{isApiData && (
+										<Badge variant="default" className="text-xs">
+											API
+										</Badge>
+									)}
 								</div>
 							</div>
 						</Card>
@@ -151,22 +321,32 @@ const StudentDetailPage = () => {
 												{student.info.age}세
 											</Typography>
 										</div>
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												구분
-											</Typography>
-											<Typography variant="body">
-												{student.info.type}
-											</Typography>
-										</div>
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												계열
-											</Typography>
-											<Typography variant="body">
-												{student.info.track}
-											</Typography>
-										</div>
+										{student.info.type && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													구분
+												</Typography>
+												<Typography variant="body">
+													{student.info.type}
+												</Typography>
+											</div>
+										)}
+										{student.info.track && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													계열
+												</Typography>
+												<Typography variant="body">
+													{student.info.track}
+												</Typography>
+											</div>
+										)}
 										<div>
 											<Typography variant="small" className="font-medium mb-1">
 												전화번호
@@ -176,24 +356,40 @@ const StudentDetailPage = () => {
 												{student.info.phone}
 											</Typography>
 										</div>
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												통화 가능 시간
-											</Typography>
-											<Typography variant="body" className="flex items-center">
-												<Clock className="h-4 w-4 mr-2" />
-												{student.info.availableCallTime}
-											</Typography>
-										</div>
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												유입경로
-											</Typography>
-											<Typography variant="body" className="flex items-center">
-												<MapPin className="h-4 w-4 mr-2" />
-												{student.info.source}
-											</Typography>
-										</div>
+										{student.info.availableCallTime && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													통화 가능 시간
+												</Typography>
+												<Typography
+													variant="body"
+													className="flex items-center"
+												>
+													<Clock className="h-4 w-4 mr-2" />
+													{student.info.availableCallTime}
+												</Typography>
+											</div>
+										)}
+										{student.info.source && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													유입경로
+												</Typography>
+												<Typography
+													variant="body"
+													className="flex items-center"
+												>
+													<MapPin className="h-4 w-4 mr-2" />
+													{student.info.source}
+												</Typography>
+											</div>
+										)}
 										<div>
 											<Typography variant="small" className="font-medium mb-1">
 												등록일
@@ -216,47 +412,73 @@ const StudentDetailPage = () => {
 										학력 정보
 									</Typography>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												전적대/학과
-											</Typography>
-											<Typography variant="body">
-												{student.info.previousEducation}
-											</Typography>
-										</div>
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												목표대학/학과
-											</Typography>
-											<Typography variant="body">
-												{student.info.targetUniversity}{" "}
-												{student.info.targetMajor}
-											</Typography>
-										</div>
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												수능 수학 등급
-											</Typography>
-											<Typography variant="body">
-												{student.info.mathGrade || "N/A"}
-											</Typography>
-										</div>
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												수능 영어 등급
-											</Typography>
-											<Typography variant="body">
-												{student.info.englishGrade || "N/A"}
-											</Typography>
-										</div>
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												이전 수강 경험
-											</Typography>
-											<Typography variant="body">
-												{student.info.previousCourse}
-											</Typography>
-										</div>
+										{student.info.previousEducation && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													전적대/학과
+												</Typography>
+												<Typography variant="body">
+													{student.info.previousEducation}
+												</Typography>
+											</div>
+										)}
+										{(student.info.targetUniversity ||
+											student.info.targetMajor) && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													목표대학/학과
+												</Typography>
+												<Typography variant="body">
+													{student.info.targetUniversity}{" "}
+													{student.info.targetMajor}
+												</Typography>
+											</div>
+										)}
+										{student.info.mathGrade && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													수능 수학 등급
+												</Typography>
+												<Typography variant="body">
+													{student.info.mathGrade}
+												</Typography>
+											</div>
+										)}
+										{student.info.englishGrade && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													수능 영어 등급
+												</Typography>
+												<Typography variant="body">
+													{student.info.englishGrade}
+												</Typography>
+											</div>
+										)}
+										{student.info.previousCourse && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													이전 수강 경험
+												</Typography>
+												<Typography variant="body">
+													{student.info.previousCourse}
+												</Typography>
+											</div>
+										)}
 										<div className="md:col-span-2">
 											<label
 												htmlFor="additionalInfo"
@@ -493,50 +715,59 @@ const StudentDetailPage = () => {
 
 								{/* Messages */}
 								<div className="space-y-3 mb-4 max-h-96 overflow-y-auto pr-2">
-									{student.kakaoMessages.map((message) => (
-										<div
-											key={message.id}
-											className={`flex ${
-												message.sender === "admin"
-													? "justify-end"
-													: "justify-start"
-											}`}
-										>
+									{student.kakaoMessages && student.kakaoMessages.length > 0 ? (
+										student.kakaoMessages.map((message) => (
 											<div
-												className={cn(
-													"max-w-xs px-4 py-2.5 rounded-2xl border shadow-sm",
+												key={message.id}
+												className={`flex ${
 													message.sender === "admin"
-														? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]/20"
-														: "bg-gray-100 text-gray-900 border-gray-200",
-												)}
+														? "justify-end"
+														: "justify-start"
+												}`}
 											>
-												<Typography
-													variant="small"
+												<div
 													className={cn(
+														"max-w-xs px-4 py-2.5 rounded-2xl border shadow-sm",
 														message.sender === "admin"
-															? "text-white"
-															: "text-gray-900",
+															? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]/20"
+															: "bg-gray-100 text-gray-900 border-gray-200",
 													)}
 												>
-													{message.message}
-												</Typography>
-												<Typography
-													variant="small"
-													className={cn(
-														"text-xs mt-1.5",
-														message.sender === "admin"
-															? "text-white/80"
-															: "text-gray-500",
-													)}
-												>
-													{formatTemporalDateTime(
-														message.timestamp,
-														"MM/dd HH:mm",
-													)}
-												</Typography>
+													<Typography
+														variant="small"
+														className={cn(
+															message.sender === "admin"
+																? "text-white"
+																: "text-gray-900",
+														)}
+													>
+														{message.message}
+													</Typography>
+													<Typography
+														variant="small"
+														className={cn(
+															"text-xs mt-1.5",
+															message.sender === "admin"
+																? "text-white/80"
+																: "text-gray-500",
+														)}
+													>
+														{formatTemporalDateTime(
+															message.timestamp,
+															"MM/dd HH:mm",
+														)}
+													</Typography>
+												</div>
 											</div>
-										</div>
-									))}
+										))
+									) : (
+										<Typography
+											variant="body-secondary"
+											className="text-center py-4"
+										>
+											메시지가 없습니다
+										</Typography>
+									)}
 								</div>
 							</Card>
 						</div>
