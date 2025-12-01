@@ -5,6 +5,7 @@ import { Badge, Button, Card, Typography } from "@/components/ui";
 import { mockStudents } from "@/data/mockData";
 import type { MessageDTO, StudentDTO } from "@/utils/api";
 import { messageApi, studentApi } from "@/utils/api";
+import { authStorage } from "@/utils/auth";
 import { formatTemporalDateTime, fromJSDate, toJSDate } from "@/utils/temporal";
 
 // 학생 정보와 메시지를 함께 관리하는 타입
@@ -23,8 +24,20 @@ const ManagementPage = () => {
 		const fetchData = async () => {
 			setIsLoading(true);
 			try {
+				// 현재 사용자 정보 가져오기
+				const authState = await authStorage.get();
+
+				// 선생님인 경우 해당 선생님의 teacherId로 학생 목록 가져오기
+				// 관리자인 경우 모든 학생 가져오기
+				const teacherId =
+					authState.role === "teacher" && authState.teacherId
+						? authState.teacherId
+						: undefined;
+
 				// 관리 중인 학생들 가져오기 (registrationStatus가 "MANAGEMENT"인 학생들)
-				const studentsResponse = await studentApi.getAll();
+				const studentsResponse = await studentApi.getAll({
+					teacherId,
+				});
 
 				const managementStudents =
 					studentsResponse.isSuccess && studentsResponse.result
@@ -49,66 +62,75 @@ const ManagementPage = () => {
 					}),
 				);
 
-				// 목업 데이터 가져오기 (status가 "management"인 학생들)
-				const mockManagementStudents = mockStudents.filter(
-					(student) => student.status === "management",
-				);
+				// 관리자인 경우에만 목업 데이터 추가
+				let finalStudents = studentsWithMessages;
+				if (authState.role === "admin") {
+					// 목업 데이터 가져오기 (status가 "management"인 학생들)
+					const mockManagementStudents = mockStudents.filter(
+						(student) => student.status === "management",
+					);
 
-				// 목업 데이터를 StudentWithMessages 형태로 변환
-				const mockStudentsWithMessages: StudentWithMessages[] =
-					mockManagementStudents.map((mockStudent) => {
-						// 목업 메시지를 MessageDTO 형태로 변환
-						const messages: MessageDTO[] = mockStudent.kakaoMessages.map(
-							(msg) => ({
-								messageId: parseInt(msg.id.replace("msg", ""), 10) || 0,
+					// 목업 데이터를 StudentWithMessages 형태로 변환
+					const mockStudentsWithMessages: StudentWithMessages[] =
+						mockManagementStudents.map((mockStudent) => {
+							// 목업 메시지를 MessageDTO 형태로 변환
+							const messages: MessageDTO[] = mockStudent.kakaoMessages.map(
+								(msg) => ({
+									messageId: parseInt(msg.id.replace("msg", ""), 10) || 0,
+									studentId: parseInt(mockStudent.info.id, 10),
+									content: msg.message,
+									messageType: "text",
+									senderType: msg.sender === "student" ? "STUDENT" : "ADMIN",
+									sentAt: toJSDate(msg.timestamp).toISOString(),
+									createdAt: toJSDate(msg.timestamp).toISOString(),
+								}),
+							);
+
+							// StudentDTO 형태로 변환
+							// PlainDate를 PlainDateTime으로 변환 (시간을 00:00:00으로 설정)
+							const createdAtDateTime =
+								mockStudent.info.createdAt.toPlainDateTime({
+									hour: 0,
+									minute: 0,
+									second: 0,
+								});
+							const updatedAtDateTime =
+								mockStudent.info.updatedAt.toPlainDateTime({
+									hour: 0,
+									minute: 0,
+									second: 0,
+								});
+
+							const studentDTO: StudentDTO = {
 								studentId: parseInt(mockStudent.info.id, 10),
-								content: msg.message,
-								messageType: "text",
-								senderType: msg.sender === "student" ? "STUDENT" : "ADMIN",
-								sentAt: toJSDate(msg.timestamp).toISOString(),
-								createdAt: toJSDate(msg.timestamp).toISOString(),
-							}),
-						);
+								name: mockStudent.info.name,
+								age: mockStudent.info.age,
+								previousSchool: mockStudent.info.previousEducation,
+								targetUniversity: mockStudent.info.targetUniversity,
+								phoneNumber: mockStudent.info.phone,
+								registrationStatus: "MANAGEMENT",
+								createdAt: toJSDate(createdAtDateTime).toISOString(),
+								updatedAt: toJSDate(updatedAtDateTime).toISOString(),
+							};
 
-						// StudentDTO 형태로 변환
-						// PlainDate를 PlainDateTime으로 변환 (시간을 00:00:00으로 설정)
-						const createdAtDateTime =
-							mockStudent.info.createdAt.toPlainDateTime({
-								hour: 0,
-								minute: 0,
-								second: 0,
-							});
-						const updatedAtDateTime =
-							mockStudent.info.updatedAt.toPlainDateTime({
-								hour: 0,
-								minute: 0,
-								second: 0,
-							});
+							return {
+								...studentDTO,
+								messages: messages.sort(
+									(a, b) =>
+										new Date(b.sentAt || 0).getTime() -
+										new Date(a.sentAt || 0).getTime(),
+								),
+							};
+						});
 
-						const studentDTO: StudentDTO = {
-							studentId: parseInt(mockStudent.info.id, 10),
-							name: mockStudent.info.name,
-							age: mockStudent.info.age,
-							previousSchool: mockStudent.info.previousEducation,
-							targetUniversity: mockStudent.info.targetUniversity,
-							phoneNumber: mockStudent.info.phone,
-							registrationStatus: "MANAGEMENT",
-							createdAt: toJSDate(createdAtDateTime).toISOString(),
-							updatedAt: toJSDate(updatedAtDateTime).toISOString(),
-						};
+					// API 데이터 뒤에 목업 데이터 추가
+					finalStudents = [
+						...studentsWithMessages,
+						...mockStudentsWithMessages,
+					];
+				}
 
-						return {
-							...studentDTO,
-							messages: messages.sort(
-								(a, b) =>
-									new Date(b.sentAt || 0).getTime() -
-									new Date(a.sentAt || 0).getTime(),
-							),
-						};
-					});
-
-				// API 데이터 뒤에 목업 데이터 추가
-				setStudents([...studentsWithMessages, ...mockStudentsWithMessages]);
+				setStudents(finalStudents);
 			} catch (error) {
 				console.error("데이터 조회 실패:", error);
 			} finally {

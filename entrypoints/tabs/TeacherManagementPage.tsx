@@ -7,17 +7,6 @@ import {
 	teacherApi,
 } from "@/utils/api";
 
-// 목업 선생님 데이터
-const mockTeacher: TeacherDTO = {
-	teacherId: 0,
-	name: "김선생",
-	email: "teacher@example.com",
-	phoneNumber: "010-1234-5678",
-	kakaoChannelId: "kakao_channel_001",
-	specialization: "수학",
-	status: "ACTIVE",
-};
-
 const TeacherManagementPage = () => {
 	const [teachers, setTeachers] = useState<TeacherDTO[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -43,7 +32,7 @@ const TeacherManagementPage = () => {
 			}
 		} catch (error) {
 			console.error("Failed to load teachers:", error);
-			setTeachers([mockTeacher]);
+			setTeachers([]);
 		} finally {
 			setLoading(false);
 		}

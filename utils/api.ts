@@ -89,6 +89,7 @@ export interface AiResponseDTO {
 	recommendedResponse: string;
 	status: string;
 	generatedAt: string;
+	lastMessage?: string;
 }
 
 export interface EditResponseRequestDTO {

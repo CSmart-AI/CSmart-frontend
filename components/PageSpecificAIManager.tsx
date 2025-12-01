@@ -1,5 +1,5 @@
 import { Eye, MessageCircle, RefreshCw, Send } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
 	type AiResponseDTO,
 	aiResponseApi,
@@ -25,6 +25,7 @@ interface ChatItem {
 	unreadCount?: number;
 	isReplied?: boolean;
 	isRead?: boolean;
+	aiResponse?: AiResponseDTO; // AI 응답 정보
 }
 
 interface PageSpecificAIManagerProps {
@@ -33,11 +34,12 @@ interface PageSpecificAIManagerProps {
 	channelType: ChannelType;
 	loading?: boolean;
 	onRefresh?: () => void;
-	onMessageSent?: () => void;
+	onMessageSent?: (messageId?: number) => void;
 }
 
 const PageSpecificAIManager = ({
 	chats,
+	students,
 	channelType: _channelType,
 	loading = false,
 	onRefresh,
@@ -53,9 +55,6 @@ const PageSpecificAIManager = ({
 	const [aiResponses, setAiResponses] = useState<
 		Record<number, AiResponseDTO | null>
 	>({});
-	const [loadingAiResponses, setLoadingAiResponses] = useState<Set<number>>(
-		new Set(),
-	);
 	const [selectedAiResponse, setSelectedAiResponse] =
 		useState<AiResponseDTO | null>(null);
 	const [guidelineData, setGuidelineData] = useState<
@@ -74,82 +73,31 @@ const PageSpecificAIManager = ({
 	const [pdfReferences, setPdfReferences] = useState<
 		Array<{ startIndex: number; endIndex: number; text: string }>
 	>([]);
-	const [showPdfViewer, setShowPdfViewer] = useState(false);
-	const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 	const [editingResponse, setEditingResponse] = useState<string>("");
 	const [editingChatId, setEditingChatId] = useState<string | null>(null);
 	const [isEditingMode, setIsEditingMode] = useState(false);
 
 	/**
-	 * 각 학생의 대기 중인 AI 응답 가져오기
+	 * chats에서 AI 응답 정보를 추출하여 상태에 반영
 	 */
-	useEffect(() => {
-		const loadAiResponses = async () => {
-			const studentIds = new Set(chats.map((chat) => chat.studentId));
+	useMemo(() => {
+		const aiResponseMap: Record<number, AiResponseDTO | null> = {};
+		const messageInputMap: Record<string, string> = {};
 
-			for (const studentId of studentIds) {
-				// 로딩 시작
-				setLoadingAiResponses((prev) => {
-					if (prev.has(studentId)) {
-						return prev;
-					}
-					return new Set(prev).add(studentId);
-				});
-
-				// 이미 데이터가 있는지 확인
-				setAiResponses((prev) => {
-					if (prev[studentId] !== undefined) {
-						setLoadingAiResponses((current) => {
-							const next = new Set(current);
-							next.delete(studentId);
-							return next;
-						});
-						return prev;
-					}
-					return prev;
-				});
-
-				try {
-					const response = await aiResponseApi.getByStudent(studentId);
-					console.log(response);
-					if (response.isSuccess && response.result) {
-						// PENDING 상태인 가장 최근 응답 찾기
-						const pendingResponse = response.result.find(
-							(res) => res.status === "PENDING_REVIEW",
-						);
-						setAiResponses((prev) => ({
-							...prev,
-							[studentId]: pendingResponse || null,
-						}));
-
-						// AI 응답이 있으면 메시지 입력 필드에 자동 채우기
-						if (pendingResponse?.recommendedResponse) {
-							const chat = chats.find((c) => c.studentId === studentId);
-							if (chat) {
-								setMessageInputs((prev) => ({
-									...prev,
-									[chat.id]: pendingResponse.recommendedResponse,
-								}));
-							}
-						}
-					}
-				} catch (error) {
-					console.error(
-						`Failed to load AI response for student ${studentId}:`,
-						error,
-					);
-				} finally {
-					setLoadingAiResponses((prev) => {
-						const next = new Set(prev);
-						next.delete(studentId);
-						return next;
-					});
+		for (const chat of chats) {
+			if (chat.aiResponse) {
+				aiResponseMap[chat.studentId] = chat.aiResponse;
+				// AI 응답이 있으면 메시지 입력 필드에 자동 채우기
+				if (chat.aiResponse.recommendedResponse) {
+					messageInputMap[chat.id] = chat.aiResponse.recommendedResponse;
 				}
+			} else {
+				aiResponseMap[chat.studentId] = null;
 			}
-		};
+		}
 
-		loadAiResponses();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		setAiResponses(aiResponseMap);
+		setMessageInputs((prev) => ({ ...prev, ...messageInputMap }));
 	}, [chats]);
 
 	const filteredChats = useMemo(
@@ -368,9 +316,9 @@ const PageSpecificAIManager = ({
 		}
 		// public 폴더의 중앙대.pdf 경로, 페이지 번호가 있으면 해당 페이지, 없으면 16페이지 표시
 		const page = pageNumber || 16;
-		const pdfPath = `/중앙대.pdf#page=${page}`;
-		setPdfUrl(pdfPath);
-		setShowPdfViewer(true);
+		const pdfPath = `${window.location.origin}/중앙대.pdf#page=${page}`;
+		// 새 창에서 PDF 열기
+		window.open(pdfPath, "_blank");
 	};
 
 	/**
@@ -384,17 +332,16 @@ const PageSpecificAIManager = ({
 		text: string,
 		e: React.MouseEvent<HTMLAnchorElement>,
 	) => {
-		// PDF 파일이고 중앙대 관련이면 뷰어로 표시
+		// PDF 파일이고 중앙대 관련이면 새 창에서 열기
 		if (
 			(url.toLowerCase().endsWith(".pdf") ||
 				text.toLowerCase().includes(".pdf")) &&
 			isChungangRelated(url, text)
 		) {
 			e.preventDefault();
-			// public 폴더의 중앙대.pdf 경로, 12페이지 표시
-			const pdfPath = "/중앙대.pdf#page=16";
-			setPdfUrl(pdfPath);
-			setShowPdfViewer(true);
+			// public 폴더의 중앙대.pdf 경로, 16페이지 표시
+			const pdfPath = `${window.location.origin}/중앙대.pdf#page=16`;
+			window.open(pdfPath, "_blank");
 		}
 		// 그 외의 경우는 기본 동작 (새 탭에서 열기)
 	};
@@ -513,12 +460,8 @@ const PageSpecificAIManager = ({
 	 * @returns 학생 이름
 	 */
 	const getStudentNameById = (studentId: number): string | null => {
-		const nameMap: Record<number, string> = {
-			1: "임경빈",
-			2: "이성재",
-			3: "한지강",
-		};
-		return nameMap[studentId] || null;
+		const student = students.find((s) => s.studentId === studentId);
+		return student?.name || null;
 	};
 
 	/**
@@ -568,13 +511,17 @@ const PageSpecificAIManager = ({
 
 			if (response.isSuccess) {
 				// 메시지 전송 성공 후 approve API 호출 (작동하지 않더라도 호출)
-				const aiResponse = aiResponses[chat.studentId];
+				const aiResponse = aiResponses[chat.studentId] || chat.aiResponse;
+				let messageId: number | undefined;
 				if (aiResponse?.responseId) {
 					try {
 						await aiResponseApi.approve(aiResponse.responseId);
+						messageId = aiResponse.messageId; // 전송한 메시지 ID 저장
 					} catch (error) {
 						// approve 실패해도 무시 (사용자에게 에러 표시하지 않음)
 						console.warn("Approve API 호출 실패:", error);
+						// approve 실패해도 messageId는 전달
+						messageId = aiResponse.messageId;
 					}
 				}
 
@@ -588,7 +535,7 @@ const PageSpecificAIManager = ({
 					delete next[chatId];
 					return next;
 				});
-				onMessageSent?.();
+				onMessageSent?.(messageId);
 			} else {
 				setErrors((prev) => ({
 					...prev,
@@ -821,10 +768,9 @@ const PageSpecificAIManager = ({
 							const isSending = sendingIds.has(chatId);
 							const error = errors[chatId];
 							const message = messageInputs[chatId] || "";
-							const aiResponse = aiResponses[chat.studentId];
-							const isLoadingAiResponse = loadingAiResponses.has(
-								chat.studentId,
-							);
+							// chats에 포함된 aiResponse 사용, 없으면 상태에서 가져오기
+							const aiResponse = chat.aiResponse || aiResponses[chat.studentId];
+							const isLoadingAiResponse = false; // 더 이상 로딩하지 않음
 
 							return (
 								<tr
@@ -1585,27 +1531,6 @@ const PageSpecificAIManager = ({
 								</div>
 							)}
 						</div>
-					</div>
-				)}
-			</Modal>
-
-			{/* PDF 뷰어 모달 */}
-			<Modal
-				isOpen={showPdfViewer}
-				onClose={() => {
-					setShowPdfViewer(false);
-					setPdfUrl(null);
-				}}
-				title="중앙대 모집요강 PDF"
-				size="xl"
-			>
-				{pdfUrl && (
-					<div className="w-full h-[calc(90vh-120px)]">
-						<iframe
-							src={pdfUrl}
-							className="w-full h-full border-0 rounded-lg"
-							title="중앙대 모집요강 PDF"
-						/>
 					</div>
 				)}
 			</Modal>
