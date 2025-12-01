@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import PageSpecificAIManager from "@/components/PageSpecificAIManager";
 import {
 	type AiResponseDTO,
@@ -9,7 +10,6 @@ import {
 	type StudentDTO,
 	studentApi,
 } from "@/utils/api";
-import { authStorage } from "@/utils/auth";
 
 // ChatItem 타입
 interface ChatItem {
@@ -26,6 +26,7 @@ interface ChatItem {
 }
 
 const AIManagementPage = () => {
+	const { teacherId: teacherIdParam } = useParams<{ teacherId?: string }>();
 	const [chats, setChats] = useState<ChatItem[]>([]);
 	const [students, setStudents] = useState<StudentDTO[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -61,16 +62,12 @@ const AIManagementPage = () => {
 					}
 				}
 
-				const authState = await authStorage.get();
-				const userChannelType: ChannelType =
-					authState.role === "admin" ? "ADMIN" : "TEACHER";
+				// URL에서 teacherId 가져오기 (있으면 선생님, 없으면 관리자)
+				const teacherId = teacherIdParam
+					? parseInt(teacherIdParam, 10)
+					: undefined;
+				const userChannelType: ChannelType = teacherId ? "TEACHER" : "ADMIN";
 				setChannelType(userChannelType);
-
-				// teacherId가 있으면 사용, 없으면 undefined (모든 pending 응답 가져오기)
-				const teacherId =
-					authState.role === "teacher" && authState.teacherId
-						? authState.teacherId
-						: undefined;
 
 				// pending AI 응답 가져오기
 				const pendingResponse = await aiResponseApi.getPending(teacherId);
@@ -188,7 +185,7 @@ const AIManagementPage = () => {
 				setLoading(false);
 			}
 		},
-		[sentMessageIds],
+		[sentMessageIds, teacherIdParam],
 	);
 
 	useEffect(() => {

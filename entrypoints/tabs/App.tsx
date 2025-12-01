@@ -4,6 +4,7 @@ import {
 	Route,
 	HashRouter as Router,
 	Routes,
+	useParams,
 } from "react-router-dom";
 import AdminLayout from "../../components/AdminLayout.tsx";
 import TeacherLayout from "../../components/TeacherLayout.tsx";
@@ -18,13 +19,21 @@ import RegistrationPage from "./RegistrationPage.tsx";
 import StudentDetailPage from "./StudentDetailPage.tsx";
 import TeacherManagementPage from "./TeacherManagementPage.tsx";
 
+// 선생님 메인 페이지 리다이렉트 컴포넌트
+function TeacherRedirect() {
+	const { teacherId } = useParams<{ teacherId: string }>();
+	return <Navigate to={`/${teacherId}/ai-management`} replace />;
+}
+
 function App() {
 	const [authState, setAuthState] = useState<{
 		isAuthenticated: boolean;
 		role: UserRole | null;
+		teacherId: number | null;
 	}>({
 		isAuthenticated: false,
 		role: null,
+		teacherId: null,
 	});
 	const [loading, setLoading] = useState(true);
 
@@ -34,6 +43,7 @@ function App() {
 			setAuthState({
 				isAuthenticated: state.isAuthenticated,
 				role: state.role,
+				teacherId: state.teacherId || null,
 			});
 			setLoading(false);
 		};
@@ -60,57 +70,133 @@ function App() {
 		);
 	}
 
-	// 관리자 라우트
-	if (authState.role === "admin") {
-		return (
-			<Router>
-				<AdminLayout>
-					<Routes>
+	return (
+		<Router>
+			<Routes>
+				{/* 관리자 라우트 */}
+				{authState.role === "admin" && (
+					<>
 						<Route path="/" element={<Navigate to="/consultation" replace />} />
-						<Route path="/login/kakao" element={<KakaoLoginPage />} />
-						<Route path="/consultation" element={<ConsultationPage />} />
-						<Route path="/registration" element={<RegistrationPage />} />
-						<Route path="/management" element={<ManagementPage />} />
-						<Route path="/calendar" element={<CalendarPage />} />
-						<Route path="/ai-management" element={<AIManagementPage />} />
+						<Route
+							path="/consultation"
+							element={
+								<AdminLayout>
+									<ConsultationPage />
+								</AdminLayout>
+							}
+						/>
+						<Route
+							path="/registration"
+							element={
+								<AdminLayout>
+									<RegistrationPage />
+								</AdminLayout>
+							}
+						/>
+						<Route
+							path="/management"
+							element={
+								<AdminLayout>
+									<ManagementPage />
+								</AdminLayout>
+							}
+						/>
+						<Route
+							path="/calendar"
+							element={
+								<AdminLayout>
+									<CalendarPage />
+								</AdminLayout>
+							}
+						/>
+						<Route
+							path="/ai-management"
+							element={
+								<AdminLayout>
+									<AIManagementPage />
+								</AdminLayout>
+							}
+						/>
 						<Route
 							path="/teacher-management"
-							element={<TeacherManagementPage />}
+							element={
+								<AdminLayout>
+									<TeacherManagementPage />
+								</AdminLayout>
+							}
 						/>
-						<Route path="/student/:id" element={<StudentDetailPage />} />
-						<Route path="*" element={<Navigate to="/consultation" replace />} />
-					</Routes>
-				</AdminLayout>
-			</Router>
-		);
-	}
-
-	// 선생님 라우트
-	if (authState.role === "teacher") {
-		return (
-			<Router>
-				<TeacherLayout>
-					<Routes>
 						<Route
-							path="/"
-							element={<Navigate to="/ai-management" replace />}
+							path="/student/:id"
+							element={
+								<AdminLayout>
+									<StudentDetailPage />
+								</AdminLayout>
+							}
 						/>
 						<Route path="/login/kakao" element={<KakaoLoginPage />} />
-						<Route path="/ai-management" element={<AIManagementPage />} />
-						<Route path="/calendar" element={<CalendarPage />} />
-						<Route path="/management" element={<ManagementPage />} />
-						<Route path="/student/:id" element={<StudentDetailPage />} />
+						<Route path="*" element={<Navigate to="/consultation" replace />} />
+					</>
+				)}
+
+				{/* 선생님 라우트 - URL 기반 (/:teacherId 경로) */}
+				<Route
+					path="/:teacherId"
+					element={
+						<TeacherLayout>
+							<TeacherRedirect />
+						</TeacherLayout>
+					}
+				/>
+				<Route
+					path="/:teacherId/ai-management"
+					element={
+						<TeacherLayout>
+							<AIManagementPage />
+						</TeacherLayout>
+					}
+				/>
+				<Route
+					path="/:teacherId/calendar"
+					element={
+						<TeacherLayout>
+							<CalendarPage />
+						</TeacherLayout>
+					}
+				/>
+				<Route
+					path="/:teacherId/management"
+					element={
+						<TeacherLayout>
+							<ManagementPage />
+						</TeacherLayout>
+					}
+				/>
+				<Route
+					path="/:teacherId/student/:id"
+					element={
+						<TeacherLayout>
+							<StudentDetailPage />
+						</TeacherLayout>
+					}
+				/>
+				<Route path="/:teacherId/login/kakao" element={<KakaoLoginPage />} />
+
+				{/* 선생님 role일 때 자동 리다이렉트 */}
+				{authState.role === "teacher" && authState.teacherId && (
+					<>
+						<Route
+							path="/"
+							element={<Navigate to={`/${authState.teacherId}`} replace />}
+						/>
 						<Route
 							path="*"
-							element={<Navigate to="/ai-management" replace />}
+							element={<Navigate to={`/${authState.teacherId}`} replace />}
 						/>
-					</Routes>
-				</TeacherLayout>
-			</Router>
-		);
-	}
-
-	return null;
+					</>
+				)}
+			</Routes>
+		</Router>
+	);
 }
 
 export default App;

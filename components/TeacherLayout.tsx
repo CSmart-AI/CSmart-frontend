@@ -1,6 +1,6 @@
 import { Bot, Calendar, Users } from "lucide-react";
 import type { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { cn } from "@/utils/cn";
 import { Typography } from "./ui";
 
@@ -10,22 +10,23 @@ interface TeacherLayoutProps {
 
 const TeacherLayout = ({ children }: TeacherLayoutProps) => {
 	const location = useLocation();
+	const { teacherId } = useParams<{ teacherId: string }>();
 
 	const navItems = [
 		{
-			path: "/ai-management",
+			path: `/${teacherId}/ai-management`,
 			label: "AI 응답",
 			icon: Bot,
 			description: "AI 자동응답 관리",
 		},
 		{
-			path: "/calendar",
+			path: `/${teacherId}/calendar`,
 			label: "일정",
 			icon: Calendar,
 			description: "상담 및 특별 일정 관리",
 		},
 		{
-			path: "/management",
+			path: `/${teacherId}/management`,
 			label: "학생 관리",
 			icon: Users,
 			description: "수강 중인 학생 관리",

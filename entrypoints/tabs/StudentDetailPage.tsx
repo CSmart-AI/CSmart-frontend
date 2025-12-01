@@ -1,34 +1,20 @@
 import {
-	AlertCircle,
 	ArrowLeft,
-	Calendar,
-	CheckCircle,
 	Clock,
-	CreditCard,
-	Edit3,
 	GraduationCap,
 	Loader2,
 	MapPin,
 	MessageCircle,
-	Phone,
-	Save,
-	Trophy,
 	User,
-	X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Badge, Button, Card, Typography } from "@/components/ui";
+import { Badge, Card, Typography } from "@/components/ui";
 import { mockStudents } from "@/data/mockData";
 import type { Student } from "@/types/student";
 import type { MessageDTO, StudentDTO } from "@/utils/api";
 import { messageApi, studentApi } from "@/utils/api";
-import { cn } from "@/utils/cn";
-import {
-	formatTemporalDate,
-	formatTemporalDateTime,
-	fromJSDate,
-} from "@/utils/temporal";
+import { formatTemporalDateTime, fromJSDate } from "@/utils/temporal";
 
 // API 데이터와 목업 데이터를 통합한 타입
 interface StudentData {
@@ -41,9 +27,6 @@ interface StudentData {
 
 const StudentDetailPage = () => {
 	const { id } = useParams<{ id: string }>();
-	const [newMessage, setNewMessage] = useState("");
-	const [isEditingNotes, setIsEditingNotes] = useState(false);
-	const [editedNotes, setEditedNotes] = useState("");
 	const [studentData, setStudentData] = useState<StudentData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
@@ -126,7 +109,6 @@ const StudentDetailPage = () => {
 	}
 
 	// API 데이터가 있으면 API 데이터 사용, 없으면 목업 데이터 사용
-	const isApiData = !!studentData.apiStudent;
 	const mockStudent = studentData.mockStudent;
 	if (!studentData.apiStudent && !mockStudent) {
 		return (
@@ -204,60 +186,6 @@ const StudentDetailPage = () => {
 			}
 		: (mockStudent as Student);
 
-	const _handleSendMessage = () => {
-		if (newMessage.trim()) {
-			// In a real app, this would send the message to the server
-			console.log("Sending message:", newMessage);
-			setNewMessage("");
-		}
-	};
-
-	const handleEditNotes = () => {
-		setEditedNotes(student.specialNotes || "");
-		setIsEditingNotes(true);
-	};
-
-	const handleSaveNotes = () => {
-		// In a real app, this would save to the server
-		console.log("Saving notes:", editedNotes);
-		setIsEditingNotes(false);
-	};
-
-	const handleCancelEdit = () => {
-		setIsEditingNotes(false);
-		setEditedNotes("");
-	};
-
-	const getStatusBadge = (status: string) => {
-		const badges = {
-			consultation: { label: "상담", variant: "warning" as const },
-			registration: { label: "등록", variant: "primary" as const },
-			management: { label: "관리", variant: "success" as const },
-		};
-		// status를 소문자로 변환하고 기본값 처리
-		const normalizedStatus = status?.toLowerCase() || "management";
-		const badge = badges[normalizedStatus as keyof typeof badges];
-
-		// badge가 없으면 기본값 사용
-		if (!badge) {
-			return <Badge variant="default">{status || "알 수 없음"}</Badge>;
-		}
-
-		return <Badge variant={badge.variant}>{badge.label}</Badge>;
-	};
-
-	const getScoreGrade = (score?: number) => {
-		if (!score) return { grade: "N/A", color: "text-gray-600" };
-		if (score >= 250) return { grade: "A", color: "text-[var(--color-green)]" };
-		if (score >= 200)
-			return { grade: "B", color: "text-[var(--color-primary)]" };
-		if (score >= 150)
-			return { grade: "C", color: "text-[var(--color-yellow)]" };
-		return { grade: "D", color: "text-[var(--color-red)]" };
-	};
-
-	const scoreGrade = getScoreGrade(student.placementTest?.totalScore);
-
 	return (
 		<div className="flex min-h-[calc(100vh-var(--header-height))]">
 			{/* Main Content Area */}
@@ -281,14 +209,6 @@ const StudentDetailPage = () => {
 											{student.info.track}
 										</Typography>
 									</div>
-								</div>
-								<div className="flex items-center gap-3">
-									{getStatusBadge(student.status)}
-									{isApiData && (
-										<Badge variant="default" className="text-xs">
-											API
-										</Badge>
-									)}
 								</div>
 							</div>
 						</Card>
@@ -327,7 +247,7 @@ const StudentDetailPage = () => {
 													variant="small"
 													className="font-medium mb-1"
 												>
-													구분
+													일반/학사
 												</Typography>
 												<Typography variant="body">
 													{student.info.type}
@@ -340,22 +260,13 @@ const StudentDetailPage = () => {
 													variant="small"
 													className="font-medium mb-1"
 												>
-													계열
+													문과/이과/특성화고/예체능/기타
 												</Typography>
 												<Typography variant="body">
 													{student.info.track}
 												</Typography>
 											</div>
 										)}
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												전화번호
-											</Typography>
-											<Typography variant="body" className="flex items-center">
-												<Phone className="h-4 w-4 mr-2" />
-												{student.info.phone}
-											</Typography>
-										</div>
 										{student.info.availableCallTime && (
 											<div>
 												<Typography
@@ -379,7 +290,7 @@ const StudentDetailPage = () => {
 													variant="small"
 													className="font-medium mb-1"
 												>
-													유입경로
+													유입경로(인스타/블로그)
 												</Typography>
 												<Typography
 													variant="body"
@@ -390,18 +301,6 @@ const StudentDetailPage = () => {
 												</Typography>
 											</div>
 										)}
-										<div>
-											<Typography variant="small" className="font-medium mb-1">
-												등록일
-											</Typography>
-											<Typography variant="body" className="flex items-center">
-												<Calendar className="h-4 w-4 mr-2" />
-												{formatTemporalDate(
-													student.info.createdAt,
-													"yyyy년 MM월 dd일",
-												)}
-											</Typography>
-										</div>
 									</div>
 								</Card>
 
@@ -418,25 +317,49 @@ const StudentDetailPage = () => {
 													variant="small"
 													className="font-medium mb-1"
 												>
-													전적대/학과
+													전적대/학과/학점은행제
 												</Typography>
 												<Typography variant="body">
 													{student.info.previousEducation}
 												</Typography>
 											</div>
 										)}
-										{(student.info.targetUniversity ||
-											student.info.targetMajor) && (
+										{student.info.targetUniversity && (
 											<div>
 												<Typography
 													variant="small"
 													className="font-medium mb-1"
 												>
-													목표대학/학과
+													목표대학
 												</Typography>
 												<Typography variant="body">
-													{student.info.targetUniversity}{" "}
+													{student.info.targetUniversity}
+												</Typography>
+											</div>
+										)}
+										{student.info.targetMajor && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													목표학과
+												</Typography>
+												<Typography variant="body">
 													{student.info.targetMajor}
+												</Typography>
+											</div>
+										)}
+										{student.info.examType && (
+											<div>
+												<Typography
+													variant="small"
+													className="font-medium mb-1"
+												>
+													시험 유형
+												</Typography>
+												<Typography variant="body">
+													{student.info.examType}
 												</Typography>
 											</div>
 										)}
@@ -446,10 +369,10 @@ const StudentDetailPage = () => {
 													variant="small"
 													className="font-medium mb-1"
 												>
-													수능 수학 등급
+													수학 등급 ({student.info.examType || "수능"})
 												</Typography>
 												<Typography variant="body">
-													{student.info.mathGrade}
+													{student.info.mathGrade}등급
 												</Typography>
 											</div>
 										)}
@@ -459,20 +382,20 @@ const StudentDetailPage = () => {
 													variant="small"
 													className="font-medium mb-1"
 												>
-													수능 영어 등급
+													영어 등급 ({student.info.examType || "수능"})
 												</Typography>
 												<Typography variant="body">
-													{student.info.englishGrade}
+													{student.info.englishGrade}등급
 												</Typography>
 											</div>
 										)}
 										{student.info.previousCourse && (
-											<div>
+											<div className="md:col-span-2">
 												<Typography
 													variant="small"
 													className="font-medium mb-1"
 												>
-													이전 수강 경험
+													수강했던 편입인강 or 학원과 진도
 												</Typography>
 												<Typography variant="body">
 													{student.info.previousCourse}
@@ -511,7 +434,7 @@ const StudentDetailPage = () => {
 												variant="small"
 												className="font-medium text-[var(--color-primary)] mb-1"
 											>
-												학생 메시지
+												꼭 하고 싶은 말
 											</Typography>
 											<Typography
 												variant="body-secondary"
@@ -522,254 +445,68 @@ const StudentDetailPage = () => {
 										</Card>
 									)}
 								</Card>
-
-								{/* Placement Test & Payment */}
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-									{/* Placement Test */}
-									{student.placementTest && (
-										<Card padding="lg">
-											<Typography
-												variant="h3"
-												className="mb-4 flex items-center"
-											>
-												<Trophy className="h-5 w-5 mr-2" />
-												배치고사 결과
-											</Typography>
-											<div className="space-y-3">
-												<div className="flex justify-between items-center">
-													<Typography variant="body-secondary">총점</Typography>
-													<div className="flex items-center gap-2">
-														<Typography variant="h3">
-															{student.placementTest.totalScore}/300
-														</Typography>
-														<Badge
-															variant="default"
-															className={cn("text-sm", scoreGrade.color)}
-														>
-															{scoreGrade.grade}
-														</Badge>
-													</div>
-												</div>
-												<div className="flex justify-between">
-													<Typography variant="body-secondary">수학</Typography>
-													<Typography variant="small" className="font-medium">
-														{student.placementTest.mathScore}
-													</Typography>
-												</div>
-												<div className="flex justify-between">
-													<Typography variant="body-secondary">영어</Typography>
-													<Typography variant="small" className="font-medium">
-														{student.placementTest.englishScore}
-													</Typography>
-												</div>
-												<div className="flex justify-between">
-													<Typography variant="body-secondary">국어</Typography>
-													<Typography variant="small" className="font-medium">
-														{student.placementTest.koreanScore}
-													</Typography>
-												</div>
-												<div className="flex justify-between">
-													<Typography variant="body-secondary">
-														응시일
-													</Typography>
-													<Typography variant="small">
-														{formatTemporalDate(
-															student.placementTest.testDate,
-															"MM/dd",
-														)}
-													</Typography>
-												</div>
-												<div className="flex justify-between items-center">
-													<Typography variant="body-secondary">
-														해설지
-													</Typography>
-													{student.placementTest.explanationProvided ? (
-														<span className="text-[var(--color-green)] flex items-center text-sm">
-															<CheckCircle className="h-4 w-4 mr-1" />
-															배급완료
-														</span>
-													) : (
-														<span className="text-[var(--color-red)] flex items-center text-sm">
-															<AlertCircle className="h-4 w-4 mr-1" />
-															미배급
-														</span>
-													)}
-												</div>
-											</div>
-										</Card>
-									)}
-
-									{/* Payment Info */}
-									{student.payment && (
-										<Card padding="lg">
-											<Typography
-												variant="h3"
-												className="mb-4 flex items-center"
-											>
-												<CreditCard className="h-5 w-5 mr-2" />
-												결제 정보
-											</Typography>
-											<div className="space-y-3">
-												<div className="flex justify-between">
-													<Typography variant="body-secondary">과정</Typography>
-													<Typography variant="small" className="font-medium">
-														{student.payment.course}
-													</Typography>
-												</div>
-												<div className="flex justify-between">
-													<Typography variant="body-secondary">금액</Typography>
-													<Typography variant="small" className="font-medium">
-														{student.payment.amount.toLocaleString()}원
-													</Typography>
-												</div>
-												<div className="flex justify-between">
-													<Typography variant="body-secondary">
-														결제방법
-													</Typography>
-													<Typography variant="small" className="font-medium">
-														{student.payment.method}
-													</Typography>
-												</div>
-												<div className="flex justify-between">
-													<Typography variant="body-secondary">
-														결제일
-													</Typography>
-													<Typography variant="small">
-														{formatTemporalDate(
-															student.payment.paymentDate,
-															"MM/dd",
-														)}
-													</Typography>
-												</div>
-												<div className="flex justify-between items-center">
-													<Typography variant="body-secondary">상태</Typography>
-													<Badge
-														variant={
-															student.payment.status === "완료"
-																? "success"
-																: student.payment.status === "대기"
-																	? "warning"
-																	: "danger"
-														}
-													>
-														{student.payment.status}
-													</Badge>
-												</div>
-											</div>
-										</Card>
-									)}
-								</div>
-
-								{/* Special Notes */}
-								<Card padding="lg">
-									<div className="flex items-center justify-between mb-4">
-										<Typography variant="h3" className="flex items-center">
-											<AlertCircle className="h-5 w-5 mr-2" />
-											특이사항
-										</Typography>
-										{!isEditingNotes && (
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={handleEditNotes}
-											>
-												<Edit3 className="h-4 w-4 mr-1" />
-												수정
-											</Button>
-										)}
-									</div>
-									{isEditingNotes ? (
-										<div className="space-y-4">
-											<textarea
-												value={editedNotes}
-												onChange={(e) => setEditedNotes(e.target.value)}
-												className="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-transparent"
-												rows={4}
-												placeholder="특이사항을 입력하세요..."
-											/>
-											<div className="flex gap-2">
-												<Button onClick={handleSaveNotes}>
-													<Save className="h-4 w-4 mr-2" />
-													저장
-												</Button>
-												<Button variant="ghost" onClick={handleCancelEdit}>
-													<X className="h-4 w-4 mr-2" />
-													취소
-												</Button>
-											</div>
-										</div>
-									) : (
-										<Typography variant="body">
-											{student.specialNotes || "특이사항이 없습니다."}
-										</Typography>
-									)}
-								</Card>
 							</div>
 
-							{/* Chat Section */}
-							<Card padding="lg" className="h-fit">
-								<Typography variant="h3" className="mb-4 flex items-center">
-									<MessageCircle className="h-5 w-5 mr-2" />
-									카카오톡 대화
-								</Typography>
-
-								{/* Messages */}
-								<div className="space-y-3 mb-4 max-h-96 overflow-y-auto pr-2">
-									{student.kakaoMessages && student.kakaoMessages.length > 0 ? (
-										student.kakaoMessages.map((message) => (
-											<div
-												key={message.id}
-												className={`flex ${
-													message.sender === "admin"
-														? "justify-end"
-														: "justify-start"
-												}`}
-											>
-												<div
-													className={cn(
-														"max-w-xs px-4 py-2.5 rounded-2xl border shadow-sm",
-														message.sender === "admin"
-															? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]/20"
-															: "bg-gray-100 text-gray-900 border-gray-200",
-													)}
-												>
-													<Typography
-														variant="small"
-														className={cn(
-															message.sender === "admin"
-																? "text-white"
-																: "text-gray-900",
-														)}
+							{/* Messages Sidebar */}
+							<div className="space-y-6">
+								<Card padding="lg">
+									<Typography variant="h3" className="mb-4 flex items-center">
+										<MessageCircle className="h-5 w-5 mr-2" />
+										메시지 이력
+									</Typography>
+									<div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+										{studentData.apiMessages &&
+										studentData.apiMessages.length > 0 ? (
+											studentData.apiMessages.map((message) => {
+												const isStudent = message.senderType === "STUDENT";
+												return (
+													<Card
+														key={message.messageId}
+														padding="md"
+														className={`border ${
+															isStudent
+																? "bg-blue-50 border-blue-300 shadow-sm"
+																: "bg-green-50 border-green-300 shadow-sm"
+														}`}
 													>
-														{message.message}
-													</Typography>
-													<Typography
-														variant="small"
-														className={cn(
-															"text-xs mt-1.5",
-															message.sender === "admin"
-																? "text-white/80"
-																: "text-gray-500",
-														)}
-													>
-														{formatTemporalDateTime(
-															message.timestamp,
-															"MM/dd HH:mm",
-														)}
-													</Typography>
-												</div>
-											</div>
-										))
-									) : (
-										<Typography
-											variant="body-secondary"
-											className="text-center py-4"
-										>
-											메시지가 없습니다
-										</Typography>
-									)}
-								</div>
-							</Card>
+														<div className="flex items-start justify-between mb-2">
+															{message.sentAt && (
+																<Typography
+																	variant="small"
+																	className={`text-xs ${
+																		isStudent
+																			? "text-blue-600"
+																			: "text-green-600"
+																	}`}
+																>
+																	{formatTemporalDateTime(
+																		fromJSDate(new Date(message.sentAt)),
+																		"MM/dd HH:mm",
+																	)}
+																</Typography>
+															)}
+														</div>
+														<Typography
+															variant="body"
+															className={`text-sm ${
+																isStudent ? "text-blue-900" : "text-green-900"
+															}`}
+														>
+															{message.content}
+														</Typography>
+													</Card>
+												);
+											})
+										) : (
+											<Card padding="md" className="text-center">
+												<Typography variant="body-secondary">
+													메시지가 없습니다
+												</Typography>
+											</Card>
+										)}
+									</div>
+								</Card>
+							</div>
 						</div>
 					</div>
 				</div>

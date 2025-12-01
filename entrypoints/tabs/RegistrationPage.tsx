@@ -57,152 +57,183 @@ const formatExtractedInfo = (
 		return info;
 	}
 
-	// additionalInfo에서 특정 필드들을 먼저 확인
-	let consultationData: string | undefined;
+	// additionalInfo에서 track 필드 확인
 	let track: string | undefined;
 
 	if (extracted.additionalInfo) {
-		if (extracted.additionalInfo.consultationData) {
-			consultationData = String(extracted.additionalInfo.consultationData);
-		}
 		if (extracted.additionalInfo.track) {
 			track = String(extracted.additionalInfo.track);
 		}
 	}
 
-	// consultationData 파싱 함수
-	const parseConsultationData = (
-		data: string,
-	): Array<{ label: string; value: string }> => {
-		const parsed: Array<{ label: string; value: string }> = [];
+	// examType을 먼저 확인
+	const examType = extracted.additionalInfo?.examType
+		? String(extracted.additionalInfo.examType)
+		: "수능";
 
-		// ", " 다음에 ":"가 나오는 위치를 찾아서 항목을 분리
-		// 예: "전형 유형: 일반, 성적: 수학 1등급(선택과목 기하), 영어 3등급, 학습 이력: ..."
-		let currentIndex = 0;
+	// 14개 필드를 항상 표시 (데이터가 없으면 "없음"로 표시)
+	// 1. 성함
+	info.push({
+		label: "1. 성함",
+		value: extracted.name || "없음",
+	});
 
-		while (currentIndex < data.length) {
-			// 다음 ", " 위치 찾기
-			const nextCommaIndex = data.indexOf(", ", currentIndex);
+	// 2. 나이
+	info.push({
+		label: "2. 나이",
+		value: extracted.age ? String(extracted.age) : "없음",
+	});
 
-			if (nextCommaIndex === -1) {
-				// 마지막 항목
-				const lastPart = data.substring(currentIndex);
-				const colonIndex = lastPart.indexOf(":");
-				if (colonIndex > 0) {
-					const label = lastPart.substring(0, colonIndex).trim();
-					const value = lastPart.substring(colonIndex + 1).trim();
-					if (label && value) {
-						parsed.push({ label, value });
-					}
-				}
-				break;
-			}
+	// 3. 일반/학사
+	const type = extracted.additionalInfo?.type
+		? String(extracted.additionalInfo.type)
+		: null;
+	info.push({
+		label: "3. 일반/학사",
+		value: type || "없음",
+	});
 
-			// ", " 다음 부분 확인
-			const afterComma = data.substring(nextCommaIndex + 2);
-			const nextColonIndex = afterComma.indexOf(":");
+	// 4. 전적대/학과/학점은행제
+	info.push({
+		label: "4. 전적대/학과/학점은행제",
+		value: extracted.previousSchool || "없음",
+	});
 
-			if (nextColonIndex > 0) {
-				// 다음 항목이 있음 - 현재 항목은 ", " 전까지
-				const currentPart = data.substring(currentIndex, nextCommaIndex);
-				const colonIndex = currentPart.indexOf(":");
-				if (colonIndex > 0) {
-					const label = currentPart.substring(0, colonIndex).trim();
-					const value = currentPart.substring(colonIndex + 1).trim();
-					if (label && value) {
-						parsed.push({ label, value });
-					}
-				}
-				currentIndex = nextCommaIndex + 2;
-			} else {
-				// 다음 항목이 없음 - 나머지 모두가 현재 항목의 값
-				const currentPart = data.substring(currentIndex);
-				const colonIndex = currentPart.indexOf(":");
-				if (colonIndex > 0) {
-					const label = currentPart.substring(0, colonIndex).trim();
-					const value = currentPart.substring(colonIndex + 1).trim();
-					if (label && value) {
-						parsed.push({ label, value });
-					}
-				}
-				break;
-			}
-		}
+	// 5. 목표대학
+	info.push({
+		label: "5. 목표대학",
+		value: extracted.targetUniversity || "없음",
+	});
 
-		return parsed;
-	};
+	// 5-2. 목표학과
+	info.push({
+		label: "5. 목표학과",
+		value: extracted.major || "없음",
+	});
 
-	// 기본 정보
-	if (extracted.name) {
-		info.push({ label: "이름", value: extracted.name });
-	}
-	if (extracted.age) {
-		info.push({ label: "나이", value: String(extracted.age) });
-	}
-	if (track) {
-		info.push({ label: "계열", value: track });
-	}
-	if (extracted.previousSchool) {
-		info.push({ label: "출신학교", value: extracted.previousSchool });
-	}
-	if (extracted.targetUniversity) {
-		info.push({ label: "목표대학", value: extracted.targetUniversity });
-	}
-	if (extracted.major) {
-		info.push({ label: "전공", value: extracted.major });
-	}
-	if (extracted.currentGrade) {
-		info.push({ label: "현재 학년", value: extracted.currentGrade });
-	}
-	if (extracted.desiredSemester) {
-		info.push({ label: "희망 입학 학기", value: extracted.desiredSemester });
-	}
-	if (extracted.phoneNumber) {
-		info.push({ label: "전화번호", value: extracted.phoneNumber });
-	}
+	// 6. 문과/이과/특성화고/예체능/기타
+	info.push({
+		label: "6. 문과/이과/특성화고/예체능/기타",
+		value: track || "없음",
+	});
 
-	// consultationData 파싱하여 각 항목을 개별적으로 추가
-	if (consultationData) {
-		const parsedConsultation = parseConsultationData(consultationData);
-		parsedConsultation.forEach((item) => {
-			// 이미 추가된 필드와 중복되지 않도록 확인
-			const existingLabels = info.map((i) => i.label);
-			if (!existingLabels.includes(item.label)) {
-				info.push(item);
-			}
-		});
-	}
+	// 7. 시험 유형
+	const examTypeValue = extracted.additionalInfo?.examType
+		? String(extracted.additionalInfo.examType)
+		: null;
+	info.push({
+		label: "7. 시험 유형",
+		value: examTypeValue || "없음",
+	});
 
-	// additionalInfo의 나머지 필드 추가 (이미 추가된 필드는 제외)
-	if (extracted.additionalInfo) {
-		const excludedKeys = [
-			"name",
-			"age",
-			"previousSchool",
-			"targetUniversity",
-			"phoneNumber",
-			"major",
-			"currentGrade",
-			"desiredSemester",
-			"consultationData",
-			"track",
-		];
-		const existingLabels = info.map((i) => i.label);
+	// 7-2. 수학 등급
+	const mathGrade = extracted.additionalInfo?.mathGrade
+		? String(extracted.additionalInfo.mathGrade)
+		: null;
+	info.push({
+		label: "7. 수학 등급",
+		value: mathGrade ? `${mathGrade}등급 (${examType})` : "없음",
+	});
 
-		Object.entries(extracted.additionalInfo).forEach(([key, value]) => {
-			// 이미 추가된 필드나 제외할 필드는 제외
-			if (
-				!excludedKeys.includes(key) &&
-				!existingLabels.includes(key) &&
-				value != null
-			) {
-				info.push({
-					label: key,
-					value: String(value || "없음"),
-				});
-			}
-		});
-	}
+	// 7-3. 영어 등급
+	const englishGrade = extracted.additionalInfo?.englishGrade
+		? String(extracted.additionalInfo.englishGrade)
+		: null;
+	info.push({
+		label: "7. 영어 등급",
+		value: englishGrade ? `${englishGrade}등급 (${examType})` : "없음",
+	});
+
+	// 8. 수강했던 편입인강 or 학원과 진도
+	const previousCourse = extracted.additionalInfo?.previousCourse
+		? String(extracted.additionalInfo.previousCourse)
+		: null;
+	info.push({
+		label: "8. 수강했던 편입인강 or 학원과 진도",
+		value: previousCourse || "없음",
+	});
+
+	// 9. 편입재수
+	const isRetaking = extracted.additionalInfo?.isRetaking;
+	info.push({
+		label: "9. 편입재수",
+		value:
+			isRetaking !== undefined && isRetaking !== null
+				? isRetaking
+					? "예"
+					: "아니오"
+				: "없음",
+	});
+
+	// 9-2. 수능재수
+	const isSunungRetaking = extracted.additionalInfo?.isSunungRetaking;
+	info.push({
+		label: "9. 수능재수",
+		value:
+			isSunungRetaking !== undefined && isSunungRetaking !== null
+				? isSunungRetaking
+					? "예"
+					: "아니오"
+				: "없음",
+	});
+
+	// 10. 토익 취득 여부
+	const hasToeic = extracted.additionalInfo?.hasToeic;
+	info.push({
+		label: "10. 토익 취득 여부",
+		value:
+			hasToeic !== undefined && hasToeic !== null
+				? hasToeic
+					? "예"
+					: "아니오"
+				: "없음",
+	});
+
+	// 11. 알바 유무
+	const hasPartTimeJob = extracted.additionalInfo?.hasPartTimeJob;
+	info.push({
+		label: "11. 알바 유무",
+		value:
+			hasPartTimeJob !== undefined && hasPartTimeJob !== null
+				? hasPartTimeJob
+					? "예"
+					: "아니오"
+				: "없음",
+	});
+
+	// 12. 통화 가능 시간
+	const availableCallTime = extracted.additionalInfo?.availableCallTime
+		? String(extracted.additionalInfo.availableCallTime)
+		: null;
+	info.push({
+		label: "12. 통화 가능 시간",
+		value: availableCallTime || "없음",
+	});
+
+	// 13. 꼭 하고 싶은 말
+	const message = extracted.additionalInfo?.message
+		? String(extracted.additionalInfo.message)
+		: null;
+	info.push({
+		label: "13. 꼭 하고 싶은 말",
+		value: message || "없음",
+	});
+
+	// 14. 유입경로(인스타/블로그)
+	const source = extracted.additionalInfo?.source
+		? String(extracted.additionalInfo.source)
+		: null;
+	info.push({
+		label: "14. 유입경로(인스타/블로그)",
+		value: source || "없음",
+	});
+
+	// 번호 순서대로 정렬
+	info.sort((a, b) => {
+		const numA = parseInt(a.label.match(/^(\d+)\./)?.[1] || "999", 10);
+		const numB = parseInt(b.label.match(/^(\d+)\./)?.[1] || "999", 10);
+		return numA - numB;
+	});
 
 	return info;
 };
@@ -227,18 +258,16 @@ const RegistrationPage = () => {
 		const fetchUnassignedData = async () => {
 			setIsLoading(true);
 			try {
-				// 1. /api/students에서 assignedTeacherId가 null인 학생들 가져오기
+				// /api/students에서 학생 목록 가져오기
 				const studentsResponse = await studentApi.getAll();
-				const unassignedStudents: StudentDTO[] = [];
+				const studentsMap = new Map<number, StudentDTO>();
 				if (studentsResponse.isSuccess && studentsResponse.result) {
-					unassignedStudents.push(
-						...studentsResponse.result.filter(
-							(student) => student.assignedTeacherId == null,
-						),
-					);
+					studentsResponse.result.forEach((student) => {
+						studentsMap.set(student.studentId, student);
+					});
 				}
 
-				// 2. /api/messages에서 teacherId가 null인 메시지들 가져오기
+				// /api/messages에서 teacherId가 null인 메시지들 가져오기
 				const messagesResponse = await messageApi.getAll(100);
 				const unassignedMessages: MessageDTO[] = [];
 				if (messagesResponse.isSuccess && messagesResponse.result) {
@@ -246,36 +275,42 @@ const RegistrationPage = () => {
 					const sentMessageIds = getSentMessageIds();
 
 					// teacherId가 null이고, 전송되지 않은 메시지만 필터링
+					// 그리고 assignedTeacherId가 없는 학생의 메시지만 포함
 					unassignedMessages.push(
-						...messagesResponse.result.filter(
-							(msg) =>
-								msg.teacherId == null &&
-								msg.studentId != null &&
-								!sentMessageIds.has(msg.messageId),
-						),
+						...messagesResponse.result.filter((msg) => {
+							if (
+								msg.teacherId != null ||
+								msg.studentId == null ||
+								sentMessageIds.has(msg.messageId)
+							) {
+								return false;
+							}
+
+							// studentId가 같은 학생 정보 확인
+							const student = studentsMap.get(msg.studentId);
+							// assignedTeacherId가 있으면 제외
+							if (student && student.assignedTeacherId != null) {
+								return false;
+							}
+
+							return true;
+						}),
 					);
 				}
 
-				// 3. 학생별로 그룹화 (학생 정보와 메시지 병합)
+				// 학생별로 그룹화
 				const grouped = new Map<number, StudentMessageGroup>();
-
-				// 먼저 학생 정보로 그룹 생성
-				unassignedStudents.forEach((student) => {
-					grouped.set(student.studentId, {
-						studentId: student.studentId,
-						messages: [],
-						studentInfo: student,
-					});
-				});
 
 				// 메시지를 그룹에 추가
 				unassignedMessages.forEach((msg) => {
 					if (msg.studentId != null) {
 						const studentId = msg.studentId;
 						if (!grouped.has(studentId)) {
+							const student = studentsMap.get(studentId);
 							grouped.set(studentId, {
 								studentId,
 								messages: [],
+								studentInfo: student,
 							});
 						}
 						const group = grouped.get(studentId);

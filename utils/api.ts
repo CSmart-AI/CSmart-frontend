@@ -109,6 +109,20 @@ async function getAuthToken(): Promise<string | null> {
 	return null;
 }
 
+// Get teacherId from auth storage
+async function getTeacherId(): Promise<number | null> {
+	try {
+		if (typeof browser !== "undefined" && browser?.storage) {
+			const result = await browser.storage.local.get("authState");
+			const authState = result.authState;
+			return authState?.teacherId || null;
+		}
+	} catch {
+		// Fallback for non-extension contexts
+	}
+	return null;
+}
+
 // 개발 모드 확인
 const isDev = import.meta.env.DEV;
 
@@ -118,6 +132,7 @@ async function apiRequest<T>(
 	options: RequestInit = {},
 ): Promise<ApiResponse<T>> {
 	const token = await getAuthToken();
+	const teacherId = await getTeacherId();
 	const headers: Record<string, string> = {
 		"Content-Type": "application/json",
 		...(options.headers as Record<string, string>),
@@ -125,6 +140,10 @@ async function apiRequest<T>(
 
 	if (token) {
 		headers.Authorization = `Bearer ${token}`;
+	}
+
+	if (teacherId) {
+		headers["X-Teacher-Id"] = String(teacherId);
 	}
 
 	const url = `${API_BASE_URL}${endpoint}`;

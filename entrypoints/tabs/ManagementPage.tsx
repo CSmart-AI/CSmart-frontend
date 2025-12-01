@@ -1,11 +1,10 @@
 import { Clock, Loader2, MessageCircle, User, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Badge, Button, Card, Typography } from "@/components/ui";
 import { mockStudents } from "@/data/mockData";
 import type { MessageDTO, StudentDTO } from "@/utils/api";
 import { messageApi, studentApi } from "@/utils/api";
-import { authStorage } from "@/utils/auth";
 import { formatTemporalDateTime, fromJSDate, toJSDate } from "@/utils/temporal";
 
 // 학생 정보와 메시지를 함께 관리하는 타입
@@ -14,6 +13,7 @@ interface StudentWithMessages extends StudentDTO {
 }
 
 const ManagementPage = () => {
+	const { teacherId: teacherIdParam } = useParams<{ teacherId?: string }>();
 	const [searchTerm] = useState("");
 	const [sortBy] = useState<"name" | "lastActivity">("lastActivity");
 	const [students, setStudents] = useState<StudentWithMessages[]>([]);
@@ -24,24 +24,21 @@ const ManagementPage = () => {
 		const fetchData = async () => {
 			setIsLoading(true);
 			try {
-				// 현재 사용자 정보 가져오기
-				const authState = await authStorage.get();
+				// URL에서 teacherId 가져오기 (있으면 선생님, 없으면 관리자)
+				const teacherId = teacherIdParam
+					? parseInt(teacherIdParam, 10)
+					: undefined;
 
-				// 선생님인 경우 해당 선생님의 teacherId로 학생 목록 가져오기
-				// 관리자인 경우 모든 학생 가져오기
-				const teacherId =
-					authState.role === "teacher" && authState.teacherId
-						? authState.teacherId
-						: undefined;
-
-				// 관리 중인 학생들 가져오기 (registrationStatus가 "MANAGEMENT"인 학생들)
+				// 관리 중인 학생들 가져오기 (assignedTeacherId가 있는 학생들)
 				const studentsResponse = await studentApi.getAll({
 					teacherId,
 				});
 
 				const managementStudents =
 					studentsResponse.isSuccess && studentsResponse.result
-						? studentsResponse.result
+						? studentsResponse.result.filter(
+								(student) => student.assignedTeacherId != null,
+							)
 						: [];
 
 				// 각 학생의 메시지 가져오기
@@ -62,9 +59,9 @@ const ManagementPage = () => {
 					}),
 				);
 
-				// 관리자인 경우에만 목업 데이터 추가
+				// 관리자인 경우에만 목업 데이터 추가 (teacherId가 없으면 관리자)
 				let finalStudents = studentsWithMessages;
-				if (authState.role === "admin") {
+				if (!teacherId) {
 					// 목업 데이터 가져오기 (status가 "management"인 학생들)
 					const mockManagementStudents = mockStudents.filter(
 						(student) => student.status === "management",
@@ -139,7 +136,7 @@ const ManagementPage = () => {
 		};
 
 		fetchData();
-	}, []);
+	}, [teacherIdParam]);
 
 	const filteredStudents = students
 		.filter(
@@ -270,24 +267,10 @@ const ManagementPage = () => {
 															variant="body-secondary"
 															className="text-sm"
 														>
-															출신학교
+															전적대/학과
 														</Typography>
 														<Typography variant="small" className="font-medium">
 															{student.previousSchool}
-														</Typography>
-													</div>
-												)}
-
-												{student.phoneNumber && (
-													<div className="flex items-center justify-between">
-														<Typography
-															variant="body-secondary"
-															className="text-sm"
-														>
-															전화번호
-														</Typography>
-														<Typography variant="small" className="font-medium">
-															{student.phoneNumber}
 														</Typography>
 													</div>
 												)}

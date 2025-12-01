@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { browser } from "wxt/browser";
-import { authApi } from "@/utils/api";
+import { authApi, teacherApi } from "@/utils/api";
 import type { UserRole } from "@/utils/auth";
 import { authStorage } from "@/utils/auth";
 import "./App.css";
@@ -31,6 +31,47 @@ function App() {
 		setLoading(true);
 
 		try {
+			// 먼저 선생님 목록 조회
+			try {
+				const teachersResponse = await teacherApi.getAll();
+
+				if (teachersResponse.isSuccess && teachersResponse.result) {
+					// 입력한 kakaoId를 email로 간주하고 일치하는 선생님 찾기
+					const matchedTeacher = teachersResponse.result.find(
+						(teacher) => teacher.email === kakaoId.trim(),
+					);
+
+					if (matchedTeacher) {
+						// 이메일이 일치하는 선생님이 있으면 기존 관리자 auth 정보를 가져와서 teacherId만 추가
+						const existingAuth = await authStorage.get();
+
+						// 기존 관리자 auth 정보가 없으면 에러
+						if (!existingAuth.isAuthenticated || !existingAuth.accessToken) {
+							setError("먼저 관리자로 로그인해주세요.");
+							return;
+						}
+
+						// 기존 관리자 auth 정보에 teacherId만 추가
+						await authStorage.set({
+							...existingAuth,
+							teacherId: matchedTeacher.teacherId,
+						});
+
+						// 선생님 페이지로 리다이렉트 (/:teacherId 형식)
+						const redirectUrl = browser.runtime.getURL(
+							`/tabs.html#/${matchedTeacher.teacherId}/ai-management`,
+						);
+						browser.tabs.create({ url: redirectUrl });
+						window.close();
+						return;
+					}
+				}
+			} catch (teacherError) {
+				// 선생님 목록 조회 실패 시 에러 로그만 남기고 카카오 로그인으로 진행
+				console.error("선생님 목록 조회 실패:", teacherError);
+			}
+
+			// 선생님 목록에 없으면 기존 카카오 로그인 진행
 			const response = await authApi.kakaoLogin({
 				kakaoId: kakaoId.trim(),
 				kakaoPassword: kakaoPassword.trim(),
@@ -65,7 +106,7 @@ function App() {
 				const redirectUrl =
 					normalizedRole === "admin"
 						? browser.runtime.getURL("/tabs.html#/management")
-						: browser.runtime.getURL("/tabs.html#/ai-management");
+						: browser.runtime.getURL(`/tabs.html#/${userId}/ai-management`);
 
 				browser.tabs.create({ url: redirectUrl });
 				window.close();
