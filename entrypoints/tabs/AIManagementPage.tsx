@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import PageSpecificAIManager from "@/components/PageSpecificAIManager";
 import {
+	type AiResponseDTO,
 	aiApi,
 	aiResponseApi,
-	type AiResponseDTO,
 	type ChannelType,
 	kakaoApi,
 	type StudentDTO,
