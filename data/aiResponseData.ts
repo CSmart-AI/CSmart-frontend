@@ -48,7 +48,7 @@ export const mockAIResponses: AIResponse[] = [
 	// 높은 신뢰도 - 자동 발송됨
 	{
 		id: "ai1",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "수업시간이 언제인가요?",
 		category: "faq",
 		confidence: 0.95,
@@ -61,7 +61,7 @@ export const mockAIResponses: AIResponse[] = [
 	},
 	{
 		id: "ai2",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "수강료가 얼마인가요?",
 		category: "faq",
 		confidence: 0.92,
@@ -74,7 +74,7 @@ export const mockAIResponses: AIResponse[] = [
 	},
 	{
 		id: "ai3",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "배치고사는 언제 보나요?",
 		category: "faq",
 		confidence: 0.88,
@@ -89,7 +89,7 @@ export const mockAIResponses: AIResponse[] = [
 	// 중간 신뢰도 - 승인 대기 중
 	{
 		id: "ai4",
-		studentId: "3",
+		studentId: "102",
 		originalMessage:
 			"편입 준비하는데 수학이 너무 어려워요. 기초부터 가르쳐주시나요?",
 		category: "consultation",
@@ -102,7 +102,7 @@ export const mockAIResponses: AIResponse[] = [
 	},
 	{
 		id: "ai5",
-		studentId: "5",
+		studentId: "104",
 		originalMessage:
 			"작년에 실패했는데 올해는 꼭 합격하고 싶어요. 어떻게 해야 할까요?",
 		category: "consultation",
@@ -117,7 +117,7 @@ export const mockAIResponses: AIResponse[] = [
 	// 낮은 신뢰도 - 수동 검토 필요
 	{
 		id: "ai6",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "선생님이 너무 까다로워서 스트레스 받아요.",
 		category: "complaint",
 		confidence: 0.45,
@@ -131,7 +131,7 @@ export const mockAIResponses: AIResponse[] = [
 	// 승인된 응답
 	{
 		id: "ai7",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "내일 수업 빠져도 될까요? 갑자기 일이 생겼어요.",
 		category: "schedule",
 		confidence: 0.68,
@@ -147,7 +147,7 @@ export const mockAIResponses: AIResponse[] = [
 	// 거절된 응답
 	{
 		id: "ai8",
-		studentId: "3",
+		studentId: "102",
 		originalMessage: "환불받고 싶은데 어떻게 해야 하나요?",
 		category: "payment",
 		confidence: 0.55,
@@ -163,7 +163,7 @@ export const mockAIResponses: AIResponse[] = [
 	// 최근 자동 발송
 	{
 		id: "ai9",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "교재는 따로 사야 하나요?",
 		category: "faq",
 		confidence: 0.91,
@@ -178,7 +178,7 @@ export const mockAIResponses: AIResponse[] = [
 	// 오늘의 새로운 문의들
 	{
 		id: "ai10",
-		studentId: "5",
+		studentId: "104",
 		originalMessage: "편입 면접 준비도 도와주시나요?",
 		category: "consultation",
 		confidence: 0.78,
@@ -194,7 +194,7 @@ export const mockAIResponses: AIResponse[] = [
 export const consultationAIResponses: AIResponse[] = [
 	{
 		id: "consult_ai1",
-		studentId: "3",
+		studentId: "102",
 		originalMessage: "전화상담 언제 가능한가요?",
 		category: "consultation",
 		confidence: 0.92,
@@ -207,7 +207,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai2",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "편입상담 받고 싶은데 어떻게 해야 하나요?",
 		category: "consultation",
 		confidence: 0.88,
@@ -220,7 +220,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai3",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "내일 오후 3시에 상담 가능한가요?",
 		category: "schedule",
 		confidence: 0.75,
@@ -232,7 +232,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai4",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "상담비용이 따로 있나요?",
 		category: "faq",
 		confidence: 0.94,
@@ -245,7 +245,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai5",
-		studentId: "5",
+		studentId: "104",
 		originalMessage: "재수강 상담도 가능한가요? 작년에 실패해서요.",
 		category: "consultation",
 		confidence: 0.82,
@@ -258,7 +258,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai6",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "주말 상담도 가능한가요? 평일엔 시간이 없어서요.",
 		category: "consultation",
 		confidence: 0.87,
@@ -271,7 +271,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai7",
-		studentId: "3",
+		studentId: "102",
 		originalMessage: "이과에서 문과로 편입 가능한가요?",
 		category: "consultation",
 		confidence: 0.73,
@@ -283,7 +283,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai8",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "온라인 상담도 되나요?",
 		category: "consultation",
 		confidence: 0.91,
@@ -296,7 +296,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai9",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "상담 전에 준비할 게 있나요?",
 		category: "faq",
 		confidence: 0.89,
@@ -309,7 +309,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai10",
-		studentId: "5",
+		studentId: "104",
 		originalMessage: "상담 시간은 얼마나 걸리나요?",
 		category: "faq",
 		confidence: 0.85,
@@ -322,7 +322,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai11",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "상담 후 바로 등록해야 하나요?",
 		category: "consultation",
 		confidence: 0.78,
@@ -334,7 +334,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai12",
-		studentId: "3",
+		studentId: "102",
 		originalMessage: "부모님과 함께 상담 받을 수 있나요?",
 		category: "consultation",
 		confidence: 0.92,
@@ -347,7 +347,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai13",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "상담 예약 취소하고 싶어요.",
 		category: "schedule",
 		confidence: 0.88,
@@ -360,7 +360,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai14",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "상담 받고 싶은데 급하게 해야 할 일이 생겼어요.",
 		category: "schedule",
 		confidence: 0.71,
@@ -372,7 +372,7 @@ export const consultationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "consult_ai15",
-		studentId: "5",
+		studentId: "104",
 		originalMessage: "상담 예약 확인하고 싶어요.",
 		category: "faq",
 		confidence: 0.93,
@@ -389,7 +389,7 @@ export const consultationAIResponses: AIResponse[] = [
 export const registrationAIResponses: AIResponse[] = [
 	{
 		id: "reg_ai1",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "배치고사 언제 보나요?",
 		category: "placement_test",
 		confidence: 0.96,
@@ -402,7 +402,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai2",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "배치고사 준비는 어떻게 해야 하나요?",
 		category: "placement_test",
 		confidence: 0.89,
@@ -415,7 +415,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai3",
-		studentId: "5",
+		studentId: "104",
 		originalMessage: "개별 카카오톡 채널은 언제 안내받나요?",
 		category: "other",
 		confidence: 0.71,
@@ -427,7 +427,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai4",
-		studentId: "3",
+		studentId: "102",
 		originalMessage: "해설지는 언제 받을 수 있나요?",
 		category: "placement_test",
 		confidence: 0.93,
@@ -440,7 +440,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai5",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "결제는 언제 해야 하나요?",
 		category: "payment",
 		confidence: 0.68,
@@ -454,7 +454,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai6",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "배치고사 결과는 언제 나오나요?",
 		category: "placement_test",
 		confidence: 0.91,
@@ -467,7 +467,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai7",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "배치고사 못 보면 어떻게 되나요?",
 		category: "placement_test",
 		confidence: 0.76,
@@ -479,7 +479,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai8",
-		studentId: "5",
+		studentId: "104",
 		originalMessage: "등록 후 바로 수업 시작하나요?",
 		category: "other",
 		confidence: 0.84,
@@ -492,7 +492,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai9",
-		studentId: "3",
+		studentId: "102",
 		originalMessage: "배치고사 재응시 가능한가요?",
 		category: "placement_test",
 		confidence: 0.88,
@@ -505,7 +505,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai10",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "등록금 할인 혜택이 있나요?",
 		category: "payment",
 		confidence: 0.79,
@@ -517,7 +517,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai11",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "배치고사 장소는 어디인가요?",
 		category: "placement_test",
 		confidence: 0.95,
@@ -530,7 +530,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai12",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "등록 전에 시설 구경 가능한가요?",
 		category: "other",
 		confidence: 0.87,
@@ -543,7 +543,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai13",
-		studentId: "5",
+		studentId: "104",
 		originalMessage: "배치고사 문제 수준이 어느 정도인가요?",
 		category: "placement_test",
 		confidence: 0.72,
@@ -555,7 +555,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai14",
-		studentId: "3",
+		studentId: "102",
 		originalMessage: "등록 후 환불 정책이 있나요?",
 		category: "payment",
 		confidence: 0.65,
@@ -567,7 +567,7 @@ export const registrationAIResponses: AIResponse[] = [
 	},
 	{
 		id: "reg_ai15",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "배치고사 예약은 어떻게 하나요?",
 		category: "placement_test",
 		confidence: 0.92,
@@ -584,7 +584,7 @@ export const registrationAIResponses: AIResponse[] = [
 export const managementAIResponses: AIResponse[] = [
 	{
 		id: "mgmt_ai1",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "편입 원서접수 일정이 언제인가요?",
 		category: "schedule",
 		confidence: 0.91,
@@ -597,7 +597,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai2",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "이번 주 과제가 뭔가요?",
 		category: "other",
 		confidence: 0.76,
@@ -609,7 +609,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai3",
-		studentId: "5",
+		studentId: "104",
 		originalMessage: "모의고사 일정 알려주세요",
 		category: "schedule",
 		confidence: 0.88,
@@ -622,7 +622,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai4",
-		studentId: "3",
+		studentId: "102",
 		originalMessage: "성적이 많이 떨어졌는데 어떻게 해야 할까요?",
 		category: "consultation",
 		confidence: 0.65,
@@ -634,7 +634,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai5",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "자소서 첨삭도 해주시나요?",
 		category: "consultation",
 		confidence: 0.84,
@@ -647,7 +647,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai6",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "수업 진도가 너무 빨라요. 따라가기 어려워요.",
 		category: "consultation",
 		confidence: 0.72,
@@ -659,7 +659,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai7",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "과제 제출은 어떻게 하나요?",
 		category: "other",
 		confidence: 0.89,
@@ -672,7 +672,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai8",
-		studentId: "5",
+		studentId: "104",
 		originalMessage: "면접 준비는 언제부터 시작하나요?",
 		category: "schedule",
 		confidence: 0.87,
@@ -685,7 +685,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai9",
-		studentId: "3",
+		studentId: "102",
 		originalMessage: "자습실 이용 시간이 언제인가요?",
 		category: "other",
 		confidence: 0.93,
@@ -698,7 +698,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai10",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "수업 빠지면 어떻게 되나요?",
 		category: "schedule",
 		confidence: 0.81,
@@ -710,7 +710,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai11",
-		studentId: "1",
+		studentId: "100",
 		originalMessage: "학습 자료는 어디서 받나요?",
 		category: "other",
 		confidence: 0.91,
@@ -723,7 +723,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai12",
-		studentId: "2",
+		studentId: "101",
 		originalMessage: "모의고사 결과는 언제 나오나요?",
 		category: "schedule",
 		confidence: 0.88,
@@ -736,7 +736,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai13",
-		studentId: "5",
+		studentId: "104",
 		originalMessage: "수업 시간표 변경 가능한가요?",
 		category: "schedule",
 		confidence: 0.74,
@@ -748,7 +748,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai14",
-		studentId: "3",
+		studentId: "102",
 		originalMessage: "개별 질문은 언제 해도 되나요?",
 		category: "other",
 		confidence: 0.92,
@@ -761,7 +761,7 @@ export const managementAIResponses: AIResponse[] = [
 	},
 	{
 		id: "mgmt_ai15",
-		studentId: "4",
+		studentId: "103",
 		originalMessage: "학원 휴강일이 언제인가요?",
 		category: "schedule",
 		confidence: 0.86,

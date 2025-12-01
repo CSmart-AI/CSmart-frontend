@@ -4,7 +4,7 @@ import type { Student } from "../types/student";
 export const mockStudents: Student[] = [
 	{
 		info: {
-			id: "1",
+			id: "100",
 			name: "김민수",
 			age: 22,
 			type: "일반",
@@ -29,7 +29,7 @@ export const mockStudents: Student[] = [
 		},
 		placementTest: {
 			id: "pt1",
-			studentId: "1",
+			studentId: "100",
 			mathScore: 85,
 			englishScore: 78,
 			koreanScore: 82,
@@ -39,7 +39,7 @@ export const mockStudents: Student[] = [
 		},
 		payment: {
 			id: "pay1",
-			studentId: "1",
+			studentId: "100",
 			amount: 1200000,
 			method: "카드",
 			status: "완료",
@@ -49,7 +49,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg1",
-				studentId: "1",
+				studentId: "100",
 				message: "안녕하세요! 편입 상담 받고 싶어서 연락드렸습니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-15T10:00:00"),
@@ -57,7 +57,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg2",
-				studentId: "1",
+				studentId: "100",
 				message:
 					"네, 안녕하세요! 편입 상담 도와드리겠습니다. 언제 통화 가능하신가요?",
 				sender: "admin",
@@ -66,7 +66,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg3",
-				studentId: "1",
+				studentId: "100",
 				message: "배치고사 해설지 잘 받았습니다. 감사합니다!",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-23T14:30:00"),
@@ -79,7 +79,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "2",
+			id: "101",
 			name: "박지영",
 			age: 21,
 			type: "학사",
@@ -104,7 +104,7 @@ export const mockStudents: Student[] = [
 		},
 		placementTest: {
 			id: "pt2",
-			studentId: "2",
+			studentId: "101",
 			mathScore: 65,
 			englishScore: 70,
 			koreanScore: 75,
@@ -114,7 +114,7 @@ export const mockStudents: Student[] = [
 		},
 		payment: {
 			id: "pay2",
-			studentId: "2",
+			studentId: "101",
 			amount: 800000,
 			method: "계좌이체",
 			status: "완료",
@@ -124,7 +124,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg4",
-				studentId: "2",
+				studentId: "101",
 				message: "편입 상담 신청합니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-18T16:20:00"),
@@ -132,7 +132,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg5",
-				studentId: "2",
+				studentId: "101",
 				message:
 					"네, 상담 신청 접수되었습니다. 주말에 통화 가능하시다고 하셨는데, 이번 주 토요일 오전 11시는 어떠신가요?",
 				sender: "admin",
@@ -141,7 +141,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg6",
-				studentId: "2",
+				studentId: "101",
 				message: "배치고사 모두 완료했습니다!",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-24T11:15:00"),
@@ -155,7 +155,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "3",
+			id: "102",
 			name: "이준호",
 			age: 24,
 			type: "일반",
@@ -181,7 +181,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg7",
-				studentId: "3",
+				studentId: "102",
 				message: "편입 상담 받고 싶습니다. 이과에서 컴공으로 편입 가능한가요?",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-10T19:30:00"),
@@ -189,7 +189,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg8",
-				studentId: "3",
+				studentId: "102",
 				message:
 					"네, 충분히 가능합니다! 상담 예약해드릴게요. 평일 저녁 시간대로 가능하시죠?",
 				sender: "admin",
@@ -198,7 +198,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg9",
-				studentId: "3",
+				studentId: "102",
 				message: "상담 후 등록하기로 결정했습니다. 결제 방법 안내해주세요.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-12T20:15:00"),
@@ -211,7 +211,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "4",
+			id: "103",
 			name: "최수진",
 			age: 20,
 			type: "일반",
@@ -237,7 +237,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg10",
-				studentId: "4",
+				studentId: "103",
 				message: "편입 상담 문의드립니다. 수학 기초부터 가르쳐주시나요?",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-25T13:45:00"),
@@ -250,7 +250,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "5",
+			id: "104",
 			name: "정민철",
 			age: 23,
 			type: "학사",
@@ -275,7 +275,7 @@ export const mockStudents: Student[] = [
 		},
 		placementTest: {
 			id: "pt3",
-			studentId: "5",
+			studentId: "104",
 			mathScore: 75,
 			englishScore: 88,
 			koreanScore: 80,
@@ -285,7 +285,7 @@ export const mockStudents: Student[] = [
 		},
 		payment: {
 			id: "pay3",
-			studentId: "5",
+			studentId: "104",
 			amount: 1500000,
 			method: "카드",
 			status: "완료",
@@ -295,7 +295,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg11",
-				studentId: "5",
+				studentId: "104",
 				message: "재수강 상담 받고 싶습니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-20T11:00:00"),
@@ -303,7 +303,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg12",
-				studentId: "5",
+				studentId: "104",
 				message: "재수강생 할인 혜택도 있으니 상담받으러 오세요!",
 				sender: "admin",
 				timestamp: Temporal.PlainDateTime.from("2024-01-20T11:10:00"),
@@ -311,7 +311,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg13",
-				studentId: "5",
+				studentId: "104",
 				message: "개별 카카오톡 채널로 질문 드려도 될까요?",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-29T15:20:00"),
@@ -324,7 +324,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "6",
+			id: "105",
 			name: "한소희",
 			age: 22,
 			type: "일반",
@@ -349,7 +349,7 @@ export const mockStudents: Student[] = [
 		},
 		placementTest: {
 			id: "pt4",
-			studentId: "6",
+			studentId: "105",
 			mathScore: 72,
 			englishScore: 85,
 			koreanScore: 90,
@@ -359,7 +359,7 @@ export const mockStudents: Student[] = [
 		},
 		payment: {
 			id: "pay4",
-			studentId: "6",
+			studentId: "105",
 			amount: 1300000,
 			method: "카드",
 			status: "완료",
@@ -369,7 +369,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg14",
-				studentId: "6",
+				studentId: "105",
 				message: "언론정보학과 편입 상담 받고 싶습니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-16T14:00:00"),
@@ -377,7 +377,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg15",
-				studentId: "6",
+				studentId: "105",
 				message:
 					"네, 상담 예약해드리겠습니다. 언론정보학과는 실기도 중요하니 함께 준비하시면 좋습니다.",
 				sender: "admin",
@@ -386,7 +386,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg16",
-				studentId: "6",
+				studentId: "105",
 				message: "국어 점수가 높게 나왔어요! 다음 단계 학습 계획 알려주세요.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-27T16:30:00"),
@@ -399,7 +399,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "7",
+			id: "106",
 			name: "강태현",
 			age: 25,
 			type: "학사",
@@ -425,7 +425,7 @@ export const mockStudents: Student[] = [
 		},
 		placementTest: {
 			id: "pt5",
-			studentId: "7",
+			studentId: "106",
 			mathScore: 92,
 			englishScore: 76,
 			koreanScore: 70,
@@ -435,7 +435,7 @@ export const mockStudents: Student[] = [
 		},
 		payment: {
 			id: "pay5",
-			studentId: "7",
+			studentId: "106",
 			amount: 1400000,
 			method: "계좌이체",
 			status: "완료",
@@ -445,7 +445,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg17",
-				studentId: "7",
+				studentId: "106",
 				message: "KAIST 편입 상담 문의드립니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-14T15:30:00"),
@@ -453,7 +453,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg18",
-				studentId: "7",
+				studentId: "106",
 				message:
 					"KAIST는 수학이 매우 중요합니다. 배치고사 결과를 보고 맞춤형 학습 계획을 세워드리겠습니다.",
 				sender: "admin",
@@ -462,7 +462,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg19",
-				studentId: "7",
+				studentId: "106",
 				message:
 					"수학 점수가 생각보다 잘 나왔어요! 다음 모의고사 일정 알려주세요.",
 				sender: "student",
@@ -471,7 +471,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg20",
-				studentId: "7",
+				studentId: "106",
 				message: "영어 단어 암기 방법 추천해주실 수 있나요?",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-30T18:45:00"),
@@ -484,7 +484,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "8",
+			id: "107",
 			name: "윤서연",
 			age: 21,
 			type: "일반",
@@ -510,7 +510,7 @@ export const mockStudents: Student[] = [
 		},
 		placementTest: {
 			id: "pt6",
-			studentId: "8",
+			studentId: "107",
 			mathScore: 68,
 			englishScore: 72,
 			koreanScore: 78,
@@ -520,7 +520,7 @@ export const mockStudents: Student[] = [
 		},
 		payment: {
 			id: "pay6",
-			studentId: "8",
+			studentId: "107",
 			amount: 1100000,
 			method: "카드",
 			status: "완료",
@@ -530,7 +530,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg21",
-				studentId: "8",
+				studentId: "107",
 				message: "연세대 사회학과 편입 상담 받고 싶습니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-22T13:20:00"),
@@ -538,7 +538,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg22",
-				studentId: "8",
+				studentId: "107",
 				message:
 					"네, 상담 예약해드리겠습니다. 사회학과는 논술도 중요하니 함께 준비하시면 좋습니다.",
 				sender: "admin",
@@ -547,7 +547,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg23",
-				studentId: "8",
+				studentId: "107",
 				message: "배치고사 결과 나왔어요. 해설 강의 들을 수 있나요?",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-31T14:10:00"),
@@ -560,7 +560,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "9",
+			id: "108",
 			name: "조현우",
 			age: 24,
 			type: "학사",
@@ -586,7 +586,7 @@ export const mockStudents: Student[] = [
 		},
 		placementTest: {
 			id: "pt7",
-			studentId: "9",
+			studentId: "108",
 			mathScore: 88,
 			englishScore: 82,
 			koreanScore: 75,
@@ -596,7 +596,7 @@ export const mockStudents: Student[] = [
 		},
 		payment: {
 			id: "pay7",
-			studentId: "9",
+			studentId: "108",
 			amount: 1450000,
 			method: "계좌이체",
 			status: "완료",
@@ -606,7 +606,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg24",
-				studentId: "9",
+				studentId: "108",
 				message: "POSTECH 컴공 편입 상담 문의드립니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-17T18:00:00"),
@@ -614,7 +614,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg25",
-				studentId: "9",
+				studentId: "108",
 				message:
 					"POSTECH는 수학과 영어가 모두 중요합니다. 배치고사 결과를 보고 맞춤형 학습 계획을 세워드리겠습니다.",
 				sender: "admin",
@@ -623,7 +623,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg26",
-				studentId: "9",
+				studentId: "108",
 				message:
 					"배치고사 점수가 목표보다 높게 나왔어요! 다음 단계 학습 계획 알려주세요.",
 				sender: "student",
@@ -638,7 +638,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "10",
+			id: "109",
 			name: "김가현",
 			age: 23,
 			type: "일반",
@@ -663,7 +663,7 @@ export const mockStudents: Student[] = [
 		},
 		placementTest: {
 			id: "pt10",
-			studentId: "10",
+			studentId: "109",
 			mathScore: 92,
 			englishScore: 88,
 			koreanScore: 75,
@@ -674,7 +674,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg27",
-				studentId: "10",
+				studentId: "109",
 				message: "서울대 화학과 편입 상담 받고 싶습니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-28T15:00:00"),
@@ -682,7 +682,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg28",
-				studentId: "10",
+				studentId: "109",
 				message: "배치고사 결과 확인했습니다. 다음 단계 진행하겠습니다.",
 				sender: "admin",
 				timestamp: Temporal.PlainDateTime.from("2024-01-30T16:00:00"),
@@ -695,7 +695,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "11",
+			id: "110",
 			name: "이유빈",
 			age: 22,
 			type: "일반",
@@ -720,7 +720,7 @@ export const mockStudents: Student[] = [
 		},
 		placementTest: {
 			id: "pt11",
-			studentId: "11",
+			studentId: "110",
 			mathScore: 78,
 			englishScore: 85,
 			koreanScore: 80,
@@ -731,7 +731,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg29",
-				studentId: "11",
+				studentId: "110",
 				message: "연세대 경영학과 편입 상담 문의드립니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-29T14:00:00"),
@@ -739,7 +739,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg30",
-				studentId: "11",
+				studentId: "110",
 				message: "배치고사 완료했습니다. 해설지 배급 부탁드립니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-02-01T15:30:00"),
@@ -752,7 +752,7 @@ export const mockStudents: Student[] = [
 	},
 	{
 		info: {
-			id: "12",
+			id: "111",
 			name: "이도윤",
 			age: 21,
 			type: "일반",
@@ -777,7 +777,7 @@ export const mockStudents: Student[] = [
 		},
 		placementTest: {
 			id: "pt12",
-			studentId: "12",
+			studentId: "111",
 			mathScore: 95,
 			englishScore: 82,
 			koreanScore: 70,
@@ -788,7 +788,7 @@ export const mockStudents: Student[] = [
 		kakaoMessages: [
 			{
 				id: "msg31",
-				studentId: "12",
+				studentId: "111",
 				message: "KAIST 전기전자공학부 편입 상담 받고 싶습니다.",
 				sender: "student",
 				timestamp: Temporal.PlainDateTime.from("2024-01-27T19:00:00"),
@@ -796,7 +796,7 @@ export const mockStudents: Student[] = [
 			},
 			{
 				id: "msg32",
-				studentId: "12",
+				studentId: "111",
 				message: "배치고사 결과 확인했습니다. 수학 실력이 우수하시네요!",
 				sender: "admin",
 				timestamp: Temporal.PlainDateTime.from("2024-01-29T20:00:00"),
