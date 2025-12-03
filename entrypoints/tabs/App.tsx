@@ -17,6 +17,7 @@ import KakaoLoginPage from "./KakaoLoginPage.tsx";
 import ManagementPage from "./ManagementPage.tsx";
 import RegistrationPage from "./RegistrationPage.tsx";
 import StudentDetailPage from "./StudentDetailPage.tsx";
+import TeacherDetailPage from "./TeacherDetailPage.tsx";
 import TeacherManagementPage from "./TeacherManagementPage.tsx";
 
 // 선생님 메인 페이지 리다이렉트 컴포넌트
@@ -130,6 +131,14 @@ function App() {
 							element={
 								<AdminLayout>
 									<StudentDetailPage />
+								</AdminLayout>
+							}
+						/>
+						<Route
+							path="/teacher/:id"
+							element={
+								<AdminLayout>
+									<TeacherDetailPage />
 								</AdminLayout>
 							}
 						/>

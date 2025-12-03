@@ -1,5 +1,6 @@
 import { Edit, Plus, Trash2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Badge, Button, Card, Input, Typography } from "@/components/ui";
 import {
 	type CreateTeacherRequestDTO,
@@ -8,6 +9,7 @@ import {
 } from "@/utils/api";
 
 const TeacherManagementPage = () => {
+	const navigate = useNavigate();
 	const [teachers, setTeachers] = useState<TeacherDTO[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [showCreateModal, setShowCreateModal] = useState(false);
@@ -198,7 +200,10 @@ const TeacherManagementPage = () => {
 										className="border border-gray-200 hover:shadow-md transition-shadow duration-100"
 									>
 										<div className="flex justify-between items-start mb-5">
-											<div className="flex-1">
+											<div
+												className="flex-1 cursor-pointer"
+												onClick={() => navigate(`/teacher/${teacher.teacherId}`)}
+											>
 												<Typography variant="h4" className="mb-1">
 													{teacher.name}
 												</Typography>
@@ -212,7 +217,10 @@ const TeacherManagementPage = () => {
 											<div className="flex gap-2 ml-3">
 												<button
 													type="button"
-													onClick={() => openEditModal(teacher)}
+													onClick={(e) => {
+														e.stopPropagation();
+														openEditModal(teacher);
+													}}
 													className="p-2 text-[var(--color-indigo)] hover:bg-[var(--color-indigo)]/10 rounded-[var(--radius-medium)] transition-colors duration-100"
 													aria-label="수정"
 												>
@@ -220,7 +228,10 @@ const TeacherManagementPage = () => {
 												</button>
 												<button
 													type="button"
-													onClick={() => handleDelete(teacher.teacherId)}
+													onClick={(e) => {
+														e.stopPropagation();
+														handleDelete(teacher.teacherId);
+													}}
 													className="p-2 text-[var(--color-red)] hover:bg-[var(--color-red)]/10 rounded-[var(--radius-medium)] transition-colors duration-100"
 													aria-label="삭제"
 												>
@@ -229,7 +240,10 @@ const TeacherManagementPage = () => {
 											</div>
 										</div>
 
-										<div className="space-y-2.5">
+										<div
+											className="space-y-2.5 cursor-pointer"
+											onClick={() => navigate(`/teacher/${teacher.teacherId}`)}
+										>
 											{teacher.phoneNumber && (
 												<div className="flex items-start">
 													<Typography
