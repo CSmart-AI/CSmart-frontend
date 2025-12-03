@@ -31,22 +31,6 @@ const AIManagementPage = () => {
 	const [students, setStudents] = useState<StudentDTO[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [channelType, setChannelType] = useState<ChannelType>("ADMIN");
-	// 전송한 메시지 ID 저장 (localStorage 사용)
-	const [sentMessageIds, setSentMessageIds] = useState<Set<number>>(() => {
-		// localStorage에서 전송한 메시지 ID 목록 불러오기
-		if (typeof window !== "undefined") {
-			const stored = localStorage.getItem("sentMessageIds");
-			if (stored) {
-				try {
-					const ids = JSON.parse(stored) as number[];
-					return new Set(ids);
-				} catch {
-					return new Set<number>();
-				}
-			}
-		}
-		return new Set<number>();
-	});
 
 	const loadData = useCallback(
 		async (triggerAI = false) => {
@@ -78,12 +62,12 @@ const AIManagementPage = () => {
 					return;
 				}
 
-				// teacherId가 없는 항목 필터링 및 전송한 메시지 ID 제외
+				// teacherId가 없는 항목 필터링 및 SENT 상태가 아닌 항목만 필터링
 				const validResponses = pendingResponse.result.filter(
 					(res) =>
 						res.teacherId !== undefined &&
 						res.teacherId !== null &&
-						!sentMessageIds.has(res.messageId), // 전송한 메시지 ID는 제외
+						res.status !== "SENT", // SENT 상태가 아닌 것만 표시
 				);
 
 				if (validResponses.length === 0) {
@@ -185,7 +169,7 @@ const AIManagementPage = () => {
 				setLoading(false);
 			}
 		},
-		[sentMessageIds, teacherIdParam],
+		[teacherIdParam],
 	);
 
 	useEffect(() => {
@@ -202,20 +186,7 @@ const AIManagementPage = () => {
 						channelType={channelType}
 						loading={loading}
 						onRefresh={() => loadData(true)}
-						onMessageSent={(messageId) => {
-							// 전송한 메시지 ID 저장
-							if (messageId) {
-								const newSentIds = new Set(sentMessageIds);
-								newSentIds.add(messageId);
-								setSentMessageIds(newSentIds);
-								// localStorage에 저장
-								if (typeof window !== "undefined") {
-									localStorage.setItem(
-										"sentMessageIds",
-										JSON.stringify(Array.from(newSentIds)),
-									);
-								}
-							}
+						onMessageSent={() => {
 							loadData(false);
 						}}
 					/>

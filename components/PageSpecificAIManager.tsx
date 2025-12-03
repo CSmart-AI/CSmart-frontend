@@ -34,7 +34,7 @@ interface PageSpecificAIManagerProps {
 	channelType: ChannelType;
 	loading?: boolean;
 	onRefresh?: () => void;
-	onMessageSent?: (messageId?: number) => void;
+	onMessageSent?: () => void;
 }
 
 const PageSpecificAIManager = ({
@@ -502,26 +502,26 @@ const PageSpecificAIManager = ({
 		setSendingIds((prev) => new Set(prev).add(chatId));
 
 		try {
-			const response = await kakaoApi.sendMessage({
-				recipient: studentName,
-				message,
-				messageType: "text",
-				chatId: chat.chatId,
-			});
+			// 백엔드 API를 통해 메시지 전송
+			const response = await kakaoApi.sendMessageViaBackend(
+				{
+					recipient: studentName,
+					message,
+					messageType: "text",
+					chatId: chat.chatId,
+				},
+				_channelType,
+			);
 
 			if (response.isSuccess) {
 				// 메시지 전송 성공 후 approve API 호출 (작동하지 않더라도 호출)
 				const aiResponse = aiResponses[chat.studentId] || chat.aiResponse;
-				let messageId: number | undefined;
 				if (aiResponse?.responseId) {
 					try {
 						await aiResponseApi.approve(aiResponse.responseId);
-						messageId = aiResponse.messageId; // 전송한 메시지 ID 저장
 					} catch (error) {
 						// approve 실패해도 무시 (사용자에게 에러 표시하지 않음)
 						console.warn("Approve API 호출 실패:", error);
-						// approve 실패해도 messageId는 전달
-						messageId = aiResponse.messageId;
 					}
 				}
 
@@ -535,7 +535,7 @@ const PageSpecificAIManager = ({
 					delete next[chatId];
 					return next;
 				});
-				onMessageSent?.(messageId);
+				onMessageSent?.();
 			} else {
 				setErrors((prev) => ({
 					...prev,

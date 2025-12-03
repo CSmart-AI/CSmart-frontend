@@ -617,6 +617,29 @@ export const kakaoApi = {
 	},
 
 	/**
+	 * 카카오톡 메시지 전송 (백엔드 API 사용)
+	 */
+	sendMessageViaBackend: async (
+		data: SendMessageRequest,
+		channelType: ChannelType = "ADMIN",
+	): Promise<ApiResponse<SendMessageResponse>> => {
+		return apiRequest<SendMessageResponse>(
+			`/kakao/send-message?channelType=${channelType}`,
+			{
+				method: "POST",
+				body: JSON.stringify({
+					recipient: data.recipient,
+					message: data.message,
+					messageType: data.messageType || "text",
+					chatId: data.chatId,
+					imageUrl: data.imageUrl,
+					fileName: data.fileName,
+				}),
+			},
+		);
+	},
+
+	/**
 	 * 카카오톡 서비스 상태 확인
 	 */
 	checkHealth: async (
