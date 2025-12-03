@@ -687,7 +687,7 @@ const PageSpecificAIManager = ({
 				<table className="w-full">
 					<thead>
 						<tr className="border-b border-gray-200 bg-gray-50">
-							<th className="px-4 py-3 text-left w-12">
+							<th className="px-4 py-3 text-left w-12 shrink-0">
 								<input
 									type="checkbox"
 									checked={allSelected}
@@ -698,7 +698,7 @@ const PageSpecificAIManager = ({
 									className="w-4 h-4 rounded border-gray-300 bg-white text-[var(--color-indigo)] focus:ring-2 focus:ring-[var(--color-indigo)]"
 								/>
 							</th>
-							<th className="px-4 py-3 text-left w-20">
+							<th className="px-4 py-3 text-left w-20 shrink-0 whitespace-nowrap">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -706,7 +706,7 @@ const PageSpecificAIManager = ({
 									프로필
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left min-w-[100px]">
+							<th className="px-4 py-3 text-left min-w-[100px] shrink-0 whitespace-nowrap">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -714,7 +714,7 @@ const PageSpecificAIManager = ({
 									이름
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left min-w-[300px]">
+							<th className="px-4 py-3 text-left min-w-[300px] shrink-0 whitespace-nowrap">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -722,7 +722,7 @@ const PageSpecificAIManager = ({
 									마지막 메시지
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-left min-w-[450px]">
+							<th className="px-4 py-3 text-left min-w-[450px] shrink-0 whitespace-nowrap">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -730,7 +730,7 @@ const PageSpecificAIManager = ({
 									전송할 메시지
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-middle w-24">
+							<th className="px-4 py-3 text-middle w-24 shrink-0 whitespace-nowrap">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -738,7 +738,7 @@ const PageSpecificAIManager = ({
 									상태
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-middle w-32">
+							<th className="px-4 py-3 text-middle w-32 shrink-0 whitespace-nowrap">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"
@@ -746,7 +746,7 @@ const PageSpecificAIManager = ({
 									시간
 								</Typography>
 							</th>
-							<th className="px-4 py-3 text-middle w-32">
+							<th className="px-4 py-3 text-middle w-32 shrink-0 whitespace-nowrap">
 								<Typography
 									variant="small"
 									className="font-medium text-gray-600"

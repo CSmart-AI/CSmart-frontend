@@ -189,7 +189,7 @@ const AIManagementPage = () => {
 	);
 
 	useEffect(() => {
-		loadData(true); // 처음 페이지 진입 시 AI 응답 생성 트리거
+		loadData(false); // 처음 페이지 진입 시에는 데이터만 가져오기 (triggerOnce 호출 안 함)
 	}, [loadData]);
 
 	return (
