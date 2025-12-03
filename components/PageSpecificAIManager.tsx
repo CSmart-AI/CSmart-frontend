@@ -502,18 +502,21 @@ const PageSpecificAIManager = ({
 		setSendingIds((prev) => new Set(prev).add(chatId));
 
 		try {
-			// 백엔드 API를 통해 메시지 전송
-			const response = await kakaoApi.sendMessageViaBackend(
-				{
-					recipient: studentName,
-					message,
-					messageType: "text",
-					chatId: chat.chatId,
-				},
-				_channelType,
-			);
+			const messageData = {
+				recipient: studentName,
+				message,
+				messageType: "text",
+				chatId: chat.chatId,
+			};
 
-			if (response.isSuccess) {
+			// 두 API를 모두 호출: localhost:3001 (kakaoApi.sendMessage)와 localhost:8080 (sendMessageViaBackend)
+			const [kakaoResponse, backendResponse] = await Promise.all([
+				kakaoApi.sendMessage(messageData),
+				kakaoApi.sendMessageViaBackend(messageData, _channelType),
+			]);
+
+			// 두 API 모두 성공해야 성공으로 처리
+			if (kakaoResponse.isSuccess && backendResponse.isSuccess) {
 				// 메시지 전송 성공 후 approve API 호출 (작동하지 않더라도 호출)
 				const aiResponse = aiResponses[chat.studentId] || chat.aiResponse;
 				if (aiResponse?.responseId) {
@@ -537,9 +540,21 @@ const PageSpecificAIManager = ({
 				});
 				onMessageSent?.();
 			} else {
+				// 하나라도 실패하면 에러 메시지 표시
+				const errorMessages: string[] = [];
+				if (!kakaoResponse.isSuccess) {
+					errorMessages.push(
+						`카카오톡 API: ${kakaoResponse.message || "실패"}`,
+					);
+				}
+				if (!backendResponse.isSuccess) {
+					errorMessages.push(
+						`백엔드 API: ${backendResponse.message || "실패"}`,
+					);
+				}
 				setErrors((prev) => ({
 					...prev,
-					[chatId]: response.message || "메시지 전송에 실패했습니다.",
+					[chatId]: errorMessages.join(", ") || "메시지 전송에 실패했습니다.",
 				}));
 			}
 		} catch (error) {

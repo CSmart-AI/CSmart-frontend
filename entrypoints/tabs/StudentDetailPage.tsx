@@ -26,7 +26,7 @@ interface StudentData {
 }
 
 const StudentDetailPage = () => {
-	const { id } = useParams<{ id: string }>();
+	const { id, teacherId } = useParams<{ id: string; teacherId?: string }>();
 	const [studentData, setStudentData] = useState<StudentData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
@@ -99,7 +99,7 @@ const StudentDetailPage = () => {
 					학생을 찾을 수 없습니다
 				</Typography>
 				<Link
-					to="/management"
+					to={teacherId ? `/${teacherId}/management` : "/management"}
 					className="text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium"
 				>
 					관리 페이지로 돌아가기
@@ -118,7 +118,7 @@ const StudentDetailPage = () => {
 					학생을 찾을 수 없습니다
 				</Typography>
 				<Link
-					to="/management"
+					to={teacherId ? `/${teacherId}/management` : "/management"}
 					className="text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium"
 				>
 					관리 페이지로 돌아가기
@@ -171,7 +171,9 @@ const StudentDetailPage = () => {
 					sender:
 						msg.senderType === "STUDENT"
 							? ("student" as const)
-							: ("admin" as const),
+							: msg.senderType === "TEACHER"
+								? ("teacher" as const)
+								: ("admin" as const),
 					timestamp: msg.sentAt
 						? fromJSDate(new Date(msg.sentAt))
 						: fromJSDate(new Date()),
@@ -197,7 +199,7 @@ const StudentDetailPage = () => {
 							<div className="flex items-center justify-between mb-4">
 								<div className="flex items-center gap-4">
 									<Link
-										to="/management"
+										to={teacherId ? `/${teacherId}/management` : "/management"}
 										className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
 									>
 										<ArrowLeft className="h-5 w-5 text-gray-600" />
